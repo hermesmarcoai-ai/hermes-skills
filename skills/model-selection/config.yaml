@@ -1,0 +1,321 @@
+# OpenRouter Auto-Configuration for Hermes Agent
+# Attiva model selection automatica e cost optimization
+
+# ============================================================================
+# SEZIONE 1: MODEL ROUTING (OpenRouter API)
+# ============================================================================
+
+model_routing:
+  # Abilita selezione automatica modelli
+  enabled: true
+  
+  # Strategy: cost_optimized, quality_first, balanced
+  # - cost_optimized: Sempre il più economico che funziona
+  # - quality_first: Sempre il più potente disponibile
+  # - balanced: Trade-off ottimale (default)
+  strategy: cost_optimized
+  
+  # Abilita fallback automatico se modello primario fallisce
+  fallback_enabled: true
+  
+  # Limite costo massimo per request (USD)
+  # Imposta a 0.50 per mantenere costi sotto controllo
+  max_cost_per_request: 0.50
+  
+  # Budget giornaliero massimo (USD)
+  # Imposta alert quando si supera l'80%
+  daily_budget: 10.00
+  
+  # Timeout (ms)
+  timeout_short: 5000     # Per modelli cheap/fast
+  timeout_medium: 10000   # Per modelli balanced
+  timeout_long: 30000     # Per modelli high-performance
+
+# ============================================================================
+# SEZIONE 2: MODEL SELECTION PREFERENCES
+# ============================================================================
+
+model_selection:
+  # Abilita auto-selection per TUTTI i task
+  auto_select: true
+  
+  # Preference: max_savings, balanced, quality_first
+  # max_savings: Usa sempre modelli free/cheap quando possibile
+  # balanced: Trade-off intelligente (default)
+  # quality_first: Usa sempre il migliore disponibile
+  preference: balanced
+  
+  # Abilita escalation automatica se qualità insufficiente
+  escalation_enabled: true
+  
+  # Confidence threshold: Se < 70%, scala al modello successivo
+  min_confidence: 0.70
+  
+  # Logica escalation
+  escalation_rules:
+    # Se modello cheap fallisce 2 volte consecutive → scala
+    cheap_failure_threshold: 2
+    
+    # Se task complesso su modello cheap → scala immediatamente
+    complex_task_escalation: true
+    
+    # Domain-specific escalation
+    domain_escalation:
+      coding:
+        cheap_fallback: qwen/qwen3-coder-next
+        balanced_fallback: deepseek/deepseek-v3.2
+      writing:
+        cheap_fallback: qwen/qwen3.5-27b
+        balanced_fallback: anthropic/claude-sonnet-4.6
+      research:
+        cheap_fallback: qwen/qwen3.5-397b-a17b
+        balanced_fallback: anthropic/claude-opus-4.6
+
+# ============================================================================
+# SEZIONE 3: COST TRACKING & ALERTS
+# ============================================================================
+
+cost_tracking:
+  # Abilita tracking costi in tempo reale
+  enabled: true
+  
+  # Alert threshold (USD) — ricevi alert quando superi questa soglia
+  alert_threshold: 5.00
+  
+  # Frequency per report (daily, weekly, monthly)
+  report_frequency: weekly
+  
+  # Export format (json, csv, markdown)
+  export_format: json
+  
+  # Storage path
+  storage_path: ~/.hermes/reports/costs
+  
+  # Budget alerts (recipients)
+  budget_alerts:
+    enabled: true
+    thresholds:
+      - 50    # 50% budget warning
+      - 80    # 80% budget warning
+      - 100   # 100% budget limit
+
+# ============================================================================
+# SEZIONE 4: MODEL CACHING & OPTIMIZATION
+# ============================================================================
+
+model_optimization:
+  # Abilita caching prompt
+  prompt_caching_enabled: true
+  
+  # Cache simile (semantic similarity > 0.85)
+  semantic_cache_enabled: true
+  semantic_threshold: 0.85
+  
+  # Compressione prompt per ridurre token
+  prompt_compression_enabled: true
+  compression_aggressiveness: medium  # low, medium, high
+  
+  # Batching strategies
+  batching:
+    enabled: true
+    max_batch_size: 10
+    batch_timeout: 60  # seconds
+
+# ============================================================================
+# SEZIONE 5: DOMAIN-SPECIFIC RULES
+# ============================================================================
+
+domain_rules:
+  # Regole specifiche per dominio/task type
+  
+  coding:
+    preferred_model: qwen/qwen3-coder-next
+    fallback_model: deepseek/deepseek-v3.2
+    max_cost: 1.00
+    confidence_threshold: 0.90
+    
+  writing:
+    preferred_model: qwen/qwen3.5-27b
+    fallback_model: anthropic/claude-sonnet-4.6
+    max_cost: 2.00
+    confidence_threshold: 0.85
+    
+  research:
+    preferred_model: qwen/qwen3.5-397b-a17b
+    fallback_model: anthropic/claude-opus-4.6
+    max_cost: 5.00
+    confidence_threshold: 0.95
+    
+  chat:
+    preferred_model: liquid/lfm-2.5-1.2b-instruct:free
+    fallback_model: qwen/qwen3.5-9b
+    max_cost: 0.10
+    confidence_threshold: 0.80
+    
+  analysis:
+    preferred_model: deepseek/deepseek-v3.2
+    fallback_model: qwen/qwen3.5-27b
+    max_cost: 1.00
+    confidence_threshold: 0.85
+    
+  enterprise:
+    preferred_model: qwen/qwen3.5-397b-a17b
+    fallback_model: anthropic/claude-opus-4.6
+    max_cost: 10.00
+    confidence_threshold: 0.98
+
+# ============================================================================
+# SEZIONE 6: MODEL DATABASE (Pre-configured)
+# ============================================================================
+
+model_database:
+  # Modelli pre-configurati con categorie e prezzi
+  
+  ultra_cheap:
+    - id: liquid/lfm-2.5-1.2b-instruct:free
+      name: "Liquid LFM 1.2B"
+      prompt_cost: 0
+      completion_cost: 0
+      context: 131072
+      latency: 200
+      
+    - id: google/gemma-4-26b-a4b-it:free
+      name: "Gemma 4 26B"
+      prompt_cost: 0
+      completion_cost: 0
+      context: 131072
+      latency: 600
+      
+    - id: nvidia/nemotron-3-super-120b-a12b:free
+      name: "Nemotron 120B"
+      prompt_cost: 0
+      completion_cost: 0
+      context: 128000
+      latency: 700
+      
+  cheap:
+    - id: nemotron-3-nano-30b-a3b
+      name: "Nemotron 30B"
+      prompt_cost: 0.05
+      completion_cost: 0.05
+      context: 128000
+      latency: 400
+      
+    - id: qwen/qwen3.5-9b
+      name: "Qwen 3.5 9B"
+      prompt_cost: 0.07
+      completion_cost: 0.07
+      context: 128000
+      latency: 250
+      
+    - id: mistralai/ministral-8b-2512
+      name: "Mistral Ministral 8B"
+      prompt_cost: 0.08
+      completion_cost: 0.08
+      context: 131072
+      latency: 280
+      
+  balanced:
+    - id: qwen/qwen3.5-27b
+      name: "Qwen 3.5 27B"
+      prompt_cost: 0.27
+      completion_cost: 0.27
+      context: 128000
+      latency: 450
+      
+    - id: mistralai/mistral-large-2512
+      name: "Mistral Large"
+      prompt_cost: 0.30
+      completion_cost: 0.30
+      context: 131072
+      latency: 500
+      
+    - id: anthropic/claude-sonnet-4.6
+      name: "Claude Sonnet 4.6"
+      prompt_cost: 3.00
+      completion_cost: 15.00
+      context: 200000
+      latency: 800
+      
+  high_performance:
+    - id: qwen/qwen3.5-397b-a17b
+      name: "Qwen 397B"
+      prompt_cost: 2.50
+      completion_cost: 2.50
+      context: 256000
+      latency: 1200
+      
+    - id: deepseek/deepseek-v3.2
+      name: "DeepSeek V3.2"
+      prompt_cost: 0.55
+      completion_cost: 0.55
+      context: 256000
+      latency: 700
+      
+    - id: anthropic/claude-opus-4.6
+      name: "Claude Opus 4.6"
+      prompt_cost: 15.00
+      completion_cost: 75.00
+      context: 200000
+      latency: 1500
+      
+  specialized_coding:
+    - id: qwen/qwen3-coder-next
+      name: "Qwen Coder Next"
+      prompt_cost: 0.50
+      completion_cost: 0.50
+      context: 256000
+      latency: 650
+      
+    - id: openai/gpt-5.3-codex
+      name: "GPT-5.3 Codex"
+      prompt_cost: 3.00
+      completion_cost: 12.00
+      context: 128000
+      latency: 800
+
+# ============================================================================
+# SEZIONE 7: DEFAULT TASK MAPPINGS (Pre-configured)
+# ============================================================================
+
+task_mappings:
+  # Mappatura task-type → model
+  content_short:
+    max_savings: liquid/lfm-2.5-1.2b-instruct:free
+    balanced: qwen/qwen3.5-9b
+    quality_first: qwen/qwen3.5-27b
+    
+  content_long_form:
+    max_savings: google/gemma-4-26b-a4b-it:free
+    balanced: qwen/qwen3.5-27b
+    quality_first: anthropic/claude-sonnet-4.6
+    
+  coding:
+    max_savings: qwen/qwen3-coder-next
+    balanced: deepseek/deepseek-v3.2
+    quality_first: openai/gpt-5.3-codex
+    
+  reasoning:
+    max_savings: nvidia/nemotron-3-super-120b-a12b:free
+    balanced: qwen/qwen3.5-397b-a17b
+    quality_first: anthropic/claude-opus-4.6
+    
+  analysis:
+    max_savings: qwen/qwen3.5-9b
+    balanced: qwen/qwen3.5-27b
+    quality_first: anthropic/claude-opus-4.6
+    
+  chat:
+    max_savings: liquid/lfm-2.5-1.2b-instruct:free
+    balanced: qwen/qwen3.5-27b
+    quality_first: mistralai/mistral-large-2512
+    
+  batch_low_value:
+    max_savings: nvidia/nemotron-3-super-120b-a12b:free
+    balanced: mistralai/ministral-8b-2512
+    quality_first: qwen/qwen3.5-9b
+    
+  enterprise:
+    max_savings: qwen/qwen3.5-397b-a17b
+    balanced: anthropic/claude-opus-4.6
+    quality_first: openai/gpt-5.4-pro
