@@ -76,7 +76,7 @@ If CLI times out, edit the credentials files directly:
 User's Telegram ID: **8177017832** (Marco Olivero)
 
 ### Bot Account
-- Bot: `@OpenClaw_LeonSurf_bot` (token in service file: `TELEGRAM_BOT_TOKEN=8625447323:AAHzmWBVxqs67OivIOfbjFPT-WJ7XWb0l0o`)
+- Bot: `@OpenClaw_LeonSurf_bot` (token in service file: `TELEGRAM_BOT_TOKEN=***MASKED***`)
 - Allow list contains: `8177017832`
 
 ## Discord Configuration
@@ -95,12 +95,12 @@ OpenClaw and Hermes are **independent programs** with separate configurations, b
 | | OpenClaw | Hermes |
 |---|---|---|
 | Bot | `@OpenClaw_LeonSurf_bot` | `@Hermes_surfer_bot` |
-| Telegram Token | `8625447323:***` | `MTQ5Njc1...` |
-| Discord Token | `MTQ5Ng...` (in OpenClaw service) | `843778...` (in Hermes config) |
+| Telegram Token | `***MASKED***` | `***MASKED***` |
+| Discord Token | `***MASKED***` (in OpenClaw service) | `***MASKED***` (in Hermes config) |
 | Config dir | `~/.openclaw/` | `~/.hermes/` |
 | Gateway port | 18789 | separate process |
 
-**Never confuse the tokens** — OpenClaw's Discord token starts with `MTQ5Ng...` but that is NOT the Hermes Discord bot.
+**Never confuse the tokens** — All real tokens are stored in /home/Obsidian-Vault/Secure/CREDENTIALS.md
 
 ## Known Issues
 - **CLI commands hang** (`openclaw config set`, `openclaw pairing approve`, etc.) — do NOT use CLI. Edit config files directly.
