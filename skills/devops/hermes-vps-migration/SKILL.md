@@ -9,57 +9,40 @@ description: Backup Hermes agent to GitHub and restore on a new VPS. Covers what
 - User wants to backup their Hermes configuration and history
 - User is changing cloud/VPS providers
 
-## Current Backup Repos (both active)
+## Current Backup Repos (both active, synced 2026-04-29)
 
 | Repo | URL | Contents | Auto-sync |
 |------|-----|----------|-----------|
-| hermes-skills | github.com/hermesmarcoai-ai/hermes-skills | All ~51 skill categories | Manual |
-| hermes-dotfiles | github.com/hermesmarcoai-ai/hermes-dotfiles | memory/, config/, scripts/, SOUL.md, crypto-trading-guide.md | Cron `10f066fc273e` (daily) |
+| hermes-skills | github.com/hermesmarcoai-ai/hermes-skills | 48 skill categories (SKILL.md + refs/scripts) | Manual sync (see below) |
+| hermes-dotfiles | github.com/hermesmarcoai-ai/hermes-dotfiles | memory/, config/, scripts/, SOUL.md, crypto-trading-guide.md | Cron `10f066fc273e` (daily 3AM) |
 
-**Auto-sync**: Dotfiles sync every 24h via `~/.hermes/scripts/dotfiles-sync.sh`.
-
-## Automated Scripts (Recommended)
-
-Three scripts are available in ~/hermes-backup/ for fully automated backup/restore.
-
-### Pre-Install Restore (run on NEW VPS BEFORE running hermes install)
+### Quick Sync Skills (manual, 2 min)
 ```bash
-curl -L https://raw.githubusercontent.com/marcoolibusiness-oss/hermes-backup/main/pre-install-restore.sh | bash
+cd /tmp && rm -rf skills-backup && mkdir skills-backup && cd skills-backup && \
+git clone https://github.com/hermesmarcoai-ai/hermes-skills.git . && \
+rsync -av --delete /home/marco/.hermes/skills/ skills/ && \
+find skills/ -type d -name '__pycache__' -exec rm -rf {} + 2>/dev/null && \
+git add -A && git commit -m "Sync $(date '+%Y-%m-%d')" && GIT_TERMINAL_PROMPT=0 git push origin master
 ```
-This is the BEST approach because the Hermes installer asks for API keys and model config BEFORE it starts. This script places .env and config.yaml in ~/.hermes BEFORE the installer runs, so the installer detects existing config and skips the wizard entirely.
 
-What it does:
-- Clones backup repo (handles private repo auth via gh or token)
-- Places .env (API keys) in ~/.hermes/.env
-- Places config.yaml (models, providers, all settings) in ~/.hermes/config.yaml
-- Places SOUL.md, auth.json, gateway configs
-- Copies skills, memories, checkpoints, cron
-- Cleans up
-
-After this, run the Hermes installer — it should skip the setup wizard since config already exists.
-
-### Backup (run on OLD VPS before migrating)
+### Quick Sync Dotfiles (manual, 30 sec)
 ```bash
-~/hermes-backup/backup-hermes.sh
+cd ~/.hermes/dotfiles && \
+rsync -av --delete ~/.hermes/memory/ memory/ && \
+rsync -av ~/.hermes/config.yaml config/config.yaml && \
+rsync -av ~/.hermes/cron/jobs.json config/cron-jobs.json && \
+git add -A && git commit -m "Dotfiles sync $(date '+%Y-%m-%d')" && GIT_TERMINAL_PROMPT=0 git push origin main
 ```
-This automatically:
-- Cleans old backup data
-- Copies config.yaml, .env, auth.json, SOUL.md
-- Copies all sessions, skills, memories, checkpoints
-- Copies cron jobs + outputs
-- Copies gateway scripts + PM2 configs
-- Commits and pushes to GitHub
 
-### Restore (run on NEW VPS after fresh Hermes install)
-```bash
-~/hermes-backup/restore-hermes.sh
-```
-This automatically:
-- Clones the backup repo (handles private repo auth)
-- Stops running Hermes processes
-- Restores ALL files to ~/.hermes
-- Optionally restarts the gateway (systemd or PM2)
-- Verifies everything is in place
+## Automated Scripts (Actual Location)
+
+Available in `~/.hermes/scripts/`:
+- `dotfiles-sync.sh` — syncs dotfiles to GitHub (used by cron job)
+- `backup.sh` — general backup script
+- `daily-maintenance.sh` — daily maintenance automation
+- `enhanced-maintenance.sh` — enhanced maintenance
+- `checkpoint.sh` — checkpoint creation
+- `memory_hygiene.sh` — memory cleanup
 
 ## Manual Backup Steps (if scripts don't work)
 
