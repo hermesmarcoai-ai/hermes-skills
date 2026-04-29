@@ -111,6 +111,53 @@ OpenClaw and Hermes are **independent programs** with separate configurations, b
 - The gateway restarts in a loop sometimes (StartLimitBurst=5) — if it won't stay up, check `journalctl --user -u openclaw-gateway` for config errors.
 - **Node.js ETIMEDOUT/ENETUNREACH on Telegram polling**: If `curl` to `api.telegram.org` works but OpenClaw logs show `fetch fallback: enabling sticky IPv4-only dispatcher (codes=ETIMEDOUT,ENETUNREACH)`, the Node.js process has a network issue distinct from system curl. This is a known problem with Node's native HTTP client behind certain proxies/firewalls. The polling will retry automatically. The bot can send outgoing messages but won't receive incoming ones while in this state — a service restart may be needed to recover.
 
+## AionUI / External Client `token_mismatch` Error
+When an external client (e.g. AionUI) fails to connect to the gateway with `token_mismatch` in the logs:
+
+**Symptoms:**
+```
+[ws] closed before connect conn=... reason=connect failed
+[gateway] token_mismatch
+```
+
+**Root cause:** The device token stored in `~/.openclaw/devices/paired.json` does not match the gateway auth token in `~/.openclaw/openclaw.json`.
+
+**Fix — manually sync the tokens:**
+
+1. Get the gateway token:
+   ```bash
+   cat ~/.openclaw/openclaw.json | python3 -c "import json,sys; d=json.load(sys.stdin); print(d['gateway']['auth']['token'])"
+   ```
+
+2. Get the device ID and current token:
+   ```bash
+   cat ~/.openclaw/devices/paired.json
+   # Find the device (e.g. "displayName": "AionUI") and its token under tokens.operator.token
+   ```
+
+3. Update the device token to match the gateway token:
+   ```bash
+   python3 -c "
+   import json
+   d = json.load(open('/home/marco/.openclaw/devices/paired.json'))
+   device_id = '<device-id-from-above>'
+   gw_token = '<token-from-gateway>'
+   d[device_id]['tokens']['operator']['token'] = gw_token
+   d[device_id]['tokens']['operator']['scopes'] = ['operator.read', 'operator.admin']
+   d[device_id]['scopes'] = ['operator.read', 'operator.admin']
+   d[device_id]['approvedScopes'] = ['operator.read', 'operator.admin']
+   json.dump(d, open('/home/marco/.openclaw/devices/paired.json', 'w'), indent=2)
+   print('Done')
+   "
+   ```
+
+4. Restart the gateway:
+   ```bash
+   systemctl --user restart openclaw-gateway
+   ```
+
+**Alternative:** If the above doesn't work, try clearing `~/.openclaw/devices/pending.json` (set to `{}`) before restarting, to force a fresh pairing handshake.
+
 ## Troubleshooting Discord "offline" / no response
 When the bot appears offline on Discord despite the gateway being "ready":
 

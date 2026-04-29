@@ -465,7 +465,23 @@ curl -s -X POST \
   -d '{"ref": "main", "inputs": {"environment": "staging"}}'
 ```
 
-## 10. Gists
+## 10. Hermes WebUI Management
+
+```bash
+# Start (ALWAYS use start.sh — it sources .env)
+cd ~/.hermes/hermes-webui && bash start.sh
+
+# Check if running
+ss -tlnp | grep 8787
+
+# Restart with new config
+kill $(ps aux | grep 'server.py' | grep -v grep | awk '{print $2}')
+cd ~/.hermes/hermes-webui && bash start.sh
+```
+
+Key: `.env` variables are sourced by `start.sh`, NOT by `server.py` directly. To change HOST/PORT, edit `.env` then restart via `start.sh`.
+
+## 11. Gists
 
 **With gh:**
 

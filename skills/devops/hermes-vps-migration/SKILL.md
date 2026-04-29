@@ -9,6 +9,15 @@ description: Backup Hermes agent to GitHub and restore on a new VPS. Covers what
 - User wants to backup their Hermes configuration and history
 - User is changing cloud/VPS providers
 
+## Current Backup Repos (both active)
+
+| Repo | URL | Contents | Auto-sync |
+|------|-----|----------|-----------|
+| hermes-skills | github.com/hermesmarcoai-ai/hermes-skills | All ~51 skill categories | Manual |
+| hermes-dotfiles | github.com/hermesmarcoai-ai/hermes-dotfiles | memory/, config/, scripts/, SOUL.md, crypto-trading-guide.md | Cron `10f066fc273e` (daily) |
+
+**Auto-sync**: Dotfiles sync every 24h via `~/.hermes/scripts/dotfiles-sync.sh`.
+
 ## Automated Scripts (Recommended)
 
 Three scripts are available in ~/hermes-backup/ for fully automated backup/restore.

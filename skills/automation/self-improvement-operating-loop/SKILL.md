@@ -106,3 +106,11 @@ Every evolved variant must pass:
 - Keep `HERMES_AGENT_REPO` pointing to the **skills** directory, not the main agent repo
 - Review generated PRs carefully — evolution can drift semantics
 - Cost per run: ~$2-10 depending on iterations and eval source
+
+## Skills Added (2026-04-25)
+
+- `cron-conditional-execution` — conditional cron predicates (price/state/time/shell)
+- `deep-research-iterative` — iterative research loop with gap analysis
+- `multi-modal-output` — video/animation/PDF generation pipeline
+- `decision-log` — save reasoning before closing strategic threads
+- `context-cross-reference` — multi-front project coordination pattern

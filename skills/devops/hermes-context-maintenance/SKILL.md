@@ -1,126 +1,132 @@
 ---
-name: crypto-portfolio-monitoring
-description: Monitor cryptocurrency portfolio across exchanges — tracks positions, monitors prices, alerts on threshold breaches, and reports P&L.
+name: hermes-context-maintenance
+description: Automatic context window maintenance for Hermes Agent — checkpoints state every 3-5 tool calls to prevent context loss during long sessions.
 version: 1.0
 author: Marco
 metadata:
   hermes:
-    tags: [crypto, portfolio, monitoring, trading, defi]
+    tags: [context, memory, checkpoint, session, recovery]
     category: devops
 ---
 
-# Crypto Portfolio Monitoring
+# Hermes Context Maintenance
 
-Monitor cryptocurrency holdings across exchanges and DeFi positions. Tracks prices, alerts on threshold breaches, and reports P&L.
+Automatic checkpoint system to prevent context loss during long autonomous sessions. Every 3-5 tool calls, state is snapshotted to disk.
 
 ## When to Use
 
-- "Show my crypto portfolio"
-- "Alert me if SOL drops below $100"
-- "What's my P&L this week?"
-- "Monitor my DeFi positions overnight"
+- Long-running autonomous tasks (>10 tool calls)
+- Complex multi-step implementations
+- R&D loops that accumulate state
+- Any session where context overflow is a risk
 
-## Supported Exchanges/Wallets
+## How It Works
 
-- Binance (via API)
-- Bybit (via API)
-- Solana wallets (via RPC)
-- Jupiter DCA orders
-- WunderTrading positions (via MCP)
+### Checkpoint File Location
+```
+~/.hermes/memory/Agent-Hermes/checkpoints/
+```
 
-## Setup
+### Checkpoint Format (JSON)
+```json
+{
+  "timestamp": "2026-04-26T02:15:00+02:00",
+  "session_id": "uuid-here",
+  "tool_count": 5,
+  "current_task": "Implement memory flush script",
+  "state": {
+    "files_modified": ["/path/to/file1", "/path/to/file2"],
+    "decisions_made": ["decision 1", "decision 2"],
+    "pending_work": ["next step 1", "next step 2"],
+    "errors_encountered": []
+  },
+  "memory_snapshot": "brief summary of what's in context"
+}
+```
+
+### Recovery Process
+
+If session crashes/restarts:
+
+1. Check for most recent checkpoint
+2. Read `current_task` and `state`
+3. Resume from `pending_work`
+4. Restore `files_modified` state if needed
+
+## Usage Patterns
+
+### Pattern 1: Manual Checkpoint (recommended for critical moments)
+
+```
+After completing any significant step:
+→ write_filecheckpoint (JSON state)
+→ Log to daily log
+```
+
+### Pattern 2: Automated via execute_code
+
+Use the `checkpoint` helper in execute_code scripts:
+
+```python
+from hermes_tools import terminal
+
+def checkpoint(session_id, tool_count, current_task, state):
+    """Write checkpoint to disk"""
+    # Implementation below
+    pass
+```
+
+### Pattern 3: Cron-triggered Recovery
+
+Every 30 minutes during active sessions:
+- Check if session is still running
+- If not, read last checkpoint
+- Resume or notify of incomplete work
+
+## Session ID Tracking
+
+Each autonomous session should:
+1. Generate unique ID at start: `date +%s`-`uuidgen | head -c 8`
+2. Include session_id in all checkpoints
+3. Write session marker file: `~/.hermes/memory/Agent-Hermes/active_session`
+
+```
+~/.hermes/memory/Agent-Hermes/active_session
+```
+```
+SESSION_ID=2026-04-26-021500-ab12cd34
+STARTED=2026-04-26T02:15:00+02:00
+LAST_CHECKPOINT=2026-04-26T02:20:00+02:00
+CURRENT_TASK=Implement memory flush script
+STATUS=active
+```
+
+## Integration with Autonomous Employee
+
+The autonomous-employee skill should:
+
+1. **Session Start**: Create active_session marker
+2. **Every 3-5 tool calls**: Write checkpoint
+3. **Before completing**: Final checkpoint with STATUS=completed
+4. **Daily log**: Copy checkpoint summary to daily log
+
+## CLI Commands
 
 ```bash
-# Store API keys securely
-export BINANCE_API_KEY=xxx
-export BINANCE_SECRET=xxx
-export BYBIT_API_KEY=xxx
-export BYBIT_SECRET=xxx
+# Check if session is active
+cat ~/.hermes/memory/Agent-Hermes/active_session
 
-# Solana wallet (base58 encoded private key - use env var, never hardcode)
-export SOLANA_WALLET_PRIVATE_KEY=xxx
+# Get last checkpoint
+ls -t ~/.hermes/memory/Agent-Hermes/checkpoints/ | head -1
+
+# Resume from checkpoint (manual)
+cat ~/.hermes/memory/Agent-Hermes/checkpoints/$(ls -t ~/.hermes/memory/Agent-Hermes/checkpoints/ | head -1)
 ```
 
-## Usage
+## Implementation Checklist
 
-### Portfolio overview
-
-```
-User: "Show my crypto portfolio"
-→ Query all connected exchanges/wallets
-→ Display:
-  EXCHANGES:
-  Binance:
-    SOL:     150 SOL    @ $120    = $18,000
-    BTC:     0.5 BTC    @ $65k    = $32,500
-    USDC:    2,000             = $2,000
-    ─────────────────────────────────────
-    Total:  $52,500
-
-  Solana:
-    Wallet:  12.5 SOL  @ $120    = $1,500
-    Jupiter DCA: 3/30 days complete
-
-  TOTAL PORTFOLIO: ~$54,000
-
-  24h CHANGE: -2.3% (-$1,270)
-  7d CHANGE:  +5.1% (+$2,610)
-```
-
-### Set price alert
-
-```
-User: "Alert me if SOL drops below $100"
-→ Register alert in memory
-→ Check price every 15 min via cron
-→ When triggered, send Telegram alert
-```
-
-### P&L Report
-
-```
-User: "Give me a P&L report for April"
-→ Pull historical balances
-→ Calculate:
-  Opening: $48,000
-  Deposits: +$3,000
-  Withdrawals: -$1,500
-  P&L: +$4,500 (9.4%)
-  Closing: $54,000
-```
-
-## Cron Integration
-
-```bash
-# Price monitoring every 15 minutes
-hermes cron create \
-  --name "Crypto price monitor" \
-  --prompt "Check crypto prices, alert on threshold breaches" \
-  --schedule "*/15 * * * *"
-
-# Portfolio update every hour
-hermes cron create \
-  --name "Portfolio update" \
-  --prompt "Update portfolio balances, log to Obsidian" \
-  --schedule "0 * * * *"
-
-# Daily P&L digest at 20:00
-hermes cron create \
-  --name "Daily crypto digest" \
-  --prompt "Generate daily P&L digest and send to Telegram" \
-  --schedule "0 20 * * *"
-```
-
-## Alert Thresholds
-
-```yaml
-alerts:
-  price_drop:
-    threshold: -10%  # Alert if drop > 10% in 24h
-    coins: [SOL, BTC, ETH]
-  volume_spike:
-    threshold: 3x average
-  whale_movement:
-    enabled: true
-    min_size: $100k
-```
+- [ ] Create checkpoints directory
+- [ ] Create active_session marker on session start
+- [ ] Checkpoint every 3-5 tool calls
+- [ ] Recovery process documented
+- [ ] Integration with daily logging

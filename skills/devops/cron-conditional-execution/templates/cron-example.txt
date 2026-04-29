@@ -1,0 +1,52 @@
+# Example crontab entries using cron-conditional-execution
+# Install with: crontab -e
+
+# ─── Shell Predicate ──────────────────────────────────────────────────────────
+# Run backup only if /tmp/backup_ok exists
+0 2 * * * /home/marco/.hermes/skills/devops/cron-conditional-execution/scripts/cron-wrapper.sh -l /var/log/cond-cron.log -- shell:"test -f /tmp/backup_ok" -- /home/marco/bin/backup.sh
+
+# Run only if disk usage is below 85%
+0 3 * * * /home/marco/.hermes/skills/devops/cron-conditional-execution/scripts/cron-wrapper.sh -- shell:"df / | awk 'NR==2 {exit !(\$5+0 < 85)}'" -- /home/marco/bin/cleanup.sh
+
+# ─── Time Predicate ───────────────────────────────────────────────────────────
+# Run trading bot only between 9 AM and 5 PM on weekdays
+*/5 9-17 * * 1-5 /home/marco/.hermes/skills/devops/cron-conditional-execution/scripts/cron-wrapper.sh -- time:"* 9-17 * * 1-5" -- /home/marco/bin/trading-bot.sh
+
+# Run only on first day of month
+0 0 1 * * /home/marco/.hermes/skills/devops/cron-conditional-execution/scripts/cron-wrapper.sh -- time:"0 0 1 * *" -- /home/marco/bin/monthly-report.sh
+
+# ─── State Predicate ──────────────────────────────────────────────────────────
+# Run only if maintenance mode is OFF
+*/10 * * * * /home/marco/.hermes/skills/devops/cron-conditional-execution/scripts/cron-wrapper.sh -- state:"maintenance_mode != on" -- /home/marco/bin/health-check.sh
+
+# Run only if previous job completed cleanly (using lock file)
+5 * * * * /home/marco/.hermes/skills/devops/cron-conditional-execution/scripts/cron-wrapper.sh -- state:"hourly_job.lock == clean" -- /home/marco/bin/hourly-task.sh
+
+# ─── Price Predicate ──────────────────────────────────────────────────────────
+# Run only when BTC > $50,000
+*/5 * * * * /home/marco/.hermes/skills/devops/cron-conditional-execution/scripts/cron-wrapper.sh -- price:"BTC > 50000" -- /home/marco/bin/alerta.sh
+
+# Run only when ETH between $2,000 and $3,000
+*/5 * * * * /home/marco/.hermes/skills/devops/cron-conditional-execution/scripts/cron-wrapper.sh -- price:"ETH > 2000 && ETH < 3000" -- /home/marco/bin/eth-range.sh
+
+# ─── Multiple Predicates (AND logic) ─────────────────────────────────────────
+# Run backup if file exists AND between 2-4 AM AND maintenance is off
+0 2-4 * * * /home/marco/.hermes/skills/devops/cron-conditional-execution/scripts/cron-wrapper.sh -v -- shell:"test -f /tmp/backup_ok" -- time:"0 2-4 * * *" -- state:"maintenance_mode != on" -- /home/marco/bin/backup.sh
+
+# ─── Crypto Trading Bot Examples ─────────────────────────────────────────────
+# DCA: buy BTC weekly if price < $45,000
+0 9 * * 1 /home/marco/.hermes/skills/devops/cron-conditional-execution/scripts/cron-wrapper.sh -- price:"BTC < 45000" -- /home/marco/bin/dca-btc.sh
+
+# Alert if SOL spikes above $200
+*/5 * * * * /home/marco/.hermes/skills/devops/cron-conditional-execution/scripts/cron-wrapper.sh -- price:"SOL > 200" -- /home/marco/bin/sol-alert.sh
+
+# ─── State File Setup ─────────────────────────────────────────────────────────
+# Create state directory
+# mkdir -p /var/run/cond-cron
+
+# Set maintenance mode
+# echo "on" > /var/run/cond-cron/maintenance_mode
+# echo "off" > /var/run/cond-cron/maintenance_mode
+
+# Mark job as complete (after job runs)
+# echo "clean" > /var/run/cond-cron/hourly_job.lock
