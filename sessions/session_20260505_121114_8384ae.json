@@ -1,0 +1,1063 @@
+{
+  "session_id": "20260505_121114_8384ae",
+  "model": "MiniMax-M2.7-highspeed",
+  "base_url": "https://api.minimax.io/anthropic",
+  "platform": "telegram",
+  "session_start": "2026-05-05T12:11:14.463263",
+  "last_updated": "2026-05-05T12:13:55.599738",
+  "system_prompt": "You are Hermes Agent, an intelligent AI assistant created by Nous Research. You are helpful, knowledgeable, and direct. You assist users with a wide range of tasks including answering questions, writing and editing code, analyzing information, creative work, and executing actions via your tools. You communicate clearly, admit uncertainty when appropriate, and prioritize being genuinely useful over being verbose unless otherwise directed below. Be targeted and efficient in your exploration and investigations.\n\nIf the user asks about configuring, setting up, or using Hermes Agent itself, load the `hermes-agent` skill with skill_view(name='hermes-agent') before answering. Docs: https://hermes-agent.nousresearch.com/docs\n\nConversation started: Tuesday, May 05, 2026 12:11 PM\nModel: MiniMax-M2.7-highspeed\nProvider: minimax\n\nYou are on a text messaging communication platform, Telegram. Standard markdown is automatically converted to Telegram format. Supported: **bold**, *italic*, ~~strikethrough~~, ||spoiler||, `inline code`, ```code blocks```, [links](url), and ## headers. Telegram has NO table syntax — prefer bullet lists or labeled key: value pairs over pipe tables (any tables you do emit are auto-rewritten into row-group bullets, which you can produce directly for cleaner output). You can send media files natively: to deliver a file to the user, include MEDIA:/absolute/path/to/file in your response. Images (.png, .jpg, .webp) appear as photos, audio (.ogg) sends as voice bubbles, and videos (.mp4) play inline. You can also include image URLs in markdown format ![alt](url) and they will be sent as native photos.",
+  "tools": [
+    {
+      "type": "function",
+      "function": {
+        "name": "patch",
+        "description": "Targeted find-and-replace edits in files. Use this instead of sed/awk in terminal. Uses fuzzy matching (9 strategies) so minor whitespace/indentation differences won't break it. Returns a unified diff. Auto-runs syntax checks after editing.\n\nReplace mode (default): find a unique string and replace it.\nPatch mode: apply V4A multi-file patches for bulk changes.",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "mode": {
+              "type": "string",
+              "enum": [
+                "replace",
+                "patch"
+              ],
+              "description": "Edit mode: 'replace' for targeted find-and-replace, 'patch' for V4A multi-file patches",
+              "default": "replace"
+            },
+            "path": {
+              "type": "string",
+              "description": "File path to edit (required for 'replace' mode)"
+            },
+            "old_string": {
+              "type": "string",
+              "description": "Text to find in the file (required for 'replace' mode). Must be unique in the file unless replace_all=true. Include enough surrounding context to ensure uniqueness."
+            },
+            "new_string": {
+              "type": "string",
+              "description": "Replacement text (required for 'replace' mode). Can be empty string to delete the matched text."
+            },
+            "replace_all": {
+              "type": "boolean",
+              "description": "Replace all occurrences instead of requiring a unique match (default: false)",
+              "default": false
+            },
+            "patch": {
+              "type": "string",
+              "description": "V4A format patch content (required for 'patch' mode). Format:\n*** Begin Patch\n*** Update File: path/to/file\n@@ context hint @@\n context line\n-removed line\n+added line\n*** End Patch"
+            }
+          },
+          "required": [
+            "mode"
+          ]
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "process",
+        "description": "Manage background processes started with terminal(background=true). Actions: 'list' (show all), 'poll' (check status + new output), 'log' (full output with pagination), 'wait' (block until done or timeout), 'kill' (terminate), 'write' (send raw stdin data without newline), 'submit' (send data + Enter, for answering prompts), 'close' (close stdin/send EOF).",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "action": {
+              "type": "string",
+              "enum": [
+                "list",
+                "poll",
+                "log",
+                "wait",
+                "kill",
+                "write",
+                "submit",
+                "close"
+              ],
+              "description": "Action to perform on background processes"
+            },
+            "session_id": {
+              "type": "string",
+              "description": "Process session ID (from terminal background output). Required for all actions except 'list'."
+            },
+            "data": {
+              "type": "string",
+              "description": "Text to send to process stdin (for 'write' and 'submit' actions)"
+            },
+            "timeout": {
+              "type": "integer",
+              "description": "Max seconds to block for 'wait' action. Returns partial output on timeout.",
+              "minimum": 1
+            },
+            "offset": {
+              "type": "integer",
+              "description": "Line offset for 'log' action (default: last 200 lines)"
+            },
+            "limit": {
+              "type": "integer",
+              "description": "Max lines to return for 'log' action",
+              "minimum": 1
+            }
+          },
+          "required": [
+            "action"
+          ]
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "read_file",
+        "description": "Read a text file with line numbers and pagination. Use this instead of cat/head/tail in terminal. Output format: 'LINE_NUM|CONTENT'. Suggests similar filenames if not found. Use offset and limit for large files. Reads exceeding ~100K characters are rejected; use offset and limit to read specific sections of large files. NOTE: Cannot read images or binary files — use vision_analyze for images.",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "path": {
+              "type": "string",
+              "description": "Path to the file to read (absolute, relative, or ~/path)"
+            },
+            "offset": {
+              "type": "integer",
+              "description": "Line number to start reading from (1-indexed, default: 1)",
+              "default": 1,
+              "minimum": 1
+            },
+            "limit": {
+              "type": "integer",
+              "description": "Maximum number of lines to read (default: 500, max: 2000)",
+              "default": 500,
+              "maximum": 2000
+            }
+          },
+          "required": [
+            "path"
+          ]
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "search_files",
+        "description": "Search file contents or find files by name. Use this instead of grep/rg/find/ls in terminal. Ripgrep-backed, faster than shell equivalents.\n\nContent search (target='content'): Regex search inside files. Output modes: full matches with line numbers, file paths only, or match counts.\n\nFile search (target='files'): Find files by glob pattern (e.g., '*.py', '*config*'). Also use this instead of ls — results sorted by modification time.",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "pattern": {
+              "type": "string",
+              "description": "Regex pattern for content search, or glob pattern (e.g., '*.py') for file search"
+            },
+            "target": {
+              "type": "string",
+              "enum": [
+                "content",
+                "files"
+              ],
+              "description": "'content' searches inside file contents, 'files' searches for files by name",
+              "default": "content"
+            },
+            "path": {
+              "type": "string",
+              "description": "Directory or file to search in (default: current working directory)",
+              "default": "."
+            },
+            "file_glob": {
+              "type": "string",
+              "description": "Filter files by pattern in grep mode (e.g., '*.py' to only search Python files)"
+            },
+            "limit": {
+              "type": "integer",
+              "description": "Maximum number of results to return (default: 50)",
+              "default": 50
+            },
+            "offset": {
+              "type": "integer",
+              "description": "Skip first N results for pagination (default: 0)",
+              "default": 0
+            },
+            "output_mode": {
+              "type": "string",
+              "enum": [
+                "content",
+                "files_only",
+                "count"
+              ],
+              "description": "Output format for grep mode: 'content' shows matching lines with line numbers, 'files_only' lists file paths, 'count' shows match counts per file",
+              "default": "content"
+            },
+            "context": {
+              "type": "integer",
+              "description": "Number of context lines before and after each match (grep mode only)",
+              "default": 0
+            }
+          },
+          "required": [
+            "pattern"
+          ]
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "terminal",
+        "description": "Execute shell commands on a Linux environment. Filesystem usually persists between calls.\n\nDo NOT use cat/head/tail to read files — use read_file instead.\nDo NOT use grep/rg/find to search — use search_files instead.\nDo NOT use ls to list directories — use search_files(target='files') instead.\nDo NOT use sed/awk to edit files — use patch instead.\nDo NOT use echo/cat heredoc to create files — use write_file instead.\nReserve terminal for: builds, installs, git, processes, scripts, network, package managers, and anything that needs a shell.\n\nForeground (default): Commands return INSTANTLY when done, even if the timeout is high. Set timeout=300 for long builds/scripts — you'll still get the result in seconds if it's fast. Prefer foreground for short commands.\nBackground: Set background=true to get a session_id. Two patterns:\n  (1) Long-lived processes that never exit (servers, watchers).\n  (2) Long-running tasks with notify_on_complete=true — you can keep working on other things and the system auto-notifies you when the task finishes. Great for test suites, builds, deployments, or anything that takes more than a minute.\nFor servers/watchers, do NOT use shell-level background wrappers (nohup/disown/setsid/trailing '&') in foreground mode. Use background=true so Hermes can track lifecycle and output.\nAfter starting a server, verify readiness with a health check or log signal, then run tests in a separate terminal() call. Avoid blind sleep loops.\nUse process(action=\"poll\") for progress checks, process(action=\"wait\") to block until done.\nWorking directory: Use 'workdir' for per-command cwd.\nPTY mode: Set pty=true for interactive CLI tools (Codex, Claude Code, Python REPL).\n\nDo NOT use vim/nano/interactive tools without pty=true — they hang without a pseudo-terminal. Pipe git output to cat if it might page.\n",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "command": {
+              "type": "string",
+              "description": "The command to execute on the VM"
+            },
+            "background": {
+              "type": "boolean",
+              "description": "Run the command in the background. Two patterns: (1) Long-lived processes that never exit (servers, watchers). (2) Long-running tasks paired with notify_on_complete=true — you can keep working and get notified when the task finishes. For short commands, prefer foreground with a generous timeout instead.",
+              "default": false
+            },
+            "timeout": {
+              "type": "integer",
+              "description": "Max seconds to wait (default: 180, foreground max: 600). Returns INSTANTLY when command finishes — set high for long tasks, you won't wait unnecessarily. Foreground timeout above 600s is rejected; use background=true for longer commands.",
+              "minimum": 1
+            },
+            "workdir": {
+              "type": "string",
+              "description": "Working directory for this command (absolute path). Defaults to the session working directory."
+            },
+            "pty": {
+              "type": "boolean",
+              "description": "Run in pseudo-terminal (PTY) mode for interactive CLI tools like Codex, Claude Code, or Python REPL. Only works with local and SSH backends. Default: false.",
+              "default": false
+            },
+            "notify_on_complete": {
+              "type": "boolean",
+              "description": "When true (and background=true), you'll be automatically notified exactly once when the process finishes. **This is the right choice for almost every long-running task** — tests, builds, deployments, multi-item batch jobs, anything that takes over a minute and has a defined end. Use this and keep working on other things; the system notifies you on exit. MUTUALLY EXCLUSIVE with watch_patterns — when both are set, watch_patterns is dropped.",
+              "default": false
+            },
+            "watch_patterns": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              },
+              "description": "Strings to watch for in background process output. HARD RATE LIMIT: at most 1 notification per 15 seconds per process — matches arriving inside the cooldown are dropped. After 3 consecutive 15-second windows with dropped matches, watch_patterns is automatically disabled for that process and promoted to notify_on_complete behavior (one notification on exit, no more mid-process spam). USE ONLY for truly rare, one-shot mid-process signals on LONG-LIVED processes that will never exit on their own — e.g. ['Application startup complete'] on a server so you know when to hit its endpoint, or ['migration done'] on a daemon. DO NOT use for: (1) end-of-run markers like 'DONE'/'PASS' — use notify_on_complete instead; (2) error patterns like 'ERROR'/'Traceback' in loops or multi-item batch jobs — they fire on every iteration and you'll hit the strike limit fast; (3) anything you'd ever combine with notify_on_complete. When in doubt, choose notify_on_complete. MUTUALLY EXCLUSIVE with notify_on_complete — set one, not both."
+            }
+          },
+          "required": [
+            "command"
+          ]
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "write_file",
+        "description": "Write content to a file, completely replacing existing content. Use this instead of echo/cat heredoc in terminal. Creates parent directories automatically. OVERWRITES the entire file — use 'patch' for targeted edits.",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "path": {
+              "type": "string",
+              "description": "Path to the file to write (will be created if it doesn't exist, overwritten if it does)"
+            },
+            "content": {
+              "type": "string",
+              "description": "Complete content to write to the file"
+            }
+          },
+          "required": [
+            "path",
+            "content"
+          ]
+        }
+      }
+    }
+  ],
+  "message_count": 50,
+  "messages": [
+    {
+      "role": "user",
+      "content": "Install the hindsight skill for Hermes Agent. Hindsight provides long-term memory with retain/recall/reflect workflows via vector search. \n\nInstall from: https://github.com/vectorize-io/hindsight\n\nSteps:\n1. Clone the repo to /tmp/hindsight\n2. Read the README to understand installation\n3. Install it following the instructions\n4. Verify installation works\n5. Report exact install path and commands used\n\nThis is for Marco Olivero's Hermes Agent on Linux VPS. The skill adds semantic vector search memory on top of Hermes's built-in FTS5."
+    },
+    {
+      "role": "assistant",
+      "content": "",
+      "reasoning": "Let me start by cloning the hindsight repository to /tmp/hindsight and reading the README to understand the installation process.",
+      "finish_reason": "tool_calls",
+      "reasoning_content": "Let me start by cloning the hindsight repository to /tmp/hindsight and reading the README to understand the installation process.",
+      "reasoning_details": [
+        {
+          "signature": "5b21ba494317dabb1221f002019ff7243c9ae298ad23594f74a27d8396db2d6d",
+          "thinking": "Let me start by cloning the hindsight repository to /tmp/hindsight and reading the README to understand the installation process.",
+          "type": "thinking"
+        }
+      ],
+      "tool_calls": [
+        {
+          "id": "call_function_ndfpf6f8lhk0_1",
+          "call_id": "call_function_ndfpf6f8lhk0_1",
+          "response_item_id": "fc_function_ndfpf6f8lhk0_1",
+          "type": "function",
+          "function": {
+            "name": "terminal",
+            "arguments": "{\"command\": \"git clone https://github.com/vectorize-io/hindsight /tmp/hindsight 2>&1\", \"timeout\": 60}"
+          }
+        }
+      ]
+    },
+    {
+      "role": "tool",
+      "name": "terminal",
+      "content": "{\"output\": \"Cloning into '/tmp/hindsight'...\", \"exit_code\": 0, \"error\": null}\n\n[Subdirectory context discovered: /tmp/hindsight/AGENTS.md]\n# AGENTS.md\n\nSee [CLAUDE.md](./CLAUDE.md) for project documentation and coding conventions.",
+      "tool_call_id": "call_function_ndfpf6f8lhk0_1"
+    },
+    {
+      "role": "assistant",
+      "content": "",
+      "reasoning": "Good, the repo is cloned. Now let me read the README to understand the installation process.",
+      "finish_reason": "tool_calls",
+      "reasoning_content": "Good, the repo is cloned. Now let me read the README to understand the installation process.",
+      "reasoning_details": [
+        {
+          "signature": "9d0e9682cd0dc2fb9c1e78a8cde00ca973f92888699c00cbe1bc14ebb9e0b0bd",
+          "thinking": "Good, the repo is cloned. Now let me read the README to understand the installation process.",
+          "type": "thinking"
+        }
+      ],
+      "tool_calls": [
+        {
+          "id": "call_function_8pdty1zbercb_1",
+          "call_id": "call_function_8pdty1zbercb_1",
+          "response_item_id": "fc_function_8pdty1zbercb_1",
+          "type": "function",
+          "function": {
+            "name": "terminal",
+            "arguments": "{\"command\": \"ls /tmp/hindsight/\"}"
+          }
+        },
+        {
+          "id": "call_function_8pdty1zbercb_2",
+          "call_id": "call_function_8pdty1zbercb_2",
+          "response_item_id": "fc_function_8pdty1zbercb_2",
+          "type": "function",
+          "function": {
+            "name": "read_file",
+            "arguments": "{\"path\": \"/tmp/hindsight/README.md\"}"
+          }
+        }
+      ]
+    },
+    {
+      "role": "tool",
+      "name": "terminal",
+      "content": "{\"output\": \"AGENTS.md\\nCLAUDE.md\\nCODE_OF_CONDUCT.md\\nCONTRIBUTING.md\\ncookbook\\ndeno.lock\\ndocker\\nhelm\\nhindsight-all\\nhindsight-all-npm\\nhindsight-all-slim\\nhindsight-api\\nhindsight-api-slim\\nhindsight-cli\\nhindsight-clients\\nhindsight-control-plane\\nhindsight-dev\\nhindsight-docs\\nhindsight-embed\\nhindsight-favicon.png\\nhindsight-integrations\\nhindsight-integration-tests\\nhindsight-tools\\nLICENSE\\nmonitoring\\npackage.json\\npackage-lock.json\\npyproject.toml\\nREADME.md\\nruff.toml\\nscripts\\nSECURITY.md\\nskills\\nuv.lock\", \"exit_code\": 0, \"error\": null}",
+      "tool_call_id": "call_function_8pdty1zbercb_1"
+    },
+    {
+      "role": "tool",
+      "name": "read_file",
+      "content": "{\"content\": \"     1|<div align=\\\"center\\\">\\n     2|\\n     3|![Hindsight Banner](./hindsight-docs/static/img/hindsight-github-banner.png)\\n     4|\\n     5|[Documentation](https://hindsight.vectorize.io) • [Paper](https://arxiv.org/abs/2512.12818) • [Cookbook](https://hindsight.vectorize.io/cookbook) • [Hindsight Cloud](https://ui.hindsight.vectorize.io/signup)\\n     6|\\n     7|[![CI](https://github.com/vectorize-io/hindsight/actions/workflows/release.yml/badge.svg)](https://github.com/vectorize-io/hindsight/actions/workflows/release.yml)\\n     8|[![Slack Community](https://img.shields.io/badge/Slack-Join%20Community-4A154B?logo=slack)](https://join.slack.com/t/hindsight-space/shared_invite/zt-3nhbm4w29-LeSJ5Ixi6j8PdiYOCPlOgg)\\n     9|[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)\\n    10|[![gitcgr](https://gitcgr.com/badge/vectorize-io/hindsight.svg)](https://gitcgr.com/vectorize-io/hindsight)\\n    11|![PyPI - Downloads](https://img.shields.io/pypi/dm/hindsight-api?label=PyPI)\\n    12|![NPM Downloads](https://img.shields.io/npm/dm/%40vectorize-io%2Fhindsight-client?logoColor=orange&label=NPM&color=blue&link=https%3A%2F%2Fwww.npmjs.com%2Fpackage%2F%40vectorize-io%2Fhindsight-client)\\n    13|<br/>\\n    14|\\n    15|<a href=\\\"https://trendshift.io/repositories/15603\\\" target=\\\"_blank\\\"><img src=\\\"https://trendshift.io/api/badge/repositories/15603\\\" alt=\\\"vectorize-io%2Fhindsight | Trendshift\\\" style=\\\"width: 250px; height: 55px;\\\" width=\\\"250\\\" height=\\\"55\\\"/></a>\\n    16|</div>\\n    17|\\n    18|---\\n    19|\\n    20|## What is Hindsight?\\n    21|\\n    22|Hindsight™ is an agent memory system built to create smarter agents that learn over time. Most agent memory systems focus on recalling conversation history. Hindsight is focused on making agents that learn, not just remember.\\n    23|\\n    24|\\n    25|<video src=\\\"https://github.com/user-attachments/assets/923b798d-3581-4897-bb62-9cfa5a931682\\\" controls></video>\\n    26|\\n    27|It eliminates the shortcomings of alternative techniques such as RAG and knowledge graph and delivers state-of-the-art performance on long term memory tasks.\\n    28|\\n    29|## Memory Performance & Accuracy\\n    30|\\n    31|Hindsight is the most accurate agent memory system ever tested according to benchmark performance. It has achieved state-of-the-art performance on the LongMemEval benchmark, widely used to assess memory system performance across a variety of conversational AI scenarios. The current reported performance of Hindsight and other agent memory solutions as of January 2026 is shown here:\\n    32|\\n    33|![Overview](./hindsight-docs/static/img/hindsight-bench.jpg)\\n    34|\\n    35|The benchmark performance data for Hindsight has been independently reproduced by research collaborators at the Virginia Tech [Sanghani Center for Artificial Intelligence and Data Analytics](https://sanghani.cs.vt.edu/) and The Washington Post. Other scores are self-reported by software vendors.\\n    36|\\n    37|Hindsight is being used in production at Fortune 500 enterprises and by a growing number of AI startups. \\n    38|\\n    39|## Adding Hindsight to Your AI Agents\\n    40|\\n    41|The easiest way to use Hindsight with an existing agent is with the LLM Wrapper. You can add memory to your agent with 2 lines of code. That will swap your current LLM client out with the Hindsight wrapper. After that, memories will be stored and retrieved automatically as you make LLM calls.\\n    42|\\n    43|If you need more control over how and when your agent stores and recalls memories, there's also a simple API you can integrate with using the SDKs or directly via HTTP.\\n    44|\\n    45|![Hindsight Banner](./hindsight-docs/static/img/migration-code.png)\\n    46|\\n    47|---\\n    48|\\n    49|> 🤖 **Using a coding agent?** Install the Hindsight documentation skill for instant access to docs while you code:\\n    50|> ```bash\\n    51|> npx skills add https://github.com/vectorize-io/hindsight --skill hindsight-docs\\n    52|> ```\\n    53|> Works with Claude Code, Cursor, and other AI coding assistants.\\n    54|\\n    55|---\\n    56|\\n    57|\\n    58|## Quick Start\\n    59|\\n    60|### Docker (recommended)\\n    61|\\n    62|```bash\\n    63|export OPENAI_API_KEY=sk-xxx\\n    64|\\n    65|docker run --rm -it --pull always -p 8888:8888 -p 9999:9999 \\\\\\n    66|  -e HINDSIGHT_API_LLM_API_KEY=$OPENAI_API_KEY \\\\\\n    67|  -v $HOME/.hindsight-docker:/home/hindsight/.pg0 \\\\\\n    68|  ghcr.io/vectorize-io/hindsight:latest\\n    69|```\\n    70|\\n    71|>API: http://localhost:8888\\n    72|>UI: http://localhost:9999\\n    73|\\n    74|You can modify the LLM provider by setting `HINDSIGHT_API_LLM_PROVIDER`. Valid options are `openai`, `anthropic`, `gemini`, `groq`, `ollama`, `lmstudio`, and `minimax`. The documentation provides more details on [supported models](https://hindsight.vectorize.io/developer/models).\\n    75|\\n    76|\\n    77|\\n    78|### Docker (external PostgreSQL)\\n    79|\\n    80|```bash\\n    81|export OPENAI_API_KEY=sk-xxx\\n    82|export HINDSIGHT_DB_PASSWORD=choose-a-password\\n    83|cd docker/docker-compose\\n    84|docker compose up \\n    85|```\\n    86|\\n    87|> Oracle AI Database is also supported for enterprise deployments with full feature parity. See the [storage documentation](https://hindsight.vectorize.io/developer/storage) for details.\\n    88|\\n    89|\\n    90|>API: http://localhost:8888\\n    91|>UI: http://localhost:9999\\n    92|\\n    93|### Client\\n    94|\\n    95|```bash\\n    96|pip install hindsight-client -U\\n    97|# or\\n    98|npm install @vectorize-io/hindsight-client\\n    99|```\\n   100|\\n   101|#### Python\\n   102|\\n   103|```python\\n   104|from hindsight_client import Hindsight\\n   105|\\n   106|client = Hindsight(base_url=\\\"http://localhost:8888\\\")\\n   107|\\n   108|# Retain: Store information\\n   109|client.retain(bank_id=\\\"my-bank\\\", content=\\\"Alice works at Google as a software engineer\\\")\\n   110|\\n   111|# Recall: Search memories\\n   112|client.recall(bank_id=\\\"my-bank\\\", query=\\\"What does Alice do?\\\")\\n   113|\\n   114|# Reflect: Generate disposition-aware response\\n   115|client.reflect(bank_id=\\\"my-bank\\\", query=\\\"Tell me about Alice\\\")\\n   116|```\\n   117|\\n   118|#### Node.js / TypeScript\\n   119|\\n   120|```bash\\n   121|npm install @vectorize-io/hindsight-client\\n   122|```\\n   123|\\n   124|```javascript\\n   125|const { HindsightClient } = require('@vectorize-io/hindsight-client');\\n   126|\\n   127|const main = async () => {\\n   128|  const client = new HindsightClient({ baseUrl: 'http://localhost:8888' });\\n   129|\\n   130|  await client.retain('my-bank', 'Alice loves hiking in Yosemite');\\n   131|\\n   132|  const results = await client.recall('my-bank', 'What does Alice like?');\\n   133|  console.log(results);\\n   134|}\\n   135|\\n   136|main();\\n   137|```\\n   138|\\n   139|\\n   140|### Python Embedded (no server required)\\n   141|\\n   142|```bash\\n   143|pip install hindsight-all -U\\n   144|```\\n   145|\\n   146|```python\\n   147|import os\\n   148|from hindsight import HindsightServer, HindsightClient\\n   149|\\n   150|with HindsightServer(\\n   151|    llm_provider=\\\"openai\\\",\\n   152|    llm_model=\\\"gpt-5-mini\\\", \\n   153|    llm_api_key=os.environ[\\\"OPENAI_API_KEY\\\"]\\n   154|) as server:\\n   155|    client = HindsightClient(base_url=server.url)\\n   156|    client.retain(bank_id=\\\"my-bank\\\", content=\\\"Alice works at Google\\\")\\n   157|    results = client.recall(bank_id=\\\"my-bank\\\", query=\\\"Where does Alice work?\\\")\\n   158|```\\n   159|\\n   160|\\n   161|---\\n   162|\\n   163|## Use Cases\\n   164|\\n   165|\\n   166|Hindsight is built to support conversational AI agents as well as agents that are intended to perform tasks autonomously. The ideal use case for Hindsight are agents that require a blend of these features such as AI employees that need to handle open-ended tasks, change behavior based on user feedback, and learn to perform complex tasks to automate work at a level that approximates a human work. Hindsight can be used with simple AI workflows like those built with n8n and other similar tools, but may be overkill for such applications.\\n   167|\\n   168|### Per-User Memories and Chat History\\n   169|\\n   170|One of the simpler use cases you can use Hindsight for is to personalize AI chatbots and other conversational agents by storing and recalling memories associated with individual users.\\n   171|\\n   172|The requirements for this use case usually look something like this:\\n   173|\\n   174|![Per-User Memories](./hindsight-docs/static/img/per-user-memory-requirements.png)\\n   175|\\n   176|<video src=\\\"https://github.com/user-attachments/assets/4805e8e1-e7d1-47c6-a4f8-2344a5ec8906\\\" controls></video>\\n   177|\\n   178|Satisfying these requirements in Hindsight is straightforward. When new user inputs and tool calls are ingested into Hindsight using the retain operation, custom metadata can be used to enrich the new memories. Metadata provides a convenient way to isolate memories that need to be restricted to a given user. Once these are fed into the retain operation, any raw memories and mental models that get created can be filtered when retrieving relevant memories. \\n   179|\\n   180|![Per-User Memories](./hindsight-docs/static/img/per-user-memory-howto.png)\\n   181|\\n   182|---\\n   183|\\n   184|## Architecture & Operations\\n   185|\\n   186|![Overview](./hindsight-docs/static/img/hindsight-overview.webp)\\n   187|\\n   188|Most agent memory implementations rely on basic vector search or sometimes use a knowledge graph. Hindsight uses biomimetic data structures to organize agent memories in a way that is more like how human memory works:\\n   189|\\n   190|- **World:** Facts about the world (\\\"The stove gets hot\\\")\\n   191|- **Experiences:** Agent's own experiences (\\\"I touched the stove and it really hurt\\\")\\n   192|- **Mental Models:** Learned understanding of the agent's world formed by reflecting on raw memories and experiences.\\n   193|\\n   194|Memories in Hindsight are stored in banks (i.e. memory banks). When memories are added to Hindsight, they are pushed into either the world facts or experiences memory pathway. They are then represented as a combination of entities, relationships, and time series with sparse/dense vector representations to aid in later recall.\\n   195|\\n   196|Hindsight provides three simple methods to interact with the system:\\n   197|\\n   198|- **Retain:** Provide information to Hindsight that you want it to remember\\n   199|- **Recall:** Retrieve memories from Hindsight\\n   200|- **Reflect:** Reflect on memories and experiences to generate new observations and insights from existing memories.\\n   201|\\n   202|### Retain\\n   203|\\n   204|The `retain` operation is used to push new memories into Hindsight. It tells Hindsight to _retain_ the information you pass in as an input.\\n   205|\\n   206|```python\\n   207|from hindsight_client import Hindsight\\n   208|\\n   209|client = Hindsight(base_url=\\\"http://localhost:8888\\\")\\n   210|\\n   211|# Simple\\n   212|client.retain(\\n   213|    bank_id=\\\"my-bank\\\",\\n   214|    content=\\\"Alice works at Google as a software engineer\\\"\\n   215|)\\n   216|\\n   217|# With context and timestamp\\n   218|client.retain(\\n   219|    bank_id=\\\"my-bank\\\",\\n   220|    content=\\\"Alice got promoted to senior engineer\\\",\\n   221|    context=\\\"career update\\\",\\n   222|    timestamp=\\\"2025-06-15T10:00:00Z\\\"\\n   223|)\\n   224|```\\n   225|\\n   226|Behind the scenes, the retain operation uses an LLM to extract key facts, temporal data, entities, and relationships. It passes these through a normalization process to transform extracted data into canonical entities, time series, and search indexes along with metadata. These representations create the pathways for accurate memory retrieval in the recall and reflect operations. \\n   227|\\n   228|![Retain Operation](hindsight-docs/static/img/retain-operation.webp)\\n   229|\\n   230|### Recall\\n   231|\\n   232|The recall operation is used to retrieve memories. These memories can come from any of the memory types (world, experiences, etc.)\\n   233|\\n   234|```python\\n   235|from hindsight_client import Hindsight\\n   236|\\n   237|client = Hindsight(base_url=\\\"http://localhost:8888\\\")\\n   238|\\n   239|# Simple\\n   240|client.recall(bank_id=\\\"my-bank\\\", query=\\\"What does Alice do?\\\")\\n   241|\\n   242|# Temporal\\n   243|client.recall(bank_id=\\\"my-bank\\\", query=\\\"What happened in June?\\\")\\n   244|```\\n   245|\\n   246|Recall performs 4 retrieval strategies in parallel:\\n   247|- Semantic: Vector similarity\\n   248|- Keyword: BM25 exact matching\\n   249|- Graph: Entity/temporal/causal links\\n   250|- Temporal: Time range filtering\\n   251|\\n   252|![Retain Operation](hindsight-docs/static/img/recall-operation.webp)\\n   253|\\n   254|The individual results from the retrievals are merged, then ordered by relevance using reciprocal rank fusion and a cross-encoder reranking model.\\n   255|\\n   256|The final output is trimmed as needed to fit within the token limit.\\n   257|\\n   258|### Reflect\\n   259|\\n   260|The reflect operation is used to perform a more thorough analysis of existing memories. This allows the agent to form new connections between memories and build a more thorough understanding of its world.\\n   261|\\n   262|For example, the `reflect` operation can be used to support use cases such as:\\n   263|\\n   264|- An **AI Project Manager** reflecting on what risks need to be mitigated on a project.\\n   265|- A **Sales Agent** reflecting on why certain outreach messages have gotten responses while others haven't.\\n   266|- A **Support Agent** reflecting on opportunities where customers have questions not answered by current product documentation.\\n   267|\\n   268|The `reflect` operation can also be used to handle on-demand question answering or analysis which require more deep thinking.\\n   269|\\n   270|```python\\n   271|from hindsight_client import Hindsight\\n   272|\\n   273|client = Hindsight(base_url=\\\"http://localhost:8888\\\")\\n   274|\\n   275|client.reflect(bank_id=\\\"my-bank\\\", query=\\\"What should I know about Alice?\\\")\\n   276|```\\n   277|\\n   278|![Retain Operation](hindsight-docs/static/img/reflect-operation.webp)\\n   279|\\n   280|---\\n   281|\\n   282|## Resources\\n   283|\\n   284|**Documentation:** \\n   285|- [https://hindsight.vectorize.io](https://hindsight.vectorize.io)\\n   286|\\n   287|**Clients:**\\n   288|- [Python](http://hindsight.vectorize.io/sdks/python)\\n   289|- [Node.js](http://hindsight.vectorize.io/sdks/nodejs)\\n   290|- [REST API](https://hindsight.vectorize.io/api-reference)\\n   291|- [CLI](https://hindsight.vectorize.io/sdks/cli)\\n   292|\\n   293|**Community:**\\n   294|- [Slack](https://join.slack.com/t/hindsight-space/shared_invite/zt-3nhbm4w29-LeSJ5Ixi6j8PdiYOCPlOgg)\\n   295|- [GitHub Issues](https://github.com/vectorize-io/hindsight/issues)\\n   296|\\n   297|---\\n   298|## Star History\\n   299|\\n   300|[![Star History Chart](https://api.star-history.com/svg?repos=vectorize-io/hindsight&type=date&legend=top-left)](https://www.star-history.com/#vectorize-io/hindsight&type=date&legend=top-left)\\n   301|---\\n   302|\\n   303|## Contributing\\n   304|\\n   305|See [CONTRIBUTING.md](./CONTRIBUTING.md).\\n   306|\\n   307|## License\\n   308|\\n   309|MIT — see [LICENSE](./LICENSE)\\n   310|\\n   311|---\\n   312|\\n   313|Built by [Vectorize.io](https://vectorize.io)\\n   314|\\n   315|<img src=\\\"https://umami-pixel.chris-latimer.workers.dev/?id=a8b043e6-6964-454d-80df-69b69d3f0d50&host=github.com&url=/vectorize-io/hindsight\\\" width=\\\"1\\\" height=\\\"1\\\" alt=\\\"\\\" />\\n   316|\", \"total_lines\": 315, \"file_size\": 13017, \"truncated\": false, \"is_binary\": false, \"is_image\": false}",
+      "tool_call_id": "call_function_8pdty1zbercb_2"
+    },
+    {
+      "role": "assistant",
+      "content": "",
+      "reasoning": "Now I need to understand how to install this as a Hermes Agent skill. Let me check the skills directory and look for skill-specific documentation.",
+      "finish_reason": "tool_calls",
+      "reasoning_content": "Now I need to understand how to install this as a Hermes Agent skill. Let me check the skills directory and look for skill-specific documentation.",
+      "reasoning_details": [
+        {
+          "signature": "d04cb3809012ce2a14ca00e8c3b229348b6a8330273339e9e8735c9dfef86522",
+          "thinking": "Now I need to understand how to install this as a Hermes Agent skill. Let me check the skills directory and look for skill-specific documentation.",
+          "type": "thinking"
+        }
+      ],
+      "tool_calls": [
+        {
+          "id": "call_function_gjobb556118j_1",
+          "call_id": "call_function_gjobb556118j_1",
+          "response_item_id": "fc_function_gjobb556118j_1",
+          "type": "function",
+          "function": {
+            "name": "terminal",
+            "arguments": "{\"command\": \"ls /tmp/hindsight/skills/\"}"
+          }
+        },
+        {
+          "id": "call_function_gjobb556118j_2",
+          "call_id": "call_function_gjobb556118j_2",
+          "response_item_id": "fc_function_gjobb556118j_2",
+          "type": "function",
+          "function": {
+            "name": "read_file",
+            "arguments": "{\"path\": \"/tmp/hindsight/AGENTS.md\"}"
+          }
+        }
+      ]
+    },
+    {
+      "role": "tool",
+      "name": "terminal",
+      "content": "{\"output\": \"hindsight-architect\\nhindsight-cloud\\nhindsight-docs\\nhindsight-local\\nhindsight-self-hosted\", \"exit_code\": 0, \"error\": null}",
+      "tool_call_id": "call_function_gjobb556118j_1"
+    },
+    {
+      "role": "tool",
+      "name": "read_file",
+      "content": "{\"content\": \"     1|# AGENTS.md\\n     2|\\n     3|See [CLAUDE.md](./CLAUDE.md) for project documentation and coding conventions.\\n     4|\", \"total_lines\": 3, \"file_size\": 92, \"truncated\": false, \"is_binary\": false, \"is_image\": false}",
+      "tool_call_id": "call_function_gjobb556118j_2"
+    },
+    {
+      "role": "assistant",
+      "content": "",
+      "reasoning": "Let me look at the skills directory more carefully - there's a `hindsight-local` skill which sounds like what we need for self-hosted/local installation. Let me also check the CLAUDE.md for more details.",
+      "finish_reason": "tool_calls",
+      "reasoning_content": "Let me look at the skills directory more carefully - there's a `hindsight-local` skill which sounds like what we need for self-hosted/local installation. Let me also check the CLAUDE.md for more details.",
+      "reasoning_details": [
+        {
+          "signature": "0ac405fbb5232d81eac329722b1526cb1a0150ecc021251b0ae0f7336a0d9612",
+          "thinking": "Let me look at the skills directory more carefully - there's a `hindsight-local` skill which sounds like what we need for self-hosted/local installation. Let me also check the CLAUDE.md for more details.",
+          "type": "thinking"
+        }
+      ],
+      "tool_calls": [
+        {
+          "id": "call_function_nkjq9hn47dt7_1",
+          "call_id": "call_function_nkjq9hn47dt7_1",
+          "response_item_id": "fc_function_nkjq9hn47dt7_1",
+          "type": "function",
+          "function": {
+            "name": "terminal",
+            "arguments": "{\"command\": \"ls /tmp/hindsight/skills/hindsight-local/ && cat /tmp/hindsight/skills/hindsight-local/skill.md 2>/dev/null || ls /tmp/hindsight/skills/hindsight-local/\"}"
+          }
+        },
+        {
+          "id": "call_function_nkjq9hn47dt7_2",
+          "call_id": "call_function_nkjq9hn47dt7_2",
+          "response_item_id": "fc_function_nkjq9hn47dt7_2",
+          "type": "function",
+          "function": {
+            "name": "terminal",
+            "arguments": "{\"command\": \"ls /tmp/hindsight/skills/hindsight-self-hosted/\"}"
+          }
+        }
+      ]
+    },
+    {
+      "role": "tool",
+      "name": "terminal",
+      "content": "{\"output\": \"SKILL.md\\nSKILL.md\", \"exit_code\": 0, \"error\": null}",
+      "tool_call_id": "call_function_nkjq9hn47dt7_1"
+    },
+    {
+      "role": "tool",
+      "name": "terminal",
+      "content": "{\"output\": \"SKILL.md\", \"exit_code\": 0, \"error\": null}",
+      "tool_call_id": "call_function_nkjq9hn47dt7_2"
+    },
+    {
+      "role": "assistant",
+      "content": "",
+      "reasoning": "Let me check the skill files to understand which one is right for the installation.",
+      "finish_reason": "tool_calls",
+      "reasoning_content": "Let me check the skill files to understand which one is right for the installation.",
+      "reasoning_details": [
+        {
+          "signature": "cf060e64f9369e294f9991ddec08d1af24339345f6fa71c64181c9dc4b12efd7",
+          "thinking": "Let me check the skill files to understand which one is right for the installation.",
+          "type": "thinking"
+        }
+      ],
+      "tool_calls": [
+        {
+          "id": "call_function_xwjkalz0xkry_1",
+          "call_id": "call_function_xwjkalz0xkry_1",
+          "response_item_id": "fc_function_xwjkalz0xkry_1",
+          "type": "function",
+          "function": {
+            "name": "read_file",
+            "arguments": "{\"path\": \"/tmp/hindsight/skills/hindsight-local/SKILL.md\"}"
+          }
+        },
+        {
+          "id": "call_function_xwjkalz0xkry_2",
+          "call_id": "call_function_xwjkalz0xkry_2",
+          "response_item_id": "fc_function_xwjkalz0xkry_2",
+          "type": "function",
+          "function": {
+            "name": "read_file",
+            "arguments": "{\"path\": \"/tmp/hindsight/skills/hindsight-self-hosted/SKILL.md\"}"
+          }
+        }
+      ]
+    },
+    {
+      "role": "tool",
+      "name": "read_file",
+      "content": "{\"content\": \"     1|---\\n     2|name: hindsight-local\\n     3|description: Store user preferences, learnings from tasks, and procedure outcomes. Use to remember what works and recall context before new tasks. (user)\\n     4|---\\n     5|\\n     6|# Hindsight Memory Skill (Local)\\n     7|\\n     8|You have persistent memory via the `hindsight-embed` CLI. **Proactively store learnings and recall context** to provide better assistance.\\n     9|\\n    10|## Setup Check (First-Time Only)\\n    11|\\n    12|Before using memory commands, verify Hindsight is configured:\\n    13|\\n    14|```bash\\n    15|uvx hindsight-embed daemon status\\n    16|```\\n    17|\\n    18|**If this fails or shows \\\"not configured\\\"**, run the interactive setup:\\n    19|\\n    20|```bash\\n    21|uvx hindsight-embed configure\\n    22|```\\n    23|\\n    24|This will prompt for an LLM provider and API key. After setup, the commands below will work.\\n    25|\\n    26|## How Hindsight Works\\n    27|\\n    28|When you call `retain`, Hindsight does **not** store the string as-is. The server runs an internal pipeline that:\\n    29|\\n    30|1. **Extracts structured facts** from the content using an LLM\\n    31|2. **Identifies entities** (people, tools, concepts) and links related facts\\n    32|3. **Builds temporal and causal relationships** between facts\\n    33|4. **Generates embeddings** for semantic search\\n    34|\\n    35|This means you should pass **rich, full-context content** — the server is better at extracting what matters than a pre-summarized string. Your job is to decide **when** to store, not **what** to extract.\\n    36|\\n    37|## Commands\\n    38|\\n    39|### Store a memory\\n    40|\\n    41|Use `memory retain` to store what you learn. Pass the full context — raw observations, session notes, conversation excerpts, or detailed descriptions:\\n    42|\\n    43|```bash\\n    44|uvx hindsight-embed memory retain default \\\"User is working on a TypeScript project. They enabled strict mode and prefer explicit type annotations over inference.\\\"\\n    45|uvx hindsight-embed memory retain default \\\"Ran the test suite with NODE_ENV=test. Tests pass. Without NODE_ENV=test, the suite fails with a missing config error.\\\" --context procedures\\n    46|uvx hindsight-embed memory retain default \\\"Build failed on Node 18 with error 'ERR_UNSUPPORTED_ESM_URL_SCHEME'. Switched to Node 20 and build succeeded.\\\" --context learnings\\n    47|```\\n    48|\\n    49|You can also pass a raw conversation transcript with timestamps:\\n    50|\\n    51|```bash\\n    52|uvx hindsight-embed memory retain default \\\"[2026-03-16T10:12:03] User: The auth tests keep failing on CI but pass locally. Any idea?\\n    53|[2026-03-16T10:12:45] Assistant: Let me check the CI logs. Looks like the tests are running without the TEST_DATABASE_URL env var set — they fall back to the production DB URL and hit a connection timeout.\\n    54|[2026-03-16T10:13:20] User: Ah right, I never added that to the CI secrets. Adding it now.\\n    55|[2026-03-16T10:15:02] User: That fixed it. All green now.\\\" --context learnings\\n    56|```\\n    57|\\n    58|### Recall memories\\n    59|\\n    60|Use `memory recall` BEFORE starting tasks to get relevant context:\\n    61|\\n    62|```bash\\n    63|uvx hindsight-embed memory recall default \\\"user preferences for this project\\\"\\n    64|uvx hindsight-embed memory recall default \\\"what issues have we encountered before\\\"\\n    65|```\\n    66|\\n    67|### Reflect on memories\\n    68|\\n    69|Use `memory reflect` to synthesize context:\\n    70|\\n    71|```bash\\n    72|uvx hindsight-embed memory reflect default \\\"How should I approach this task based on past experience?\\\"\\n    73|```\\n    74|\\n    75|## IMPORTANT: When to Store Memories\\n    76|\\n    77|**Always store** after you learn something valuable:\\n    78|\\n    79|### User Preferences\\n    80|- Coding style (indentation, naming conventions, language preferences)\\n    81|- Tool preferences (editors, linters, formatters)\\n    82|- Communication preferences\\n    83|- Project conventions\\n    84|\\n    85|### Procedure Outcomes\\n    86|- Steps that successfully completed a task\\n    87|- Commands that worked (or failed) and why\\n    88|- Workarounds discovered\\n    89|- Configuration that resolved issues\\n    90|\\n    91|### Learnings from Tasks\\n    92|- Bugs encountered and their solutions\\n    93|- Performance optimizations that worked\\n    94|- Architecture decisions and rationale\\n    95|- Dependencies or version requirements\\n    96|\\n    97|## IMPORTANT: When to Recall Memories\\n    98|\\n    99|**Always recall** before:\\n   100|- Starting any non-trivial task\\n   101|- Making decisions about implementation\\n   102|- Suggesting tools, libraries, or approaches\\n   103|- Writing code in a new area of the project\\n   104|\\n   105|## Best Practices\\n   106|\\n   107|1. **Store immediately**: When you discover something, store it right away\\n   108|2. **Pass rich context**: Include full observations, not pre-summarized strings — the server extracts facts automatically\\n   109|3. **Include outcomes**: Store what happened AND why, including failures and workarounds\\n   110|4. **Recall first**: Always check for relevant context before starting work\\n   111|5. **Use `--context` for metadata**: The `--context` flag labels the type of memory (e.g., `procedures`, `learnings`, `preferences`), not a replacement for full content\\n   112|\", \"total_lines\": 111, \"file_size\": 4489, \"truncated\": false, \"is_binary\": false, \"is_image\": false}",
+      "tool_call_id": "call_function_xwjkalz0xkry_1"
+    },
+    {
+      "role": "tool",
+      "name": "read_file",
+      "content": "{\"content\": \"     1|---\\n     2|name: hindsight-self-hosted\\n     3|description: Store team knowledge, project conventions, and learnings from tasks. Use to remember what works and recall context before new tasks. Connects to a self-hosted Hindsight server. (user)\\n     4|---\\n     5|\\n     6|# Hindsight Memory Skill (Self-Hosted)\\n     7|\\n     8|You have persistent memory via a **self-hosted Hindsight server**. This memory bank can be **shared with the team**, so knowledge stored here benefits everyone working on this codebase.\\n     9|\\n    10|**Proactively store team knowledge and recall context** to provide better assistance.\\n    11|\\n    12|## Setup Check (First-Time Only)\\n    13|\\n    14|Before using memory commands, verify the Hindsight CLI is configured:\\n    15|\\n    16|```bash\\n    17|cat ~/.hindsight/config\\n    18|```\\n    19|\\n    20|**If the file doesn't exist or is missing credentials**, help the user set it up:\\n    21|\\n    22|1. **Install the CLI** (if `hindsight` command not found):\\n    23|   ```bash\\n    24|   curl -fsSL https://hindsight.vectorize.io/get-cli | bash\\n    25|   ```\\n    26|\\n    27|2. **Create the config file** - ask the user for:\\n    28|   - **API URL**: Their self-hosted Hindsight server URL (e.g., `https://hindsight.mycompany.com`)\\n    29|   - **API Key**: Their authentication key\\n    30|\\n    31|   ```bash\\n    32|   mkdir -p ~/.hindsight\\n    33|   cat > ~/.hindsight/config << 'EOF'\\n    34|   api_url = \\\"<user's server URL>\\\"\\n    35|   api_key = \\\"<user's API key>\\\"\\n    36|   EOF\\n    37|   chmod 600 ~/.hindsight/config\\n    38|   ```\\n    39|\\n    40|3. **Get the bank ID** - ask the user for their bank ID (e.g., `team-myproject`)\\n    41|\\n    42|After setup, use the bank ID in all commands below.\\n    43|\\n    44|## How Hindsight Works\\n    45|\\n    46|When you call `retain`, Hindsight does **not** store the string as-is. The server runs an internal pipeline that:\\n    47|\\n    48|1. **Extracts structured facts** from the content using an LLM\\n    49|2. **Identifies entities** (people, tools, concepts) and links related facts\\n    50|3. **Builds temporal and causal relationships** between facts\\n    51|4. **Generates embeddings** for semantic search\\n    52|\\n    53|This means you should pass **rich, full-context content** — the server is better at extracting what matters than a pre-summarized string. Your job is to decide **when** to store, not **what** to extract.\\n    54|\\n    55|## Commands\\n    56|\\n    57|Replace `<bank-id>` with the user's actual bank ID (e.g., `team-frontend`).\\n    58|\\n    59|### Store a memory\\n    60|\\n    61|Use `memory retain` to store what you learn. Pass full context — raw observations, session notes, or detailed descriptions:\\n    62|\\n    63|```bash\\n    64|hindsight memory retain <bank-id> \\\"The project uses ESLint configured with the Airbnb rule set and Prettier for formatting. Auto-fix on save is enabled in the editor config.\\\"\\n    65|hindsight memory retain <bank-id> \\\"Ran the test suite with NODE_ENV=test. Tests pass. Without NODE_ENV=test, the suite fails with a missing config error.\\\" --context procedures\\n    66|hindsight memory retain <bank-id> \\\"Build failed on Node 18 with error 'ERR_UNSUPPORTED_ESM_URL_SCHEME'. Switched to Node 20 and build succeeded.\\\" --context learnings\\n    67|hindsight memory retain <bank-id> \\\"Alice reviewed the PR and asked for verbose commit messages that explain the motivation, not just what changed.\\\" --context preferences\\n    68|```\\n    69|\\n    70|You can also pass a raw conversation transcript with timestamps:\\n    71|\\n    72|```bash\\n    73|hindsight memory retain <bank-id> \\\"[2026-03-16T10:12:03] User: The auth tests keep failing on CI but pass locally. Any idea?\\n    74|[2026-03-16T10:12:45] Assistant: Let me check the CI logs. Looks like the tests are running without the TEST_DATABASE_URL env var set — they fall back to the production DB URL and hit a connection timeout.\\n    75|[2026-03-16T10:13:20] User: Ah right, I never added that to the CI secrets. Adding it now.\\n    76|[2026-03-16T10:15:02] User: That fixed it. All green now.\\\" --context learnings\\n    77|```\\n    78|\\n    79|### Recall memories\\n    80|\\n    81|Use `memory recall` BEFORE starting tasks to get relevant context:\\n    82|\\n    83|```bash\\n    84|hindsight memory recall <bank-id> \\\"project conventions and coding standards\\\"\\n    85|hindsight memory recall <bank-id> \\\"Alice preferences for this project\\\"\\n    86|hindsight memory recall <bank-id> \\\"what issues have we encountered before\\\"\\n    87|hindsight memory recall <bank-id> \\\"how does the auth module work\\\"\\n    88|```\\n    89|\\n    90|### Reflect on memories\\n    91|\\n    92|Use `memory reflect` to synthesize context:\\n    93|\\n    94|```bash\\n    95|hindsight memory reflect <bank-id> \\\"How should I approach this task based on past experience?\\\"\\n    96|```\\n    97|\\n    98|## IMPORTANT: When to Store Memories\\n    99|\\n   100|This is a **shared team bank**. Store knowledge that benefits the team. For individual preferences, include the person's name.\\n   101|\\n   102|### Project/Team Conventions (shared)\\n   103|- Coding standards (\\\"Project uses 2-space indentation\\\")\\n   104|- Required tools and versions (\\\"Project requires Node 20+, PostgreSQL 15+\\\")\\n   105|- Linting and formatting rules (\\\"ESLint with Airbnb config\\\")\\n   106|- Testing conventions (\\\"Integration tests require Docker running\\\")\\n   107|- Branch naming and PR conventions\\n   108|\\n   109|### Individual Preferences (attribute to person)\\n   110|- Personal coding style (\\\"Alice prefers explicit type annotations\\\")\\n   111|- Communication preferences (\\\"Bob prefers detailed PR descriptions\\\")\\n   112|- Tool preferences (\\\"Carol uses vim keybindings\\\")\\n   113|\\n   114|### Procedure Outcomes\\n   115|- Steps that successfully completed a task\\n   116|- Commands that worked (or failed) and why\\n   117|- Workarounds discovered\\n   118|- Configuration that resolved issues\\n   119|\\n   120|### Learnings from Tasks\\n   121|- Bugs encountered and their solutions\\n   122|- Performance optimizations that worked\\n   123|- Architecture decisions and rationale\\n   124|- Dependencies or version requirements\\n   125|\\n   126|### Team Knowledge\\n   127|- Onboarding information for new team members\\n   128|- Common pitfalls and how to avoid them\\n   129|- Architecture decisions and their rationale\\n   130|- Integration points with external systems\\n   131|- Domain knowledge and business logic explanations\\n   132|\\n   133|## IMPORTANT: When to Recall Memories\\n   134|\\n   135|**Always recall** before:\\n   136|- Starting any non-trivial task\\n   137|- Making decisions about implementation\\n   138|- Suggesting tools, libraries, or approaches\\n   139|- Writing code in a new area of the project\\n   140|- When answering questions about the codebase\\n   141|- When a team member asks how something works\\n   142|\\n   143|## Best Practices\\n   144|\\n   145|1. **Store immediately**: When you discover something, store it right away\\n   146|2. **Pass rich context**: Include full observations, not pre-summarized strings — the server extracts facts automatically\\n   147|3. **Include outcomes**: Store what happened AND why, including failures and workarounds\\n   148|4. **Recall first**: Always check for relevant context before starting work\\n   149|5. **Think team-first**: Store knowledge that would help other team members\\n   150|6. **Attribute individual preferences**: Store \\\"Alice reviewed the PR and asked for X\\\" not just \\\"User prefers X\\\"\\n   151|7. **Distinguish project vs personal**: Project conventions apply to everyone; personal preferences are per-person\\n   152|8. **Use `--context` for metadata**: The `--context` flag labels the type of memory (e.g., `procedures`, `learnings`, `preferences`), not a replacement for full content\\n   153|\", \"total_lines\": 152, \"file_size\": 6625, \"truncated\": false, \"is_binary\": false, \"is_image\": false}",
+      "tool_call_id": "call_function_xwjkalz0xkry_2"
+    },
+    {
+      "role": "assistant",
+      "content": "",
+      "reasoning": "I see there are two skills: `hindsight-local` and `hindsight-self-hosted`. For Marco's use case (a single user on a Linux VPS), `hindsight-local` seems most appropriate since it's a personal memory bank. Let me check if there's a way to install skills using Hermes Agent's skill system, and also check the `hindsight-embed` CLI which is referenced in the local skill.\n\nLet me look at what tools Hermes Agent has for installing skills, and also install the `hindsight-embed` CLI for the local skill.",
+      "finish_reason": "tool_calls",
+      "reasoning_content": "I see there are two skills: `hindsight-local` and `hindsight-self-hosted`. For Marco's use case (a single user on a Linux VPS), `hindsight-local` seems most appropriate since it's a personal memory bank. Let me check if there's a way to install skills using Hermes Agent's skill system, and also check the `hindsight-embed` CLI which is referenced in the local skill.\n\nLet me look at what tools Hermes Agent has for installing skills, and also install the `hindsight-embed` CLI for the local skill.",
+      "reasoning_details": [
+        {
+          "signature": "34bec2cdd1456201cbb67d63b0c254563c151e02afb96239d2c80e89501f8abd",
+          "thinking": "I see there are two skills: `hindsight-local` and `hindsight-self-hosted`. For Marco's use case (a single user on a Linux VPS), `hindsight-local` seems most appropriate since it's a personal memory bank. Let me check if there's a way to install skills using Hermes Agent's skill system, and also check the `hindsight-embed` CLI which is referenced in the local skill.\n\nLet me look at what tools Hermes Agent has for installing skills, and also install the `hindsight-embed` CLI for the local skill.",
+          "type": "thinking"
+        }
+      ],
+      "tool_calls": [
+        {
+          "id": "call_function_gt1gku5ych9i_1",
+          "call_id": "call_function_gt1gku5ych9i_1",
+          "response_item_id": "fc_function_gt1gku5ych9i_1",
+          "type": "function",
+          "function": {
+            "name": "terminal",
+            "arguments": "{\"command\": \"which skill 2>/dev/null || ls /home/marco/.hermes/skills/ 2>/dev/null || ls /home/marco/ 2>/dev/null | head -20\"}"
+          }
+        },
+        {
+          "id": "call_function_gt1gku5ych9i_2",
+          "call_id": "call_function_gt1gku5ych9i_2",
+          "response_item_id": "fc_function_gt1gku5ych9i_2",
+          "type": "function",
+          "function": {
+            "name": "terminal",
+            "arguments": "{\"command\": \"uv --version 2>/dev/null; python3 --version 2>/dev/null\"}"
+          }
+        }
+      ]
+    },
+    {
+      "role": "tool",
+      "name": "terminal",
+      "content": "{\"output\": \"/usr/bin/skill\", \"exit_code\": 0, \"error\": null}",
+      "tool_call_id": "call_function_gt1gku5ych9i_1"
+    },
+    {
+      "role": "tool",
+      "name": "terminal",
+      "content": "{\"output\": \"uv 0.11.7 (x86_64-unknown-linux-gnu)\\nPython 3.11.15\", \"exit_code\": 0, \"error\": null}",
+      "tool_call_id": "call_function_gt1gku5ych9i_2"
+    },
+    {
+      "role": "assistant",
+      "content": "",
+      "reasoning": "There's a `skill` command available at `/usr/bin/skill`. Let me check how it works and where skills are installed.",
+      "finish_reason": "tool_calls",
+      "reasoning_content": "There's a `skill` command available at `/usr/bin/skill`. Let me check how it works and where skills are installed.",
+      "reasoning_details": [
+        {
+          "signature": "b56ec191e42126e834a4147248895cc470affe70d7790f305875118d517045fd",
+          "thinking": "There's a `skill` command available at `/usr/bin/skill`. Let me check how it works and where skills are installed.",
+          "type": "thinking"
+        }
+      ],
+      "tool_calls": [
+        {
+          "id": "call_function_iygqxxrhet9x_1",
+          "call_id": "call_function_iygqxxrhet9x_1",
+          "response_item_id": "fc_function_iygqxxrhet9x_1",
+          "type": "function",
+          "function": {
+            "name": "terminal",
+            "arguments": "{\"command\": \"skill --help 2>&1; echo \\\"---\\\"; skill list 2>&1; echo \\\"---\\\"; ls /home/marco/.hermes/ 2>/dev/null || echo \\\"no .hermes dir\\\"\"}"
+          }
+        }
+      ]
+    },
+    {
+      "role": "tool",
+      "name": "terminal",
+      "content": "{\"output\": \"Usage:\\n skill [signal] [options] <expression>\\n\\nOptions:\\n -f, --fast         fast mode (not implemented)\\n -i, --interactive  interactive\\n -l, --list         list all signal names\\n -L, --table        list all signal names in a nice table\\n -n, --no-action    do not actually kill processes; just print what would happen\\n -v, --verbose      explain what is being done\\n -w, --warnings     enable warnings (not implemented)\\n\\nExpression can be: terminal, user, pid, command.\\nThe options below may be used to ensure correct interpretation.\\n -c, --command <command>  expression is a command name\\n -p, --pid <pid>          expression is a process id number\\n -t, --tty <tty>          expression is a terminal\\n -u, --user <username>    expression is a username\\n\\nAlternatively, expression can be:\\n --ns <pid>               match the processes that belong to the same\\n                          namespace as <pid>\\n --nslist <ns,...>        list which namespaces will be considered for\\n                          the --ns option; available namespaces are\\n:                          ipc, mnt, net, pid, user, uts\\n\\n\\n -h, --help     display this help and exit\\n -V, --version  output version information and exit\\n\\nThe default signal is TERM. Use -l or -L to list available signals.\\nParticularly useful signals include HUP, INT, KILL, STOP, CONT, and 0.\\nAlternate signals may be specified in three ways: -SIGKILL -KILL -9\\n\\nFor more details see skill(1).\\n---\\n---\\naudio_cache\\nauth.json\\nauth.lock\\nautomaton\\nbin\\ncache\\nchannel_directory.json\\ncheckpoints\\nconfig.yaml\\ncron\\ndecisions\\ndesktop\\ndiscord.env\\ndiscord_threads.json\\ndotfiles\\ngateway.lock\\ngateway.pid\\ngateway_state.json\\nhermes-agent\\nhermes-office\\nhermes-webui\\nhooks\\nimage_cache\\nimages\\ninterrupt_debug.log\\nkanban.db\\nlogs\\nmemories\\nmemory\\nmodels_dev_cache.json\\nmodels.json\\nnode_modules\\nopen-webui\\npairing\\npastes\\nplatforms\\nprocesses.json\\nresponse_store.db\\nresponse_store.db-shm\\nresponse_store.db-wal\\nsandboxes\\nscripts\\nsessions\\nskills\\nSOUL.md\\nstate.db\\nstate.db-shm\\nstate.db-wal\\nstate-snapshots\\ntasks.json\\nwebui-state\", \"exit_code\": 0, \"error\": null}",
+      "tool_call_id": "call_function_iygqxxrhet9x_1"
+    },
+    {
+      "role": "assistant",
+      "content": "",
+      "reasoning": "There's a `skills` directory and `memories` directory in `/home/marco/.hermes/`. Let me look at those to understand the skill structure.",
+      "finish_reason": "tool_calls",
+      "reasoning_content": "There's a `skills` directory and `memories` directory in `/home/marco/.hermes/`. Let me look at those to understand the skill structure.",
+      "reasoning_details": [
+        {
+          "signature": "13471241ce0a01a6f34c7bf94c5c9374ff0f119fc1dc2376823206f25ae78095",
+          "thinking": "There's a `skills` directory and `memories` directory in `/home/marco/.hermes/`. Let me look at those to understand the skill structure.",
+          "type": "thinking"
+        }
+      ],
+      "tool_calls": [
+        {
+          "id": "call_function_tr3fohvvxwau_1",
+          "call_id": "call_function_tr3fohvvxwau_1",
+          "response_item_id": "fc_function_tr3fohvvxwau_1",
+          "type": "function",
+          "function": {
+            "name": "terminal",
+            "arguments": "{\"command\": \"ls /home/marco/.hermes/skills/\"}"
+          }
+        },
+        {
+          "id": "call_function_tr3fohvvxwau_2",
+          "call_id": "call_function_tr3fohvvxwau_2",
+          "response_item_id": "fc_function_tr3fohvvxwau_2",
+          "type": "function",
+          "function": {
+            "name": "terminal",
+            "arguments": "{\"command\": \"which hermes-agent 2>/dev/null; ls /home/marco/.hermes/hermes-agent/ 2>/dev/null\"}"
+          }
+        }
+      ]
+    },
+    {
+      "role": "tool",
+      "name": "terminal",
+      "content": "{\"output\": \"apple\\nautomation\\nautonomous-ai-agents\\nblack-forest-labs\\ncreative\\ndata-science\\ndevops\\ndiagramming\\ndiscord-message-content-intent\\ndogfood\\ndomain\\nemail\\nfeeds\\ngaming\\ngifs\\ngithub\\nhealth-fitness\\nhermes-gateway-restart-notification\\nhermes-security-hardening\\nhermes-weather-plugin\\nhermes-web-search-plus\\ninference-sh\\nintegration\\nleisure\\nmcp\\nmedia\\nmessaging\\nmlops\\nmodel-selection\\nnetworking\\nnote-taking\\nobsidian-hermes-memory\\nopenrouter-cost-optimization\\nproductivity\\nred-teaming\\nresearch\\nsecurity\\nsecurity-health-check\\nsmart-home\\nsocial-media\\nsoftware-development\\nsystem-maintenance\\ntrading\\nvectorized-crypto-backtester\\nweather-plugin\\nweb-checks\\nweb-development\\nwondelai\\nyuanbao\", \"exit_code\": 0, \"error\": null}",
+      "tool_call_id": "call_function_tr3fohvvxwau_1"
+    },
+    {
+      "role": "tool",
+      "name": "terminal",
+      "content": "{\"output\": \"/home/marco/.hermes/hermes-agent/venv/bin/hermes-agent\\nacp_adapter\\nacp_registry\\nagent\\nAGENTS.md\\nassets\\nbatch_runner.py\\ncli-config.yaml.example\\ncli.py\\nconstraints-termux.txt\\nCONTRIBUTING.md\\ncron\\ndatagen-config-examples\\ndocker\\ndocker-compose.yml\\nDockerfile\\ndocs\\nenvironments\\nflake.lock\\nflake.nix\\ngateway\\nhermes\\nhermes_agent.egg-info\\nhermes-already-has-routines.md\\nhermes_cli\\nhermes_constants.py\\nhermes_logging.py\\nhermes_state.py\\nhermes_time.py\\nLICENSE\\nMANIFEST.in\\nmcp_serve.py\\nmini_swe_runner.py\\nmodel_tools.py\\nnix\\nnode_modules\\noptional-skills\\npackage.json\\npackage-lock.json\\npackaging\\nplans\\nplugins\\n__pycache__\\npyproject.toml\\nREADME.md\\nRELEASE_v0.10.0.md\\nRELEASE_v0.11.0.md\\nRELEASE_v0.12.0.md\\nRELEASE_v0.2.0.md\\nRELEASE_v0.3.0.md\\nRELEASE_v0.4.0.md\\nRELEASE_v0.5.0.md\\nRELEASE_v0.6.0.md\\nRELEASE_v0.7.0.md\\nRELEASE_v0.8.0.md\\nRELEASE_v0.9.0.md\\nrl_cli.py\\nrun_agent.py\\nscripts\\nSECURITY.md\\nsetup-hermes.sh\\nskills\\ntests\\ntinker-atropos\\ntools\\ntoolset_distributions.py\\ntoolsets.py\\ntrajectory_compressor.py\\ntui_gateway\\nui-tui\\nutils.py\\nuv.lock\\nvenv\\nweb\\nwebsite\", \"exit_code\": 0, \"error\": null}\n\n[Subdirectory context discovered: .hermes/hermes-agent/AGENTS.md]\n# Hermes Agent - Development Guide\n\nInstructions for AI coding assistants and developers working on the hermes-agent codebase.\n\n## Development Environment\n\n```bash\n# Prefer .venv; fall back to venv if that's what your checkout has.\nsource .venv/bin/activate   # or: source venv/bin/activate\n```\n\n`scripts/run_tests.sh` probes `.venv` first, then `venv`, then\n`$HOME/.hermes/hermes-agent/venv` (for worktrees that share a venv with the\nmain checkout).\n\n## Project Structure\n\nFile counts shift constantly — don't treat the tree below as exhaustive.\nThe canonical source is the filesystem. The notes call out the load-bearing\nentry points you'll actually edit.\n\n```\nhermes-agent/\n├── run_agent.py          # AIAgent class — core conversation loop (~12k LOC)\n├── model_tools.py        # Tool orchestration, discover_builtin_tools(), handle_function_call()\n├── toolsets.py           # Toolset definitions, _HERMES_CORE_TOOLS list\n├── cli.py                # HermesCLI class — interactive CLI orchestrator (~11k LOC)\n├── hermes_state.py       # SessionDB — SQLite session store (FTS5 search)\n├── hermes_constants.py   # get_hermes_home(), display_hermes_home() — profile-aware paths\n├── hermes_logging.py     # setup_logging() — agent.log / errors.log / gateway.log (profile-aware)\n├── batch_runner.py       # Parallel batch processing\n├── agent/                # Agent internals (provider adapters, memory, caching, compression, etc.)\n├── hermes_cli/           # CLI subcommands, setup wizard, plugins loader, skin engine\n├── tools/                # Tool implementations — auto-discovered via tools/registry.py\n│   └── environments/     # Terminal backends (local, docker, ssh, modal, daytona, singularity)\n├── gateway/              # Messaging gateway — run.py + session.py + platforms/\n│   ├── platforms/        # Adapter per platform (telegram, discord, slack, whatsapp,\n│   │                     #   homeassistant, signal, matrix, mattermost, email, sms,\n│   │                     #   dingtalk, wecom, weixin, feishu, qqbot, bluebubbles,\n│   │                     #   webhook, api_server, ...). See ADDING_A_PLATFORM.md.\n│   └── builtin_hooks/    # Extension point for always-registered gateway hooks (none shipped)\n├── plugins/              # Plugin system (see \"Plugins\" section below)\n│   ├── memory/           # Memory-provider plugins (honcho, mem0, supermemory, ...)\n│   ├── context_engine/   # Context-engine plugins\n│   └── <others>/         # Dashboard, image-gen, disk-cleanup, examples, ...\n├── optional-skills/      # Heavier/niche skills shipped but NOT active by default\n├── skills/               # Built-in skills bundled with the repo\n├── ui-tui/               # Ink (React) terminal UI — `hermes --tui`\n│   └── src/              # entry.tsx, app.tsx, gatewayClient.ts + app/components/hooks/lib\n├── tui_gateway/          # Python JSON-RPC backend for the TUI\n├── acp_adapter/          # ACP server (VS Code / Zed / JetBrains integration)\n├── cron/                 # Scheduler — jobs.py, scheduler.py\n├── environments/         # RL training environments (Atropos)\n├── scripts/              # run_tests.sh, release.py, auxiliary scripts\n├── website/              # Docusaurus docs site\n└── tests/                # Pytest suite (~15k tests across ~700 files as of Apr 2026)\n```\n\n**User config:** `~/.hermes/config.yaml` (settings), `~/.hermes/.env` (API keys only).\n**Logs:** `~/.hermes/logs/` — `agent.log` (INFO+), `errors.log` (WARNING+),\n`gateway.log` when running the gateway. Profile-aware via `get_hermes_home()`.\nBrowse with `hermes logs [--follow] [--level ...] [--session ...]`.\n\n## File Dependency Chain\n\n```\ntools/registry.py  (no deps — imported by all tool files)\n       ↑\ntools/*.py  (each calls registry.register() at import time)\n       ↑\nmodel_tools.py  (imports tools/registry + triggers tool discovery)\n       ↑\nrun_agent.py, cli.py, batch_runner.py, environments/\n```\n\n---\n\n## AIAgent Class (run_agent.py)\n\nThe real `AIAgent.__init__` takes ~60 parameters (credentials, routing, callbacks,\nsession context, budget, credential pool, etc.). The signature below is the\nminimum subset you'll usually touch — read `run_agent.py` for the full list.\n\n```python\nclass AIAgent:\n    def __init__(self,\n        base_url: str = None,\n        api_key: str = None,\n        provider: str = None,\n        api_mode: str = None,              # \"chat_completions\" | \"codex_responses\" | ...\n        model: str = \"\",                   # empty → resolved from config/provider later\n        max_iterations: int = 90,          # tool-calling iterations (shared with subagents)\n        enabled_toolsets: list = None,\n        disabled_toolsets: list = None,\n        quiet_mode: bool = False,\n        save_trajectories: bool = False,\n        platform: str = None,              # \"cli\", \"telegram\", etc.\n        session_id: str = None,\n        skip_context_files: bool = False,\n        skip_memory: bool = False,\n        credential_pool=None,\n        # ... plus callbacks, thread/user/chat IDs, iteration_budget, fallback_model,\n        # checkpoints config, prefill_messages, service_tier, reasoning_config, etc.\n    ): ...\n\n    def chat(self, message: str) -> str:\n        \"\"\"Simple interface — returns final response string.\"\"\"\n\n    def run_conversation(self, user_message: str, system_message: str = None,\n                         conversation_history: list = None, task_id: str = None) -> dict:\n        \"\"\"Full interface — returns dict with final_response + messages.\"\"\"\n```\n\n### Agent Loop\n\nThe core loop is inside `run_conversation()` — entirely synchronous, with\ninterrupt checks, budget tracking, and a one-turn grace call:\n\n```python\nwhile (api_call_count < self.max_iterations and self.iteration_budget.remaining > 0) \\\n        or self._budget_grace_call:\n    if self._interrupt_requested: break\n    response = client.chat.completions.create(model=model, messages=messages, tools=tool_schemas)\n    if response.tool_calls:\n        for tool_call in response.tool_calls:\n            result = handle_function_call(tool_call.name, tool_call.args, task_id)\n            messages.append(tool_result_message(result))\n        api_call_count += 1\n    else:\n        return response.content\n```\n\nMessages follow OpenAI format: `{\"role\": \"system/user/assistant/tool\", ...}`.\nReasoning content is stored in `assistant_msg[\"reasoning\"]`.\n\n---\n\n## CLI Architecture (cli.py)\n\n- **Rich** for banner/panels, **prompt_toolkit** for input with autocomplete\n- **KawaiiSpinner** (`agent/display.py`) — animated faces during API calls, `┊` activity feed for tool results\n- `load_cli_config()` in cli.py merges hardcoded defaults + user config YAML\n- **Skin engine** (`hermes_cli/skin_engine.py`) — data-driven CLI theming; initialized from `display.skin` config key at startup; skins customize banner colors, spinner faces/verbs/wings, tool prefix, response box, branding text\n- `process_command()` is a method on `HermesCLI` — dispatches on canonical command name resolved via `resolve_command()` from the central registry\n- Skill slash commands: `agent/skill_commands.py` scans `~/.hermes/skills/`, injects as **user message** (not system prompt) to preserve prompt caching\n\n### Slash Command Registry (`hermes_cli/commands.py`)\n\nAll slash commands are defined in a central `COMMAND_REGISTRY` list of `CommandDef` objects. Every downstream consumer derives from this registry automatically:\n\n- **CLI** — `process_command()` resolves aliases via `resolve_command()`, dispatches on canonical name\n- **Gateway** — `GATEWAY_KNOWN_COMMANDS` frozenset for hook emission, `resolve_command()` for dispatch\n- **Gateway help** — `gateway_help_lines()` generates `/help` output\n- **Telegram** — `telegram_bot_commands()` generates the BotCommand menu\n- **Slack** — `slack_subcommand_map()` generates `/hermes` subcommand routing\n- **Autocomplete** — `COMMANDS` flat dict feeds `SlashCommandCompleter`\n- **CLI help** — `COMMANDS_BY_CATEGORY` dict feeds `show_help()`\n\n### Adding a Slash Command\n\n1. Add a `CommandDef` \n\n[...truncated AGENTS.md: 35,602 chars total]",
+      "tool_call_id": "call_function_tr3fohvvxwau_2"
+    },
+    {
+      "role": "assistant",
+      "content": "",
+      "reasoning": "I can see the skills are installed in `/home/marco/.hermes/skills/`. For Hermes Agent, skills are just directories with a `SKILL.md` file. Let me look at how existing skills are structured and then install the hindsight skill properly.\n\nThe `hindsight-local` skill uses `uvx hindsight-embed` commands. Let me check if `hindsight-embed` is available, or if we need to install it. Let me also look at an existing skill for reference.",
+      "finish_reason": "tool_calls",
+      "reasoning_content": "I can see the skills are installed in `/home/marco/.hermes/skills/`. For Hermes Agent, skills are just directories with a `SKILL.md` file. Let me look at how existing skills are structured and then install the hindsight skill properly.\n\nThe `hindsight-local` skill uses `uvx hindsight-embed` commands. Let me check if `hindsight-embed` is available, or if we need to install it. Let me also look at an existing skill for reference.",
+      "reasoning_details": [
+        {
+          "signature": "902a50e389296817466a5ed030d9c9cf94d3b6cf196687ad05403c8366cf5eae",
+          "thinking": "I can see the skills are installed in `/home/marco/.hermes/skills/`. For Hermes Agent, skills are just directories with a `SKILL.md` file. Let me look at how existing skills are structured and then install the hindsight skill properly.\n\nThe `hindsight-local` skill uses `uvx hindsight-embed` commands. Let me check if `hindsight-embed` is available, or if we need to install it. Let me also look at an existing skill for reference.",
+          "type": "thinking"
+        }
+      ],
+      "tool_calls": [
+        {
+          "id": "call_function_t8mqxiy876o5_1",
+          "call_id": "call_function_t8mqxiy876o5_1",
+          "response_item_id": "fc_function_t8mqxiy876o5_1",
+          "type": "function",
+          "function": {
+            "name": "terminal",
+            "arguments": "{\"command\": \"ls /home/marco/.hermes/skills/trading/ && cat /home/marco/.hermes/skills/trading/SKILL.md 2>/dev/null | head -30\"}"
+          }
+        },
+        {
+          "id": "call_function_t8mqxiy876o5_2",
+          "call_id": "call_function_t8mqxiy876o5_2",
+          "response_item_id": "fc_function_t8mqxiy876o5_2",
+          "type": "function",
+          "function": {
+            "name": "terminal",
+            "arguments": "{\"command\": \"uvx hindsight-embed --version 2>&1 || echo \\\"hindsight-embed not installed\\\"\"}"
+          }
+        }
+      ]
+    },
+    {
+      "role": "tool",
+      "name": "terminal",
+      "content": "{\"output\": \"alpaca-crypto-paper-trader\\nautomated-trading-bot\\nbacktest-vectorized-crypto\\nbinance-trading\\nbybit-hyperliquid-trading\\ncrypto-backtest-engine\\ncrypto-paper-trader\\ncrypto-risk-management.md\\ncrypto-strategy-backtester\\ncrypto-trading-strategy\\ndex-analytics\\ndyor-onchain-analytics\\nfunding-rate-liquidations\\nhyperliquid-paper-trading\\nhyperperfect-trading-strategies\\nmulti-timeframe-analysis\\nportfolio-heatmap.md\\nrealistic-crypto-backtester\\nsentiment-technical-confluence.md\\nskill.json\\nsmart-money-crypto-strategy\\nsmart-money-fusion\\nsmart-money-paper-trader\\nsr-zone-paper-trader\\nthe-better-traders-course\\ntrading-backtest-validation\\nwealthyeducation-trading-backtest\\nwhale-alert-monitoring\", \"exit_code\": 0, \"error\": null}",
+      "tool_call_id": "call_function_t8mqxiy876o5_1"
+    },
+    {
+      "role": "tool",
+      "name": "terminal",
+      "content": "{\"output\": \"Installed 12 packages in 20ms\\nError: LLM API key is required.\\nRun 'hindsight-embed configure' to set up.\\nhindsight-embed not installed\", \"exit_code\": 0, \"error\": null}",
+      "tool_call_id": "call_function_t8mqxiy876o5_2"
+    },
+    {
+      "role": "assistant",
+      "content": "",
+      "reasoning": "Good - `uvx hindsight-embed` works. Now let me install the hindsight skill. Looking at the skill structure, I need to create a skill folder in `/home/marco/.hermes/skills/`.\n\nLet me look at an existing skill to understand the format, then copy the appropriate hindsight skill there.\n\nThe `hindsight-local` skill seems right for a local/self-hosted setup on Marco's VPS. Let me install it.",
+      "finish_reason": "tool_calls",
+      "reasoning_content": "Good - `uvx hindsight-embed` works. Now let me install the hindsight skill. Looking at the skill structure, I need to create a skill folder in `/home/marco/.hermes/skills/`.\n\nLet me look at an existing skill to understand the format, then copy the appropriate hindsight skill there.\n\nThe `hindsight-local` skill seems right for a local/self-hosted setup on Marco's VPS. Let me install it.",
+      "reasoning_details": [
+        {
+          "signature": "2fe5064479998c6cf2dc97943130fc5760ba236f002fcb1da6f191b8f0cb1293",
+          "thinking": "Good - `uvx hindsight-embed` works. Now let me install the hindsight skill. Looking at the skill structure, I need to create a skill folder in `/home/marco/.hermes/skills/`.\n\nLet me look at an existing skill to understand the format, then copy the appropriate hindsight skill there.\n\nThe `hindsight-local` skill seems right for a local/self-hosted setup on Marco's VPS. Let me install it.",
+          "type": "thinking"
+        }
+      ],
+      "tool_calls": [
+        {
+          "id": "call_function_q978v8nms5se_1",
+          "call_id": "call_function_q978v8nms5se_1",
+          "response_item_id": "fc_function_q978v8nms5se_1",
+          "type": "function",
+          "function": {
+            "name": "terminal",
+            "arguments": "{\"command\": \"cat /home/marco/.hermes/skills/trading/skill.json\"}"
+          }
+        },
+        {
+          "id": "call_function_q978v8nms5se_2",
+          "call_id": "call_function_q978v8nms5se_2",
+          "response_item_id": "fc_function_q978v8nms5se_2",
+          "type": "function",
+          "function": {
+            "name": "terminal",
+            "arguments": "{\"command\": \"ls /home/marco/.hermes/skills/trading/skill.json 2>/dev/null && cat /home/marco/.hermes/skills/trading/skill.json || echo \\\"no skill.json\\\"\"}"
+          }
+        }
+      ]
+    },
+    {
+      "role": "tool",
+      "name": "terminal",
+      "content": "{\"output\": \"{\\n  \\\"name\\\": \\\"sentiment-technical-confluence\\\",\\n  \\\"version\\\": \\\"1.0.0\\\",\\n  \\\"description\\\": \\\"Trading strategy skill identifying high-probability setups where sentiment indicators and technical analysis converge\\\",\\n  \\\"category\\\": \\\"trading\\\",\\n  \\\"tags\\\": [\\\"sentiment\\\", \\\"technical-analysis\\\", \\\"trading-strategy\\\", \\\"confluence\\\", \\\"fear-greed\\\"],\\n  \\\"file\\\": \\\"sentiment-technical-confluence.md\\\"\\n}\", \"exit_code\": 0, \"error\": null}",
+      "tool_call_id": "call_function_q978v8nms5se_1"
+    },
+    {
+      "role": "tool",
+      "name": "terminal",
+      "content": "{\"output\": \"/home/marco/.hermes/skills/trading/skill.json\\n{\\n  \\\"name\\\": \\\"sentiment-technical-confluence\\\",\\n  \\\"version\\\": \\\"1.0.0\\\",\\n  \\\"description\\\": \\\"Trading strategy skill identifying high-probability setups where sentiment indicators and technical analysis converge\\\",\\n  \\\"category\\\": \\\"trading\\\",\\n  \\\"tags\\\": [\\\"sentiment\\\", \\\"technical-analysis\\\", \\\"trading-strategy\\\", \\\"confluence\\\", \\\"fear-greed\\\"],\\n  \\\"file\\\": \\\"sentiment-technical-confluence.md\\\"\\n}\", \"exit_code\": 0, \"error\": null}",
+      "tool_call_id": "call_function_q978v8nms5se_2"
+    },
+    {
+      "role": "assistant",
+      "content": "",
+      "reasoning": "Interesting - there's a `skill.json` file for the trading skill. Let me look at the structure of the hindsight skills folder more carefully. The `hindsight-local` skill uses `uvx hindsight-embed` which is a Python tool. Let me install it first.\n\nThe key question is: should I install `hindsight-local` or `hindsight-self-hosted`? Since Marco is running his own VPS, `hindsight-self-hosted` with a self-hosted server makes more sense for a production setup. But `hindsight-local` is simpler to set up with just the CLI.\n\nActually, looking at the README, the simplest approach for a VPS is:\n\n\n- `pip install hindsight-all` for a self-contained embedded version\n- or Docker setup\n\nFor the Hermes Agent skill integration, `hindsight-local` uses `uvx hindsight-embed` - a CLI tool that runs a local daemon. This seems like the best fit for Marco's use case. I'll go with `hindsight-local` since it's designed for local/single-user scenarios. The skill file is just a SKILL.md, and Hermes Agent scans the skills directory and loads these as instructions. So I just need to copy the SKILL.md to the skills folder.\n\nBut the `hindsight-local` skill requires the `hindsight-embed` CLI to be installed and configured. Let me install `hindsight-embed` using `pip install hindsight-all` or `uvx`. Actually, the skill uses `uvx hindsight-embed` which means it's run via `uvx` (the Rust package runner), not installed as a package. `uvx` runs packages from PyPI or other sources directly.\n\nSo the workflow is:\n1. Copy the `hindsight-local/SKILL.md` to `/home/marco/.hermes/skills/hindsight-local/SKILL.md`\n2. Install `hindsight-embed` via `pip install hindsight-embed` or `uvx hindsight-embed`\n3. Run `hindsight-embed configure` to set up the LLM\n\nFor the install, I should go with `pip install hindsight-all` since it includes everything needed for the embedded server variant. The `hindsight-local` skill relies on `uvx hindsight-embed` commands, so I need to make sure that's available through `uvx` or as a direct install. Let me start by installing the package and then configure it.",
+      "finish_reason": "tool_calls",
+      "reasoning_content": "Interesting - there's a `skill.json` file for the trading skill. Let me look at the structure of the hindsight skills folder more carefully. The `hindsight-local` skill uses `uvx hindsight-embed` which is a Python tool. Let me install it first.\n\nThe key question is: should I install `hindsight-local` or `hindsight-self-hosted`? Since Marco is running his own VPS, `hindsight-self-hosted` with a self-hosted server makes more sense for a production setup. But `hindsight-local` is simpler to set up with just the CLI.\n\nActually, looking at the README, the simplest approach for a VPS is:\n\n\n- `pip install hindsight-all` for a self-contained embedded version\n- or Docker setup\n\nFor the Hermes Agent skill integration, `hindsight-local` uses `uvx hindsight-embed` - a CLI tool that runs a local daemon. This seems like the best fit for Marco's use case. I'll go with `hindsight-local` since it's designed for local/single-user scenarios. The skill file is just a SKILL.md, and Hermes Agent scans the skills directory and loads these as instructions. So I just need to copy the SKILL.md to the skills folder.\n\nBut the `hindsight-local` skill requires the `hindsight-embed` CLI to be installed and configured. Let me install `hindsight-embed` using `pip install hindsight-all` or `uvx`. Actually, the skill uses `uvx hindsight-embed` which means it's run via `uvx` (the Rust package runner), not installed as a package. `uvx` runs packages from PyPI or other sources directly.\n\nSo the workflow is:\n1. Copy the `hindsight-local/SKILL.md` to `/home/marco/.hermes/skills/hindsight-local/SKILL.md`\n2. Install `hindsight-embed` via `pip install hindsight-embed` or `uvx hindsight-embed`\n3. Run `hindsight-embed configure` to set up the LLM\n\nFor the install, I should go with `pip install hindsight-all` since it includes everything needed for the embedded server variant. The `hindsight-local` skill relies on `uvx hindsight-embed` commands, so I need to make sure that's available through `uvx` or as a direct install. Let me start by installing the package and then configure it.",
+      "reasoning_details": [
+        {
+          "signature": "b3971d61c94831ce940859e0d9f5aeb5a5d5d66d85a075f44b6ccd42c9d5467a",
+          "thinking": "Interesting - there's a `skill.json` file for the trading skill. Let me look at the structure of the hindsight skills folder more carefully. The `hindsight-local` skill uses `uvx hindsight-embed` which is a Python tool. Let me install it first.\n\nThe key question is: should I install `hindsight-local` or `hindsight-self-hosted`? Since Marco is running his own VPS, `hindsight-self-hosted` with a self-hosted server makes more sense for a production setup. But `hindsight-local` is simpler to set up with just the CLI.\n\nActually, looking at the README, the simplest approach for a VPS is:\n\n\n- `pip install hindsight-all` for a self-contained embedded version\n- or Docker setup\n\nFor the Hermes Agent skill integration, `hindsight-local` uses `uvx hindsight-embed` - a CLI tool that runs a local daemon. This seems like the best fit for Marco's use case. I'll go with `hindsight-local` since it's designed for local/single-user scenarios. The skill file is just a SKILL.md, and Hermes Agent scans the skills directory and loads these as instructions. So I just need to copy the SKILL.md to the skills folder.\n\nBut the `hindsight-local` skill requires the `hindsight-embed` CLI to be installed and configured. Let me install `hindsight-embed` using `pip install hindsight-all` or `uvx`. Actually, the skill uses `uvx hindsight-embed` which means it's run via `uvx` (the Rust package runner), not installed as a package. `uvx` runs packages from PyPI or other sources directly.\n\nSo the workflow is:\n1. Copy the `hindsight-local/SKILL.md` to `/home/marco/.hermes/skills/hindsight-local/SKILL.md`\n2. Install `hindsight-embed` via `pip install hindsight-embed` or `uvx hindsight-embed`\n3. Run `hindsight-embed configure` to set up the LLM\n\nFor the install, I should go with `pip install hindsight-all` since it includes everything needed for the embedded server variant. The `hindsight-local` skill relies on `uvx hindsight-embed` commands, so I need to make sure that's available through `uvx` or as a direct install. Let me start by installing the package and then configure it.",
+          "type": "thinking"
+        }
+      ],
+      "tool_calls": [
+        {
+          "id": "call_function_btoo714yd71g_1",
+          "call_id": "call_function_btoo714yd71g_1",
+          "response_item_id": "fc_function_btoo714yd71g_1",
+          "type": "function",
+          "function": {
+            "name": "terminal",
+            "arguments": "{\"command\": \"ls /home/marco/.hermes/skills/obsidian-hermes-memory/ 2>/dev/null && cat /home/marco/.hermes/skills/obsidian-hermes-memory/skill.json 2>/dev/null || echo \\\"checking structure of memory skills\\\"\"}"
+          }
+        },
+        {
+          "id": "call_function_btoo714yd71g_2",
+          "call_id": "call_function_btoo714yd71g_2",
+          "response_item_id": "fc_function_btoo714yd71g_2",
+          "type": "function",
+          "function": {
+            "name": "terminal",
+            "arguments": "{\"command\": \"ls /home/marco/.hermes/hermes-agent/skills/\"}"
+          }
+        }
+      ]
+    },
+    {
+      "role": "tool",
+      "name": "terminal",
+      "content": "{\"output\": \"SKILL.md\\nchecking structure of memory skills\", \"exit_code\": 0, \"error\": null}",
+      "tool_call_id": "call_function_btoo714yd71g_1"
+    },
+    {
+      "role": "tool",
+      "name": "terminal",
+      "content": "{\"output\": \"apple\\nautonomous-ai-agents\\ncreative\\ndata-science\\ndevops\\ndiagramming\\ndogfood\\ndomain\\nemail\\ngaming\\ngifs\\ngithub\\nindex-cache\\ninference-sh\\nmcp\\nmedia\\nmlops\\nnote-taking\\nproductivity\\nred-teaming\\nresearch\\nsmart-home\\nsocial-media\\nsoftware-development\\nyuanbao\", \"exit_code\": 0, \"error\": null}",
+      "tool_call_id": "call_function_btoo714yd71g_2"
+    },
+    {
+      "role": "assistant",
+      "content": "",
+      "reasoning": "I see - there are skills in `/home/marco/.hermes/skills/` (user skills) and `/home/marco/.hermes/hermes-agent/skills/` (built-in agent skills). The skills format appears to be a `SKILL.md` file with YAML frontmatter containing metadata.\n\nFor the hindsight skill, I should copy it to `/home/marco/.hermes/skills/`. The skill needs:\n1. A `skill.json` (metadata)\n2. A `SKILL.md` (the skill content)\n\nLet me check the skill format more carefully and then install the appropriate hindsight skill.\n\nFor Marco, since this is a personal VPS for an Italian crypto trader, the `hindsight-local` skill (using `uvx hindsight-embed`) seems most appropriate as it runs locally and doesn't require a separate server. The `hindsight-self-hosted` would require setting up a Hindsight server.\n\n\nNow I'll install the `hindsight-local` skill by copying the files to the skills directory and creating the necessary metadata.",
+      "finish_reason": "tool_calls",
+      "reasoning_content": "I see - there are skills in `/home/marco/.hermes/skills/` (user skills) and `/home/marco/.hermes/hermes-agent/skills/` (built-in agent skills). The skills format appears to be a `SKILL.md` file with YAML frontmatter containing metadata.\n\nFor the hindsight skill, I should copy it to `/home/marco/.hermes/skills/`. The skill needs:\n1. A `skill.json` (metadata)\n2. A `SKILL.md` (the skill content)\n\nLet me check the skill format more carefully and then install the appropriate hindsight skill.\n\nFor Marco, since this is a personal VPS for an Italian crypto trader, the `hindsight-local` skill (using `uvx hindsight-embed`) seems most appropriate as it runs locally and doesn't require a separate server. The `hindsight-self-hosted` would require setting up a Hindsight server.\n\n\nNow I'll install the `hindsight-local` skill by copying the files to the skills directory and creating the necessary metadata.",
+      "reasoning_details": [
+        {
+          "signature": "4ad4f911415c882ed3c101ac0cbf7888388baf330c87957483f405f574789ebf",
+          "thinking": "I see - there are skills in `/home/marco/.hermes/skills/` (user skills) and `/home/marco/.hermes/hermes-agent/skills/` (built-in agent skills). The skills format appears to be a `SKILL.md` file with YAML frontmatter containing metadata.\n\nFor the hindsight skill, I should copy it to `/home/marco/.hermes/skills/`. The skill needs:\n1. A `skill.json` (metadata)\n2. A `SKILL.md` (the skill content)\n\nLet me check the skill format more carefully and then install the appropriate hindsight skill.\n\nFor Marco, since this is a personal VPS for an Italian crypto trader, the `hindsight-local` skill (using `uvx hindsight-embed`) seems most appropriate as it runs locally and doesn't require a separate server. The `hindsight-self-hosted` would require setting up a Hindsight server.\n\n\nNow I'll install the `hindsight-local` skill by copying the files to the skills directory and creating the necessary metadata.",
+          "type": "thinking"
+        }
+      ],
+      "tool_calls": [
+        {
+          "id": "call_function_t1xrid973ao5_1",
+          "call_id": "call_function_t1xrid973ao5_1",
+          "response_item_id": "fc_function_t1xrid973ao5_1",
+          "type": "function",
+          "function": {
+            "name": "terminal",
+            "arguments": "{\"command\": \"ls /home/marco/.hermes/skills/obsidian-hermes-memory/SKILL.md 2>/dev/null && head -5 /home/marco/.hermes/skills/obsidian-hermes-memory/SKILL.md\"}"
+          }
+        },
+        {
+          "id": "call_function_t1xrid973ao5_2",
+          "call_id": "call_function_t1xrid973ao5_2",
+          "response_item_id": "fc_function_t1xrid973ao5_2",
+          "type": "function",
+          "function": {
+            "name": "read_file",
+            "arguments": "{\"path\": \"/tmp/hindsight/skills/hindsight-local/SKILL.md\"}"
+          }
+        }
+      ]
+    },
+    {
+      "role": "tool",
+      "name": "terminal",
+      "content": "{\"output\": \"/home/marco/.hermes/skills/obsidian-hermes-memory/SKILL.md\\n---\\nname: obsidian-hermes-memory\\ndescription: Manage Marco's Obsidian Knowledge Graph / Memory Vault synced via GitHub. Read, create, update vault files, and push changes so they sync to Marco's Macbook.\\n---\", \"exit_code\": 0, \"error\": null}",
+      "tool_call_id": "call_function_t1xrid973ao5_1"
+    },
+    {
+      "role": "tool",
+      "name": "read_file",
+      "content": "{\"status\": \"unchanged\", \"message\": \"File unchanged since last read. The content from the earlier read_file result in this conversation is still current — refer to that instead of re-reading.\", \"path\": \"/tmp/hindsight/skills/hindsight-local/SKILL.md\", \"dedup\": true, \"content_returned\": false}",
+      "tool_call_id": "call_function_t1xrid973ao5_2"
+    },
+    {
+      "role": "assistant",
+      "content": "",
+      "reasoning": "Now I understand the structure. The skills are installed in `/home/marco/.hermes/skills/`. Each skill has at minimum a `SKILL.md` file (and optionally a `skill.json`).\n\nFor the hindsight-local skill, which is the local/embedded version that works without a server, I need to:\n\n1. Copy the `hindsight-local` skill folder to `/home/marco/.hermes/skills/`\n2. Install `hindsight-embed` (the CLI for local use)\n3. Verify the installation\n\nThe `hindsight-local` skill uses `uvx hindsight-embed` which means it uses `uvx` (the UV runner) to run hindsight-embed without installation. This is already available since `uv --version` returned `0.11.7`.\n \nFor a VPS environment, `hindsight-local` is the right choice since it uses an embedded SQLite database rather than requiring Docker. I'll copy the skill folder and test if `uvx hindsight-embed` works as expected.",
+      "finish_reason": "tool_calls",
+      "reasoning_content": "Now I understand the structure. The skills are installed in `/home/marco/.hermes/skills/`. Each skill has at minimum a `SKILL.md` file (and optionally a `skill.json`).\n\nFor the hindsight-local skill, which is the local/embedded version that works without a server, I need to:\n\n1. Copy the `hindsight-local` skill folder to `/home/marco/.hermes/skills/`\n2. Install `hindsight-embed` (the CLI for local use)\n3. Verify the installation\n\nThe `hindsight-local` skill uses `uvx hindsight-embed` which means it uses `uvx` (the UV runner) to run hindsight-embed without installation. This is already available since `uv --version` returned `0.11.7`.\n \nFor a VPS environment, `hindsight-local` is the right choice since it uses an embedded SQLite database rather than requiring Docker. I'll copy the skill folder and test if `uvx hindsight-embed` works as expected.",
+      "reasoning_details": [
+        {
+          "signature": "0316e8b193472c6df3069651935085b2c172228803d3643e11fb6c5b2548346c",
+          "thinking": "Now I understand the structure. The skills are installed in `/home/marco/.hermes/skills/`. Each skill has at minimum a `SKILL.md` file (and optionally a `skill.json`).\n\nFor the hindsight-local skill, which is the local/embedded version that works without a server, I need to:\n\n1. Copy the `hindsight-local` skill folder to `/home/marco/.hermes/skills/`\n2. Install `hindsight-embed` (the CLI for local use)\n3. Verify the installation\n\nThe `hindsight-local` skill uses `uvx hindsight-embed` which means it uses `uvx` (the UV runner) to run hindsight-embed without installation. This is already available since `uv --version` returned `0.11.7`.\n \nFor a VPS environment, `hindsight-local` is the right choice since it uses an embedded SQLite database rather than requiring Docker. I'll copy the skill folder and test if `uvx hindsight-embed` works as expected.",
+          "type": "thinking"
+        }
+      ],
+      "tool_calls": [
+        {
+          "id": "call_function_z4sdjwoq7z3f_1",
+          "call_id": "call_function_z4sdjwoq7z3f_1",
+          "response_item_id": "fc_function_z4sdjwoq7z3f_1",
+          "type": "function",
+          "function": {
+            "name": "terminal",
+            "arguments": "{\"command\": \"cp -r /tmp/hindsight/skills/hindsight-local /home/marco/.hermes/skills/hindsight-local\"}"
+          }
+        },
+        {
+          "id": "call_function_z4sdjwoq7z3f_2",
+          "call_id": "call_function_z4sdjwoq7z3f_2",
+          "response_item_id": "fc_function_z4sdjwoq7z3f_2",
+          "type": "function",
+          "function": {
+            "name": "terminal",
+            "arguments": "{\"command\": \"uvx hindsight-embed --version 2>&1\"}"
+          }
+        }
+      ]
+    },
+    {
+      "role": "tool",
+      "name": "terminal",
+      "content": "{\"output\": \"\", \"exit_code\": 0, \"error\": null}",
+      "tool_call_id": "call_function_z4sdjwoq7z3f_1"
+    },
+    {
+      "role": "tool",
+      "name": "terminal",
+      "content": "{\"output\": \"Error: LLM API key is required.\\nRun 'hindsight-embed configure' to set up.\", \"exit_code\": 1, \"error\": null}",
+      "tool_call_id": "call_function_z4sdjwoq7z3f_2"
+    },
+    {
+      "role": "assistant",
+      "content": "",
+      "reasoning": "Good - `hindsight-embed` is installed via `uvx` and is accessible. The error is just that it needs an LLM API key to work, which is expected on first run. Let me verify the skill was copied properly and check the installation.",
+      "finish_reason": "tool_calls",
+      "reasoning_content": "Good - `hindsight-embed` is installed via `uvx` and is accessible. The error is just that it needs an LLM API key to work, which is expected on first run. Let me verify the skill was copied properly and check the installation.",
+      "reasoning_details": [
+        {
+          "signature": "2fe70b3a8593800f2a6cef46a420254a10e4430b6e20aba63a73b94af750fe4a",
+          "thinking": "Good - `hindsight-embed` is installed via `uvx` and is accessible. The error is just that it needs an LLM API key to work, which is expected on first run. Let me verify the skill was copied properly and check the installation.",
+          "type": "thinking"
+        }
+      ],
+      "tool_calls": [
+        {
+          "id": "call_function_24elq66hngs0_1",
+          "call_id": "call_function_24elq66hngs0_1",
+          "response_item_id": "fc_function_24elq66hngs0_1",
+          "type": "function",
+          "function": {
+            "name": "terminal",
+            "arguments": "{\"command\": \"ls /home/marco/.hermes/skills/hindsight-local/\"}"
+          }
+        },
+        {
+          "id": "call_function_24elq66hngs0_2",
+          "call_id": "call_function_24elq66hngs0_2",
+          "response_item_id": "fc_function_24elq66hngs0_2",
+          "type": "function",
+          "function": {
+            "name": "terminal",
+            "arguments": "{\"command\": \"uvx hindsight-embed daemon status 2>&1\"}"
+          }
+        }
+      ]
+    },
+    {
+      "role": "tool",
+      "name": "terminal",
+      "content": "{\"output\": \"SKILL.md\", \"exit_code\": 0, \"error\": null}",
+      "tool_call_id": "call_function_24elq66hngs0_1"
+    },
+    {
+      "role": "tool",
+      "name": "terminal",
+      "content": "{\"output\": \"╭─────────────────────────────── Daemon Status ────────────────────────────────╮\\n│ Daemon is not running                                                        │\\n╰──────────────────────────────────────────────────────────────────────────────╯\", \"exit_code\": 1, \"error\": null}",
+      "tool_call_id": "call_function_24elq66hngs0_2"
+    },
+    {
+      "role": "assistant",
+      "content": "",
+      "reasoning": "Good. The `hindsight-local` skill is installed. Now `uvx hindsight-embed` can be run. The daemon isn't running but that's expected - it would need to be started by the user. The skill file uses `uvx hindsight-embed` which runs it as a temporary command.\n\nLet me verify everything is in place and provide the summary.",
+      "finish_reason": "tool_calls",
+      "reasoning_content": "Good. The `hindsight-local` skill is installed. Now `uvx hindsight-embed` can be run. The daemon isn't running but that's expected - it would need to be started by the user. The skill file uses `uvx hindsight-embed` which runs it as a temporary command.\n\nLet me verify everything is in place and provide the summary.",
+      "reasoning_details": [
+        {
+          "signature": "253af5fd8d7675cc09bf8f1f8c7bf490c5f8d9a3ec3cc5316cd62cbd76500b91",
+          "thinking": "Good. The `hindsight-local` skill is installed. Now `uvx hindsight-embed` can be run. The daemon isn't running but that's expected - it would need to be started by the user. The skill file uses `uvx hindsight-embed` which runs it as a temporary command.\n\nLet me verify everything is in place and provide the summary.",
+          "type": "thinking"
+        }
+      ],
+      "tool_calls": [
+        {
+          "id": "call_function_i9zvw8dlfn9i_1",
+          "call_id": "call_function_i9zvw8dlfn9i_1",
+          "response_item_id": "fc_function_i9zvw8dlfn9i_1",
+          "type": "function",
+          "function": {
+            "name": "terminal",
+            "arguments": "{\"command\": \"ls -la /home/marco/.hermes/skills/hindsight-local/ && echo \\\"---\\\" && head -20 /home/marco/.hermes/skills/hindsight-local/SKILL.md\"}"
+          }
+        }
+      ]
+    },
+    {
+      "role": "tool",
+      "name": "terminal",
+      "content": "{\"output\": \"total 16\\ndrwxrwxr-x  2 marco marco 4096 mag  5 12:13 .\\ndrwxrwxr-x 53 marco marco 4096 mag  5 12:13 ..\\n-rw-rw-r--  1 marco marco 4489 mag  5 12:13 SKILL.md\\n---\\n---\\nname: hindsight-local\\ndescription: Store user preferences, learnings from tasks, and procedure outcomes. Use to remember what works and recall context before new tasks. (user)\\n---\\n\\n# Hindsight Memory Skill (Local)\\n\\nYou have persistent memory via the `hindsight-embed` CLI. **Proactively store learnings and recall context** to provide better assistance.\\n\\n## Setup Check (First-Time Only)\\n\\nBefore using memory commands, verify Hindsight is configured:\\n\\n```bash\\nuvx hindsight-embed daemon status\\n```\\n\\n**If this fails or shows \\\"not configured\\\"**, run the interactive setup:\\n\\n```bash\", \"exit_code\": 0, \"error\": null}",
+      "tool_call_id": "call_function_i9zvw8dlfn9i_1"
+    },
+    {
+      "role": "assistant",
+      "content": "",
+      "reasoning": "The skill is installed. Let me now test if the `hindsight-embed` CLI works (even though the daemon isn't running, the CLI itself is functional). Let me also check if we need to configure it. The skill is at `/home/marco/.hermes/skills/hindsight-local/SKILL.md`.\n\nLet me also check the README for more details about the `hindsight-local` skill variant.",
+      "finish_reason": "tool_calls",
+      "reasoning_content": "The skill is installed. Let me now test if the `hindsight-embed` CLI works (even though the daemon isn't running, the CLI itself is functional). Let me also check if we need to configure it. The skill is at `/home/marco/.hermes/skills/hindsight-local/SKILL.md`.\n\nLet me also check the README for more details about the `hindsight-local` skill variant.",
+      "reasoning_details": [
+        {
+          "signature": "1725e9a936b0270f194044b335dc402d828042451332b5ac797adb7effe63819",
+          "thinking": "The skill is installed. Let me now test if the `hindsight-embed` CLI works (even though the daemon isn't running, the CLI itself is functional). Let me also check if we need to configure it. The skill is at `/home/marco/.hermes/skills/hindsight-local/SKILL.md`.\n\nLet me also check the README for more details about the `hindsight-local` skill variant.",
+          "type": "thinking"
+        }
+      ],
+      "tool_calls": [
+        {
+          "id": "call_function_egm9cjz4imzx_1",
+          "call_id": "call_function_egm9cjz4imzx_1",
+          "response_item_id": "fc_function_egm9cjz4imzx_1",
+          "type": "function",
+          "function": {
+            "name": "terminal",
+            "arguments": "{\"command\": \"uvx hindsight-embed --help 2>&1 | head -30\"}"
+          }
+        },
+        {
+          "id": "call_function_egm9cjz4imzx_2",
+          "call_id": "call_function_egm9cjz4imzx_2",
+          "response_item_id": "fc_function_egm9cjz4imzx_2",
+          "type": "function",
+          "function": {
+            "name": "terminal",
+            "arguments": "{\"command\": \"ls /tmp/hindsight/skills/hindsight-local/\"}"
+          }
+        }
+      ]
+    },
+    {
+      "role": "tool",
+      "name": "terminal",
+      "content": "{\"output\": \"Hindsight Embedded CLI - local memory operations with automatic daemon management.\\n\\nUsage: hindsight-embed [-p PROFILE] <command> [options]\\n\\nProfile management:\\n    profile create NAME --port PORT [--env KEY=VALUE ...]   Create a new profile\\n    profile set-env NAME KEY VALUE                          Set/update environment variable\\n    profile remove-env NAME KEY                             Remove environment variable\\n    profile list [-o json]                                  List all profiles\\n    profile show [-o json]                                  Show current active profile\\n    profile set-active NAME                                 Set active profile\\n    profile delete NAME                                     Delete a profile\\n\\nDaemon management:\\n    daemon start           Start the background daemon\\n    daemon stop            Stop the daemon\\n    daemon status          Check daemon status\\n    daemon logs [-f] [-n]  View daemon logs\\n\\nUI (control plane):\\n    ui start [--port PORT] [--hostname HOST]  Start the web UI (default port: daemon_port + 10000)\\n    ui stop [--port PORT]                     Stop the web UI\\n    ui status [--port PORT]                   Check UI status\\n    ui logs [-f] [-n]                         View UI logs\\n\\nCLI commands (forwarded to hindsight-cli):\\n    memory retain <bank> <content>   Store a memory\\n    memory recall <bank> <query>     Search memories\\n    memory reflect <bank> <query>    Generate contextual answer\\n    bank list                        List memory banks\", \"exit_code\": 0, \"error\": null}",
+      "tool_call_id": "call_function_egm9cjz4imzx_1"
+    },
+    {
+      "role": "tool",
+      "name": "terminal",
+      "content": "{\"output\": \"SKILL.md\", \"exit_code\": 0, \"error\": null}",
+      "tool_call_id": "call_function_egm9cjz4imzx_2"
+    },
+    {
+      "role": "assistant",
+      "content": "",
+      "reasoning": "The skill is properly installed. The README and SKILL.md don't mention needing any additional files. The `hindsight-embed` tool is installed via `uvx` (from the `hindsight-embed` package in PyPI).\n\nLet me now verify everything is working properly by checking the daemon status and seeing if the skill is recognized by Hermes Agent.\n\nActually, let me also check if there's a skill registry or index that needs to be updated. Looking at the existing skills, they all just have SKILL.md files. Let me check if there are any skill.json files.",
+      "finish_reason": "tool_calls",
+      "reasoning_content": "The skill is properly installed. The README and SKILL.md don't mention needing any additional files. The `hindsight-embed` tool is installed via `uvx` (from the `hindsight-embed` package in PyPI).\n\nLet me now verify everything is working properly by checking the daemon status and seeing if the skill is recognized by Hermes Agent.\n\nActually, let me also check if there's a skill registry or index that needs to be updated. Looking at the existing skills, they all just have SKILL.md files. Let me check if there are any skill.json files.",
+      "reasoning_details": [
+        {
+          "signature": "f2c3233a28371248f9b0cccd8bf34bd62e0174372069b041ee0a8aa716b047d9",
+          "thinking": "The skill is properly installed. The README and SKILL.md don't mention needing any additional files. The `hindsight-embed` tool is installed via `uvx` (from the `hindsight-embed` package in PyPI).\n\nLet me now verify everything is working properly by checking the daemon status and seeing if the skill is recognized by Hermes Agent.\n\nActually, let me also check if there's a skill registry or index that needs to be updated. Looking at the existing skills, they all just have SKILL.md files. Let me check if there are any skill.json files.",
+          "type": "thinking"
+        }
+      ],
+      "tool_calls": [
+        {
+          "id": "call_function_s3sff7ou4ubj_1",
+          "call_id": "call_function_s3sff7ou4ubj_1",
+          "response_item_id": "fc_function_s3sff7ou4ubj_1",
+          "type": "function",
+          "function": {
+            "name": "terminal",
+            "arguments": "{\"command\": \"ls /home/marco/.hermes/skills/ | wc -l && echo \\\"---checking skill.json patterns---\\\" && find /home/marco/.hermes/skills/ -maxdepth 2 -name \\\"skill.json\\\" | head -5\"}"
+          }
+        },
+        {
+          "id": "call_function_s3sff7ou4ubj_2",
+          "call_id": "call_function_s3sff7ou4ubj_2",
+          "response_item_id": "fc_function_s3sff7ou4ubj_2",
+          "type": "function",
+          "function": {
+            "name": "terminal",
+            "arguments": "{\"command\": \"uvx hindsight-embed daemon status 2>&1; echo \\\"exit: $?\\\"\"}"
+          }
+        }
+      ]
+    },
+    {
+      "role": "tool",
+      "name": "terminal",
+      "content": "{\"output\": \"50\\n---checking skill.json patterns---\\n/home/marco/.hermes/skills/trading/skill.json\", \"exit_code\": 0, \"error\": null}",
+      "tool_call_id": "call_function_s3sff7ou4ubj_1"
+    },
+    {
+      "role": "tool",
+      "name": "terminal",
+      "content": "{\"output\": \"╭─────────────────────────────── Daemon Status ────────────────────────────────╮\\n│ Daemon is not running                                                        │\\n╰──────────────────────────────────────────────────────────────────────────────╯\\nexit: 1\", \"exit_code\": 0, \"error\": null}",
+      "tool_call_id": "call_function_s3sff7ou4ubj_2"
+    },
+    {
+      "role": "assistant",
+      "content": "## Summary\n\n**Installed:** Hindsight memory skill (`hindsight-local`) for Hermes Agent\n\n### What I Did\n\n1. **Cloned** the repository to `/tmp/hindsight`\n2. **Reviewed** the README and skill documentation — found 5 skill variants under `skills/`:\n   - `hindsight-architect` (architecture/team)\n   - `hindsight-cloud` (Vectorize.io hosted)\n   - `hindsight-docs` (documentation)\n   - `hindsight-local` ← **selected for self-hosted/Linux VPS use**\n   - `hindsight-self-hosted` (team/shared bank variant)\n3. **Selected `hindsight-local`** as the right fit for Marco's Linux VPS (local embedded mode, no external server required)\n4. **Copied** the skill to the Hermes skills directory\n\n### Install Path\n```\n/home/marco/.hermes/skills/hindsight-local/SKILL.md\n```\n\n### Verification\n```\n$ uvx hindsight-embed daemon status\n╭───────────────────────────────────────────────╮\n│ Daemon is not running                        │\n╰───────────────────────────────────────────────╯\n\n$ ls /home/marco/.hermes/skills/hindsight-local/\nSKILL.md\n```\n\n### Commands Used\n```bash\ngit clone https://github.com/vectorize-io/hindsight /tmp/hindsight\ncp -r /tmp/hindsight/skills/hindsight-local /home/marco/.hermes/skills/hindsight-local\nuvx hindsight-embed daemon status   # verification\n```\n\n### Post-Install Note\nThe skill requires first-time configuration via `uvx hindsight-embed configure` to set up an LLM provider and API key. The SKILL.md guides through this step when the agent first attempts memory operations.",
+      "reasoning": "Good. The skill is installed and `uvx hindsight-embed` is available. The daemon needs configuration but that's expected - the skill will guide users through setup.\n\nLet me provide the summary.",
+      "finish_reason": "stop",
+      "reasoning_content": "Good. The skill is installed and `uvx hindsight-embed` is available. The daemon needs configuration but that's expected - the skill will guide users through setup.\n\nLet me provide the summary.",
+      "reasoning_details": [
+        {
+          "signature": "a91d48def1b29fd53f3739e6a374fcbc219abffe862f6b0d0a8e4a86f0d77ca7",
+          "thinking": "Good. The skill is installed and `uvx hindsight-embed` is available. The daemon needs configuration but that's expected - the skill will guide users through setup.\n\nLet me provide the summary.",
+          "type": "thinking"
+        }
+      ]
+    }
+  ]
+}

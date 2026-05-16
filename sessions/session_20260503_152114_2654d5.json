@@ -1,0 +1,495 @@
+{
+  "session_id": "20260503_152114_2654d5",
+  "model": "MiniMax M2.7 Highspeed",
+  "base_url": "https://api.minimax.io/anthropic",
+  "platform": "telegram",
+  "session_start": "2026-05-03T15:21:14.785060",
+  "last_updated": "2026-05-03T15:24:13.388657",
+  "system_prompt": "You are Hermes Agent, an intelligent AI assistant created by Nous Research. You are helpful, knowledgeable, and direct. You assist users with a wide range of tasks including answering questions, writing and editing code, analyzing information, creative work, and executing actions via your tools. You communicate clearly, admit uncertainty when appropriate, and prioritize being genuinely useful over being verbose unless otherwise directed below. Be targeted and efficient in your exploration and investigations.\n\nIf the user asks about configuring, setting up, or using Hermes Agent itself, load the `hermes-agent` skill with skill_view(name='hermes-agent') before answering. Docs: https://hermes-agent.nousresearch.com/docs\n\nConversation started: Sunday, May 03, 2026 03:21 PM\nModel: MiniMax M2.7 Highspeed\nProvider: minimax\n\nYou are on a text messaging communication platform, Telegram. Standard markdown is automatically converted to Telegram format. Supported: **bold**, *italic*, ~~strikethrough~~, ||spoiler||, `inline code`, ```code blocks```, [links](url), and ## headers. Telegram has NO table syntax — prefer bullet lists or labeled key: value pairs over pipe tables (any tables you do emit are auto-rewritten into row-group bullets, which you can produce directly for cleaner output). You can send media files natively: to deliver a file to the user, include MEDIA:/absolute/path/to/file in your response. Images (.png, .jpg, .webp) appear as photos, audio (.ogg) sends as voice bubbles, and videos (.mp4) play inline. You can also include image URLs in markdown format ![alt](url) and they will be sent as native photos.",
+  "tools": [
+    {
+      "type": "function",
+      "function": {
+        "name": "patch",
+        "description": "Targeted find-and-replace edits in files. Use this instead of sed/awk in terminal. Uses fuzzy matching (9 strategies) so minor whitespace/indentation differences won't break it. Returns a unified diff. Auto-runs syntax checks after editing.\n\nReplace mode (default): find a unique string and replace it.\nPatch mode: apply V4A multi-file patches for bulk changes.",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "mode": {
+              "type": "string",
+              "enum": [
+                "replace",
+                "patch"
+              ],
+              "description": "Edit mode: 'replace' for targeted find-and-replace, 'patch' for V4A multi-file patches",
+              "default": "replace"
+            },
+            "path": {
+              "type": "string",
+              "description": "File path to edit (required for 'replace' mode)"
+            },
+            "old_string": {
+              "type": "string",
+              "description": "Text to find in the file (required for 'replace' mode). Must be unique in the file unless replace_all=true. Include enough surrounding context to ensure uniqueness."
+            },
+            "new_string": {
+              "type": "string",
+              "description": "Replacement text (required for 'replace' mode). Can be empty string to delete the matched text."
+            },
+            "replace_all": {
+              "type": "boolean",
+              "description": "Replace all occurrences instead of requiring a unique match (default: false)",
+              "default": false
+            },
+            "patch": {
+              "type": "string",
+              "description": "V4A format patch content (required for 'patch' mode). Format:\n*** Begin Patch\n*** Update File: path/to/file\n@@ context hint @@\n context line\n-removed line\n+added line\n*** End Patch"
+            }
+          },
+          "required": [
+            "mode"
+          ]
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "process",
+        "description": "Manage background processes started with terminal(background=true). Actions: 'list' (show all), 'poll' (check status + new output), 'log' (full output with pagination), 'wait' (block until done or timeout), 'kill' (terminate), 'write' (send raw stdin data without newline), 'submit' (send data + Enter, for answering prompts), 'close' (close stdin/send EOF).",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "action": {
+              "type": "string",
+              "enum": [
+                "list",
+                "poll",
+                "log",
+                "wait",
+                "kill",
+                "write",
+                "submit",
+                "close"
+              ],
+              "description": "Action to perform on background processes"
+            },
+            "session_id": {
+              "type": "string",
+              "description": "Process session ID (from terminal background output). Required for all actions except 'list'."
+            },
+            "data": {
+              "type": "string",
+              "description": "Text to send to process stdin (for 'write' and 'submit' actions)"
+            },
+            "timeout": {
+              "type": "integer",
+              "description": "Max seconds to block for 'wait' action. Returns partial output on timeout.",
+              "minimum": 1
+            },
+            "offset": {
+              "type": "integer",
+              "description": "Line offset for 'log' action (default: last 200 lines)"
+            },
+            "limit": {
+              "type": "integer",
+              "description": "Max lines to return for 'log' action",
+              "minimum": 1
+            }
+          },
+          "required": [
+            "action"
+          ]
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "read_file",
+        "description": "Read a text file with line numbers and pagination. Use this instead of cat/head/tail in terminal. Output format: 'LINE_NUM|CONTENT'. Suggests similar filenames if not found. Use offset and limit for large files. Reads exceeding ~100K characters are rejected; use offset and limit to read specific sections of large files. NOTE: Cannot read images or binary files — use vision_analyze for images.",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "path": {
+              "type": "string",
+              "description": "Path to the file to read (absolute, relative, or ~/path)"
+            },
+            "offset": {
+              "type": "integer",
+              "description": "Line number to start reading from (1-indexed, default: 1)",
+              "default": 1,
+              "minimum": 1
+            },
+            "limit": {
+              "type": "integer",
+              "description": "Maximum number of lines to read (default: 500, max: 2000)",
+              "default": 500,
+              "maximum": 2000
+            }
+          },
+          "required": [
+            "path"
+          ]
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "search_files",
+        "description": "Search file contents or find files by name. Use this instead of grep/rg/find/ls in terminal. Ripgrep-backed, faster than shell equivalents.\n\nContent search (target='content'): Regex search inside files. Output modes: full matches with line numbers, file paths only, or match counts.\n\nFile search (target='files'): Find files by glob pattern (e.g., '*.py', '*config*'). Also use this instead of ls — results sorted by modification time.",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "pattern": {
+              "type": "string",
+              "description": "Regex pattern for content search, or glob pattern (e.g., '*.py') for file search"
+            },
+            "target": {
+              "type": "string",
+              "enum": [
+                "content",
+                "files"
+              ],
+              "description": "'content' searches inside file contents, 'files' searches for files by name",
+              "default": "content"
+            },
+            "path": {
+              "type": "string",
+              "description": "Directory or file to search in (default: current working directory)",
+              "default": "."
+            },
+            "file_glob": {
+              "type": "string",
+              "description": "Filter files by pattern in grep mode (e.g., '*.py' to only search Python files)"
+            },
+            "limit": {
+              "type": "integer",
+              "description": "Maximum number of results to return (default: 50)",
+              "default": 50
+            },
+            "offset": {
+              "type": "integer",
+              "description": "Skip first N results for pagination (default: 0)",
+              "default": 0
+            },
+            "output_mode": {
+              "type": "string",
+              "enum": [
+                "content",
+                "files_only",
+                "count"
+              ],
+              "description": "Output format for grep mode: 'content' shows matching lines with line numbers, 'files_only' lists file paths, 'count' shows match counts per file",
+              "default": "content"
+            },
+            "context": {
+              "type": "integer",
+              "description": "Number of context lines before and after each match (grep mode only)",
+              "default": 0
+            }
+          },
+          "required": [
+            "pattern"
+          ]
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "terminal",
+        "description": "Execute shell commands on a Linux environment. Filesystem usually persists between calls.\n\nDo NOT use cat/head/tail to read files — use read_file instead.\nDo NOT use grep/rg/find to search — use search_files instead.\nDo NOT use ls to list directories — use search_files(target='files') instead.\nDo NOT use sed/awk to edit files — use patch instead.\nDo NOT use echo/cat heredoc to create files — use write_file instead.\nReserve terminal for: builds, installs, git, processes, scripts, network, package managers, and anything that needs a shell.\n\nForeground (default): Commands return INSTANTLY when done, even if the timeout is high. Set timeout=300 for long builds/scripts — you'll still get the result in seconds if it's fast. Prefer foreground for short commands.\nBackground: Set background=true to get a session_id. Two patterns:\n  (1) Long-lived processes that never exit (servers, watchers).\n  (2) Long-running tasks with notify_on_complete=true — you can keep working on other things and the system auto-notifies you when the task finishes. Great for test suites, builds, deployments, or anything that takes more than a minute.\nFor servers/watchers, do NOT use shell-level background wrappers (nohup/disown/setsid/trailing '&') in foreground mode. Use background=true so Hermes can track lifecycle and output.\nAfter starting a server, verify readiness with a health check or log signal, then run tests in a separate terminal() call. Avoid blind sleep loops.\nUse process(action=\"poll\") for progress checks, process(action=\"wait\") to block until done.\nWorking directory: Use 'workdir' for per-command cwd.\nPTY mode: Set pty=true for interactive CLI tools (Codex, Claude Code, Python REPL).\n\nDo NOT use vim/nano/interactive tools without pty=true — they hang without a pseudo-terminal. Pipe git output to cat if it might page.\n",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "command": {
+              "type": "string",
+              "description": "The command to execute on the VM"
+            },
+            "background": {
+              "type": "boolean",
+              "description": "Run the command in the background. Two patterns: (1) Long-lived processes that never exit (servers, watchers). (2) Long-running tasks paired with notify_on_complete=true — you can keep working and get notified when the task finishes. For short commands, prefer foreground with a generous timeout instead.",
+              "default": false
+            },
+            "timeout": {
+              "type": "integer",
+              "description": "Max seconds to wait (default: 180, foreground max: 600). Returns INSTANTLY when command finishes — set high for long tasks, you won't wait unnecessarily. Foreground timeout above 600s is rejected; use background=true for longer commands.",
+              "minimum": 1
+            },
+            "workdir": {
+              "type": "string",
+              "description": "Working directory for this command (absolute path). Defaults to the session working directory."
+            },
+            "pty": {
+              "type": "boolean",
+              "description": "Run in pseudo-terminal (PTY) mode for interactive CLI tools like Codex, Claude Code, or Python REPL. Only works with local and SSH backends. Default: false.",
+              "default": false
+            },
+            "notify_on_complete": {
+              "type": "boolean",
+              "description": "When true (and background=true), you'll be automatically notified exactly once when the process finishes. **This is the right choice for almost every long-running task** — tests, builds, deployments, multi-item batch jobs, anything that takes over a minute and has a defined end. Use this and keep working on other things; the system notifies you on exit. MUTUALLY EXCLUSIVE with watch_patterns — when both are set, watch_patterns is dropped.",
+              "default": false
+            },
+            "watch_patterns": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              },
+              "description": "Strings to watch for in background process output. HARD RATE LIMIT: at most 1 notification per 15 seconds per process — matches arriving inside the cooldown are dropped. After 3 consecutive 15-second windows with dropped matches, watch_patterns is automatically disabled for that process and promoted to notify_on_complete behavior (one notification on exit, no more mid-process spam). USE ONLY for truly rare, one-shot mid-process signals on LONG-LIVED processes that will never exit on their own — e.g. ['Application startup complete'] on a server so you know when to hit its endpoint, or ['migration done'] on a daemon. DO NOT use for: (1) end-of-run markers like 'DONE'/'PASS' — use notify_on_complete instead; (2) error patterns like 'ERROR'/'Traceback' in loops or multi-item batch jobs — they fire on every iteration and you'll hit the strike limit fast; (3) anything you'd ever combine with notify_on_complete. When in doubt, choose notify_on_complete. MUTUALLY EXCLUSIVE with notify_on_complete — set one, not both."
+            }
+          },
+          "required": [
+            "command"
+          ]
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "write_file",
+        "description": "Write content to a file, completely replacing existing content. Use this instead of echo/cat heredoc in terminal. Creates parent directories automatically. OVERWRITES the entire file — use 'patch' for targeted edits.",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "path": {
+              "type": "string",
+              "description": "Path to the file to write (will be created if it doesn't exist, overwritten if it does)"
+            },
+            "content": {
+              "type": "string",
+              "description": "Complete content to write to the file"
+            }
+          },
+          "required": [
+            "path",
+            "content"
+          ]
+        }
+      }
+    }
+  ],
+  "message_count": 15,
+  "messages": [
+    {
+      "role": "user",
+      "content": "Create portfolio-heatmap and crypto-risk-management skills in ~/.hermes/skills/trading/. Return what you built."
+    },
+    {
+      "role": "assistant",
+      "content": "",
+      "reasoning": "I need to create two skills in the trading directory:\n1. portfolio-heatmap\n2. crypto-risk-management\n\nLet me first check if the directory exists and understand the skill format used in this environment.",
+      "finish_reason": "tool_calls",
+      "reasoning_content": "I need to create two skills in the trading directory:\n1. portfolio-heatmap\n2. crypto-risk-management\n\nLet me first check if the directory exists and understand the skill format used in this environment.",
+      "reasoning_details": [
+        {
+          "signature": "83ced35d9e0656a2e692423db41e58f402a3b1bf81004b264f83190c6a38d83b",
+          "thinking": "I need to create two skills in the trading directory:\n1. portfolio-heatmap\n2. crypto-risk-management\n\nLet me first check if the directory exists and understand the skill format used in this environment.",
+          "type": "thinking"
+        }
+      ],
+      "tool_calls": [
+        {
+          "id": "call_function_nr2u88vw03bh_1",
+          "call_id": "call_function_nr2u88vw03bh_1",
+          "response_item_id": "fc_function_nr2u88vw03bh_1",
+          "type": "function",
+          "function": {
+            "name": "terminal",
+            "arguments": "{\"command\": \"ls ~/.hermes/skills/ 2>/dev/null || echo \\\"Directory does not exist\\\"\"}"
+          }
+        },
+        {
+          "id": "call_function_nr2u88vw03bh_2",
+          "call_id": "call_function_nr2u88vw03bh_2",
+          "response_item_id": "fc_function_nr2u88vw03bh_2",
+          "type": "function",
+          "function": {
+            "name": "search_files",
+            "arguments": "{\"pattern\": \"*.md\", \"target\": \"files\", \"path\": \"/home/marco/.hermes/skills\"}"
+          }
+        }
+      ]
+    },
+    {
+      "role": "tool",
+      "content": "{\"output\": \"apple\\nautomation\\nautonomous-ai-agents\\nblack-forest-labs\\ncreative\\ndata-science\\ndevops\\ndiagramming\\ndiscord-message-content-intent\\ndogfood\\ndomain\\nemail\\nfeeds\\ngaming\\ngifs\\ngithub\\nhermes-gateway-restart-notification\\nhermes-security-hardening\\nhermes-weather-plugin\\nhermes-web-search-plus\\ninference-sh\\nintegration\\nleisure\\nmcp\\nmedia\\nmessaging\\nmlops\\nmodel-selection\\nnetworking\\nnote-taking\\nobsidian-hermes-memory\\nopenrouter-cost-optimization\\nproductivity\\nred-teaming\\nresearch\\nsecurity\\nsecurity-health-check\\nsmart-home\\nsocial-media\\nsoftware-development\\nsystem-maintenance\\ntrading\\nvectorized-crypto-backtester\\nweather-plugin\\nweb-checks\\nweb-development\\nwondelai\\nyuanbao\", \"exit_code\": 0, \"error\": null}",
+      "tool_call_id": "call_function_nr2u88vw03bh_1"
+    },
+    {
+      "role": "tool",
+      "content": "{\"total_count\": 0}",
+      "tool_call_id": "call_function_nr2u88vw03bh_2"
+    },
+    {
+      "role": "assistant",
+      "content": "",
+      "reasoning": "The trading directory already exists. Let me check what's inside it.",
+      "finish_reason": "tool_calls",
+      "reasoning_content": "The trading directory already exists. Let me check what's inside it.",
+      "reasoning_details": [
+        {
+          "signature": "b7503279647279bbbaf114cf608d4d882ead7b1db0bfe0845e1598e24d70fbd6",
+          "thinking": "The trading directory already exists. Let me check what's inside it.",
+          "type": "thinking"
+        }
+      ],
+      "tool_calls": [
+        {
+          "id": "call_function_emd72bfp58pp_1",
+          "call_id": "call_function_emd72bfp58pp_1",
+          "response_item_id": "fc_function_emd72bfp58pp_1",
+          "type": "function",
+          "function": {
+            "name": "search_files",
+            "arguments": "{\"pattern\": \"*\", \"target\": \"files\", \"path\": \"/home/marco/.hermes/skills/trading\"}"
+          }
+        }
+      ]
+    },
+    {
+      "role": "tool",
+      "content": "{\"total_count\": 0}",
+      "tool_call_id": "call_function_emd72bfp58pp_1"
+    },
+    {
+      "role": "assistant",
+      "content": "",
+      "reasoning": "The trading directory exists but is empty. Let me create the two skills. I'll start with portfolio-heatmap and then crypto-risk-management.",
+      "finish_reason": "tool_calls",
+      "reasoning_content": "The trading directory exists but is empty. Let me create the two skills. I'll start with portfolio-heatmap and then crypto-risk-management.",
+      "reasoning_details": [
+        {
+          "signature": "c4079df1e48b115b5533faa47a9f83f6f7c7460473b123b82d298e40c7d0c3a1",
+          "thinking": "The trading directory exists but is empty. Let me create the two skills. I'll start with portfolio-heatmap and then crypto-risk-management.",
+          "type": "thinking"
+        }
+      ],
+      "tool_calls": [
+        {
+          "id": "call_function_72nkb7g1ml0a_1",
+          "call_id": "call_function_72nkb7g1ml0a_1",
+          "response_item_id": "fc_function_72nkb7g1ml0a_1",
+          "type": "function",
+          "function": {
+            "name": "terminal",
+            "arguments": "{\"command\": \"mkdir -p ~/.hermes/skills/trading\"}"
+          }
+        }
+      ]
+    },
+    {
+      "role": "tool",
+      "content": "{\"output\": \"\", \"exit_code\": 0, \"error\": null}",
+      "tool_call_id": "call_function_72nkb7g1ml0a_1"
+    },
+    {
+      "role": "assistant",
+      "content": "",
+      "reasoning": "Now let me create both skills. I'll create detailed, working skills with code examples, API endpoints, and pitfalls sections.",
+      "finish_reason": "tool_calls",
+      "reasoning_content": "Now let me create both skills. I'll create detailed, working skills with code examples, API endpoints, and pitfalls sections.",
+      "reasoning_details": [
+        {
+          "signature": "f1a0c7ba849562c1cc42c3c22bff5fd7b3f795372718651e7366a9d091f52155",
+          "thinking": "Now let me create both skills. I'll create detailed, working skills with code examples, API endpoints, and pitfalls sections.",
+          "type": "thinking"
+        }
+      ],
+      "tool_calls": [
+        {
+          "id": "call_function_udgd1gayqv9w_1",
+          "call_id": "call_function_udgd1gayqv9w_1",
+          "response_item_id": "fc_function_udgd1gayqv9w_1",
+          "type": "function",
+          "function": {
+            "name": "write_file",
+            "arguments": "{\"path\": \"/home/marco/.hermes/skills/trading/portfolio-heatmap.md\", \"content\": \"# Portfolio Heatmap\\n\\n## Description\\nVisualizes portfolio allocation and performance as a heatmap using hierarchical treemaps. Supports crypto, stocks, and mixed portfolios. Integrates with CoinGecko, Yahoo Finance, and CSV imports.\\n\\n## Definitions\\n- **heatmap**: A treemap visualization where tile size = position value and tile color = performance (green/red for gain/loss)\\n- **snapshots**: Stored JSON snapshots of portfolio state for historical comparison\\n- **rebalance alerts**: Configurable thresholds that trigger when an asset drifts beyond allocated weight\\n\\n## Invocation\\n```\\n@portfolio-heatmap [command] [options]\\n```\\n\\n## Commands\\n\\n### `build <source>`\\nBuild and display a portfolio heatmap.\\n\\n| Argument | Type | Description |\\n|----------|------|-------------|\\n| `source` | string | `crypto`, `stocks`, or path to CSV/JSON file |\\n\\n**Options:**\\n- `--output <path>` \\u2014 Save heatmap as PNG/SVG to file\\n- `--currency <code>` \\u2014 Display currency (USD, EUR, GBP, default: USD)\\n- `--title <text>` \\u2014 Custom heatmap title\\n- `--period <range>` \\u2014 Time period for performance colors: `1D`, `7D`, `30D`, `1Y`, `ALL` (default: 1D for crypto, 1D for stocks)\\n\\n**Examples:**\\n```\\n@portfolio-heatmap build crypto --period 7D\\n@portfolio-heatmap build stocks --currency EUR --title \\\"My Equity Portfolio\\\"\\n@portfolio-heatmap build /data/portfolio.csv --output heatmap.png\\n```\\n\\n### `snapshot [label]`\\nSave current portfolio state as a timestamped snapshot for later comparison.\\n\\n| Argument | Type | Description |\\n|----------|------|-------------|\\n| `label` | string | Optional label for the snapshot |\\n\\n### `compare <snapshot_a> <snapshot_b>`\\nCompare two portfolio snapshots side-by-side with delta annotations.\\n\\n| Argument | Type | Description |\\n|----------|------|-------------|\\n| `snapshot_a` | string | Label or ID of first snapshot |\\n| `snapshot_b` | string | Label or ID of second snapshot |\\n\\n### `alerts`\\nList active rebalance alerts and their current status.\\n\\n### `alert add <name> <asset> <threshold>`\\nCreate a new rebalance alert.\\n\\n| Argument | Type | Description |\\n|----------|------|-------------|\\n| `name` | string | Alert name |\\n| `asset` | string | Asset symbol (e.g., `BTC`, `ETH`) |\\n| `threshold` | float | Drift percentage to trigger alert |\\n\\n### `alert remove <name>`\\nDelete an alert by name.\\n\\n## API Endpoints\\n\\n### Internal Skill API\\n```\\n# Get portfolio data (used internally by heatmap builder)\\nskill_portfolio_heatmap_get_data(source: str, currency: str) -> dict\\n\\n# Trigger alert check\\nskill_portfolio_heatmap_check_alerts() -> list[dict]\\n```\\n\\n### External Data Sources\\n| Service | Endpoint Pattern | Auth |\\n|---------|------------------|------|\\n| CoinGecko | `https://api.coingecko.com/api/v3/` | API key (free tier: 10-50 calls/min) |\\n| Yahoo Finance | `https://query1.finance.yahoo.com/v8/finance/` | OAuth / cookie (unofficial) |\\n| Alpha Vantage | `https://www.alphavantage.co/query` | API key (free: 500/day) |\\n\\n## Configuration\\n\\n```json\\n{\\n  \\\"portfolio_heatmap\\\": {\\n    \\\"default_currency\\\": \\\"USD\\\",\\n    \\\"default_period\\\": \\\"1D\\\",\\n    \\\"color_scheme\\\": \\\"classic\\\",\\n    \\\"snapshots_dir\\\": \\\"~/.hermes/skills/trading/snapshots\\\",\\n    \\\"alerts\\\": [],\\n    \\\"data_sources\\\": {\\n      \\\"crypto\\\": {\\n        \\\"provider\\\": \\\"coingecko\\\",\\n        \\\"api_key_env\\\": \\\"COINGECKO_API_KEY\\\"\\n      },\\n      \\\"stocks\\\": {\\n        \\\"provider\\\": \\\"yahoo\\\",\\n        \\\"cookie_env\\\": \\\"YAHOO_COOKIE\\\"\\n      }\\n    }\\n  }\\n}\\n```\\n\\n## Code Examples\\n\\n### Python: Build a Crypto Heatmap\\n```python\\nimport requests\\nimport squarify\\nimport matplotlib.pyplot as plt\\nimport matplotlib.patches as mpatches\\nimport os\\n\\nCOINGECKO_BASE = \\\"https://api.coingecko.com/api/v3\\\"\\nAPI_KEY = os.getenv(\\\"COINGECKO_API_KEY\\\")\\n\\ndef get_portfolio_data(holdings: list[dict], currency: str = \\\"usd\\\") -> list[dict]:\\n    \\\"\\\"\\\"\\n    Fetch current prices and calculate portfolio data.\\n    holdings: [{\\\"id\\\": \\\"bitcoin\\\", \\\"symbol\\\": \\\"btc\\\", \\\"amount\\\": 0.5}, ...]\\n    \\\"\\\"\\\"\\n    ids = [h[\\\"id\\\"] for h in holdings]\\n    params = {\\n        \\\"ids\\\": \\\",\\\".join(ids),\\n        \\\"vs_currencies\\\": currency,\\n        \\\"include_24hr_change\\\": True,\\n    }\\n    headers = {\\\"x-cg-demo-api-key\\\": API_KEY} if API_KEY else {}\\n    \\n    resp = requests.get(\\n        f\\\"{COINGECKO_BASE}/simple/price\\\",\\n        params=params,\\n        headers=headers,\\n        timeout=10\\n    )\\n    resp.raise_for_status()\\n    prices = resp.json()\\n    \\n    portfolio = []\\n    total_value = 0.0\\n    for h in holdings:\\n        id_ = h[\\\"id\\\"]\\n        price = prices[id_].get(currency, 0)\\n        change_24h = prices[id_].get(f\\\"{currency}_24h_change\\\", 0)\\n        value = h[\\\"amount\\\"] * price\\n        total_value += value\\n        portfolio.append({\\n            \\\"id\\\": id_,\\n            \\\"symbol\\\": h[\\\"symbol\\\"].upper(),\\n            \\\"amount\\\": h[\\\"amount\\\"],\\n            \\\"price\\\": price,\\n            \\\"value\\\": value,\\n            \\\"change_24h\\\": change_24h,\\n            \\\"weight\\\": 0.0,  # calculated below\\n        })\\n    \\n    for asset in portfolio:\\n        asset[\\\"weight\\\"] = (asset[\\\"value\\\"] / total_value) * 100\\n    \\n    return portfolio\\n\\ndef build_heatmap(portfolio: list[dict], title: str = \\\"Portfolio Heatmap\\\",\\n                  output_path: str = None) -> str:\\n    \\\"\\\"\\\"\\n    Render a treemap heatmap. Tile size = value, tile color = 24h change.\\n    \\\"\\\"\\\"\\n    if not portfolio:\\n        return \\\"No portfolio data to display.\\\"\\n    \\n    values = [a[\\\"value\\\"] for a in portfolio]\\n    labels = [f\\\"{a['symbol']}\\\\n${a['value']:,.0f}\\\\n{a['change_24h']:+.1f}%\\\" for a in portfolio]\\n    \\n    # Color: green for positive, red for negative\\n    colors = []\\n    for a in portfolio:\\n        change = a[\\\"change_24h\\\"]\\n        if change > 5:\\n            colors.append(\\\"#00c853\\\")   # strong green\\n        elif change > 0:\\n            colors.append(\\\"#69f0ae\\\")  # light green\\n        elif change > -5:\\n            colors.append(\\\"#ff5252\\\")  # light red\\n        else:\\n            colors.append(\\\"#d50000\\\")  # strong red\\n    \\n    fig, ax = plt.subplots(1, figsize=(16, 10))\\n    squarify.plot(\\n        sizes=values,\\n        label=labels,\\n        color=colors,\\n        alpha=0.85,\\n        text_kwargs={\\n            \\\"fontsize\\\": 10,\\n            \\\"color\\\": \\\"white\\\",\\n            \\\"fontweight\\\": \\\"bold\\\",\\n            \\\"ha\\\": \\\"center\\\",\\n            \\\"va\\\": \\\"center\\\",\\n        },\\n        ax=ax,\\n    )\\n    \\n    # Legend\\n    legend_elements = [\\n        mpatches.Patch(facecolor=\\\"#00c853\\\", label=\\\">+5%\\\"),\\n        mpatches.Patch(facecolor=\\\"#69f0ae\\\", label=\\\"0 to +5%\\\"),\\n        mpatches.Patch(facecolor=\\\"#ff5252\\\", label=\\\"-5 to 0%\\\"),\\n        mpatches.Patch(facecolor=\\\"#d50000\\\", label=\\\"<-5%\\\"),\\n    ]\\n    ax.legend(handles=legend_elements, loc=\\\"lower right\\\", fontsize=10)\\n    \\n    ax.set_title(title, fontsize=18, fontweight=\\\"bold\\\", pad=20)\\n    ax.axis(\\\"off\\\")\\n    \\n    if output_path:\\n        plt.savefig(output_path, bbox_inches=\\\"tight\\\", dpi=150)\\n        plt.close()\\n        return f\\\"Heatmap saved to {output_path}\\\"\\n    \\n    plt.tight_layout()\\n    return \\\"Heatmap rendered\\\"\\n\\n\\n# Example usage\\nif __name__ == \\\"__main__\\\":\\n    holdings = [\\n        {\\\"id\\\": \\\"bitcoin\\\",     \\\"symbol\\\": \\\"btc\\\", \\\"amount\\\": 0.5},\\n        {\\\"id\\\": \\\"ethereum\\\",    \\\"symbol\\\": \\\"eth\\\", \\\"amount\\\": 4.0},\\n        {\\\"id\\\": \\\"solana\\\",      \\\"symbol\\\": \\\"sol\\\", \\\"amount\\\": 25.0},\\n        {\\\"id\\\": \\\"chainlink\\\",   \\\"symbol\\\": \\\"link\\\", \\\"amount\\\": 100.0},\\n        {\\\"id\\\": \\\"polkadot\\\",    \\\"symbol\\\": \\\"dot\\\", \\\"amount\\\": 50.0},\\n    ]\\n    \\n    portfolio = get_portfolio_data(holdings, currency=\\\"usd\\\")\\n    print(\\\"Portfolio:\\\", portfolio)\\n    result = build_heatmap(portfolio, title=\\\"My Crypto Portfolio\\\")\\n    print(result)\\n```\\n\\n### Python: Save & Compare Snapshots\\n```python\\nimport json\\nimport os\\nfrom datetime import datetime\\nfrom pathlib import Path\\n\\nSNAPSHOTS_DIR = Path(\\\"~/.hermes/skills/trading/snapshots\\\").expanduser()\\nSNAPSHOTS_DIR.mkdir(parents=True, exist_ok=True)\\n\\ndef save_snapshot(portfolio: list[dict], label: str = None) -> str:\\n    snapshot_id = datetime.utcnow().strftime(\\\"%Y%m%d_%H%M%S\\\")\\n    label_slug = label.lower().replace(\\\" \\\", \\\"_\\\") if label else \\\"\\\"\\n    filename = f\\\"{snapshot_id}_{label_slug}.json\\\" if label_slug else f\\\"{snapshot_id}.json\\\"\\n    path = SNAPSHOTS_DIR / filename\\n    \\n    data = {\\n        \\\"id\\\": snapshot_id,\\n        \\\"label\\\": label,\\n        \\\"timestamp\\\": datetime.utcnow().isoformat(),\\n        \\\"portfolio\\\": portfolio,\\n        \\\"total_value\\\": sum(a[\\\"value\\\"] for a in portfolio),\\n    }\\n    \\n    with open(path, \\\"w\\\") as f:\\n        json.dump(data, f, indent=2)\\n    \\n    return snapshot_id\\n\\ndef load_snapshot(snapshot_id_or_label: str) -> dict:\\n    \\\"\\\"\\\"Load by ID or partial label match.\\\"\\\"\\\"\\n    files = list(SNAPSHOTS_DIR.glob(\\\"*.json\\\"))\\n    # Try exact ID match first\\n    for f in files:\\n        if snapshot_id_or_label in f.stem:\\n            with open(f) as fp:\\n                return json.load(fp)\\n    raise FileNotFoundError(f\\\"Snapshot not found: {snapshot_id_or_label}\\\")\\n\\ndef compare_snapshots(snap_a: dict, snap_b: dict) -> dict:\\n    \\\"\\\"\\\"Return delta between two snapshots.\\\"\\\"\\\"\\n    assets_a = {a[\\\"id\\\"]: a for a in snap_a[\\\"portfolio\\\"]}\\n    assets_b = {a[\\\"id\\\"]: a for a in snap_b[\\\"portfolio\\\"]}\\n    \\n    all_ids = set(assets_a) | set(assets_b)\\n    deltas = []\\n    \\n    for id_ in all_ids:\\n        a = assets_a.get(id_, {\\\"value\\\": 0, \\\"change_24h\\\": 0})\\n        b = assets_b.get(id_, {\\\"value\\\": 0, \\\"change_24h\\\": 0})\\n        \\n        value_delta = b[\\\"value\\\"] - a[\\\"value\\\"]\\n        pct_delta = (b[\\\"value\\\"] / a[\\\"value\\\"] * 100) - 100 if a[\\\"value\\\"] else 0\\n        \\n        deltas.append({\\n            \\\"id\\\": id_,\\n            \\\"value_before\\\": a[\\\"value\\\"],\\n            \\\"value_after\\\": b[\\\"value\\\"],\\n            \\\"value_delta\\\": value_delta,\\n            \\\"pct_delta\\\": pct_delta,\\n        })\\n    \\n    return {\\n        \\\"snapshot_a\\\": snap_a[\\\"id\\\"],\\n        \\\"snapshot_b\\\": snap_b[\\\"id\\\"],\\n        \\\"total_value_before\\\": snap_a[\\\"total_value\\\"],\\n        \\\"total_value_after\\\": snap_b[\\\"total_value\\\"],\\n        \\\"total_delta\\\": snap_b[\\\"total_value\\\"] - snap_a[\\\"total_value\\\"],\\n        \\\"assets\\\": deltas,\\n    }\\n```\\n\\n### CSV Format for Portfolio Import\\n```csv\\nid,symbol,amount\\nbitcoin,btc,0.5\\nethereum,eth,4.0\\nsolana,sol,25.0\\n```\\n\\n## Pitfalls\\n\\n1. **Rate limiting (CoinGecko)**: Free API tier limits requests. Cache prices for at least 30\\u201360 seconds between calls. Use `--cache-ttl` if supported.\\n2. **Incorrect asset IDs**: CoinGecko uses `id` fields (e.g., `bitcoin`, not `BTC`). Always map symbols to IDs via `/coins/list` first.\\n3. **NFT/illiquid assets**: Squarify fails with zero or negative values. Filter out dust amounts (< $1) before rendering.\\n4. **Yahoo Finance breaking changes**: Yahoo frequently changes their non-public API. If ` YAHOO_COOKIE` fails, switch to Alpha Vantage or a paid data provider.\\n5. **Colorblind accessibility**: Default red/green scheme may be indistinguishable. Consider a diverging palette (e.g., blue-white-red) for deuteranopia.\\n6. **Snapshot drift**: If you rename or move assets between snapshots, comparison will miss or mismatch them. Use a stable `id` field.\\n7. **Currency conversion**: `vs_currencies` must match exactly \\u2014 `USD` not `Usd`, `EUR` not `Eur`.\\n\"}"
+          }
+        },
+        {
+          "id": "call_function_udgd1gayqv9w_2",
+          "call_id": "call_function_udgd1gayqv9w_2",
+          "response_item_id": "fc_function_udgd1gayqv9w_2",
+          "type": "function",
+          "function": {
+            "name": "write_file",
+            "arguments": "{\"path\": \"/home/marco/.hermes/skills/trading/crypto-risk-management.md\", \"content\": \"# Crypto Risk Management\\n\\n## Description\\nComprehensive risk management for crypto portfolios. Calculates VaR, CVaR, drawdown, position sizing, Kelly Criterion, and risk-adjusted returns. Supports Monte Carlo simulation and live position tracking.\\n\\n## Definitions\\n- **VaR (Value at Risk)**: Maximum expected loss at a given confidence interval over a time horizon\\n- **CVaR (Conditional VaR)**: Expected loss beyond the VaR threshold (also called Expected Shortfall)\\n- **Drawdown**: Peak-to-trough decline in portfolio value\\n- **Kelly Criterion**: Optimal position sizing formula for long-term growth: `f* = (bp - q) / b`\\n- **Sharpe Ratio**: Risk-adjusted return: `(return - rf) / std_dev`\\n- **Maximum Drawdown (MDD)**: Largest observed drawdown from peak\\n\\n## Invocation\\n```\\n@crypto-risk-management [command] [options]\\n```\\n\\n## Commands\\n\\n### `var <portfolio> [options]`\\nCalculate Value at Risk and Conditional VaR.\\n\\n| Argument | Type | Description |\\n|----------|------|-------------|\\n| `portfolio` | string | Portfolio ID or path to JSON/CSV holding positions |\\n\\n**Options:**\\n- `--confidence <level>` \\u2014 Confidence level: `0.90`, `0.95`, `0.99` (default: 0.95)\\n- `--horizon <days>` \\u2014 Time horizon in days: `1`, `10`, `30` (default: 1)\\n- `--method <name>` \\u2014 Calculation method: `historical`, `parametric`, `monte-carlo` (default: historical)\\n\\n### `drawdown <portfolio>`\\nCalculate current drawdown metrics (max drawdown, current drawdown, recovery time estimate).\\n\\n### `position-size <asset> <risk_pct>`\\nCalculate optimal position size using Kelly Criterion or fixed fractional method.\\n\\n| Argument | Type | Description |\\n|----------|------|-------------|\\n| `asset` | string | Asset symbol (e.g., `BTC`) |\\n| `risk_pct` | float | Percentage of portfolio to risk (e.g., `2` for 2%) |\\n\\n**Options:**\\n- `--method <name>` \\u2014 Sizing method: `kelly`, `half-kelly`, `fixed-fractional` (default: half-kelly)\\n- `--win-rate <float>` \\u2014 Historical win rate (0.0\\u20131.0)\\n- `--avg-win <float>` \\u2014 Average gain on winning trades\\n- `--avg-loss <float>` \\u2014 Average loss on losing trades\\n\\n### `risk-metrics <portfolio>`\\nReturn a full risk dashboard: Sharpe, Sortino, Calmar ratio, VaR, CVaR, and drawdown.\\n\\n### `simulate <portfolio> [options]`\\nRun Monte Carlo simulation to forecast portfolio outcomes.\\n\\n**Options:**\\n- `--trials <n>` \\u2014 Number of simulation trials (default: 10000)\\n- `--horizon <days>` \\u2014 Forecast horizon in days (default: 30)\\n- `--confidence <level>` \\u2014 Confidence interval (default: 0.95)\\n- `--output <path>` \\u2014 Save histogram plot to file\\n\\n### `correlation <portfolio>`\\nCompute and display asset return correlations. Useful for diversification analysis.\\n\\n## API Endpoints\\n\\n### Internal Skill API\\n```\\n# Calculate VaR\\nskill_crypto_risk_var(portfolio: list[dict], confidence: float, horizon: int, method: str) -> dict\\n\\n# Run Monte Carlo\\nskill_crypto_risk_simulate(portfolio: list[dict], trials: int, horizon: int) -> dict\\n\\n# Position sizing\\nskill_crypto_risk_position_size(risk_pct: float, method: str, win_rate: float, avg_win: float, avg_loss: float) -> dict\\n```\\n\\n### External Data Sources\\n| Service | Purpose | Rate Limit |\\n|---------|---------|------------|\\n| CoinGecko | Historical price data for VaR/monte Carlo | 10\\u201350 req/min (free) |\\n| CryptoCompare | Alternative price source, social data | 10 req/sec |\\n| Glassnode | On-chain risk metrics (advanced) | Requires paid plan |\\n\\n## Configuration\\n\\n```json\\n{\\n  \\\"crypto_risk_management\\\": {\\n    \\\"default_confidence\\\": 0.95,\\n    \\\"default_horizon\\\": 1,\\n    \\\"default_method\\\": \\\"historical\\\",\\n    \\\"risk_free_rate\\\": 0.04,\\n    \\\"kelly_multiplier\\\": 0.5,\\n    \\\"data_source\\\": \\\"coingecko\\\",\\n    \\\"cache_ttl_seconds\\\": 60,\\n    \\\"alerts\\\": {\\n      \\\"var_threshold_pct\\\": 5.0,\\n      \\\"drawdown_threshold_pct\\\": 20.0\\n    }\\n  }\\n}\\n```\\n\\n## Code Examples\\n\\n### Python: Calculate VaR (Historical, Parametric, Monte Carlo)\\n```python\\nimport requests\\nimport numpy as np\\nimport os\\nfrom datetime import datetime, timedelta\\nfrom scipy import stats\\n\\nCOINGECKO_BASE = \\\"https://api.coingecko.com/api/v3\\\"\\nAPI_KEY = os.getenv(\\\"COINGECKO_API_KEY\\\")\\n\\ndef fetch_historical_prices(asset_ids: list[str], days: int = 365,\\n                            currency: str = \\\"usd\\\") -> dict[str, list[float]]:\\n    \\\"\\\"\\\"Fetch daily closing prices for each asset.\\\"\\\"\\\"\\n    prices = {}\\n    headers = {\\\"x-cg-demo-api-key\\\": API_KEY} if API_KEY else {}\\n    \\n    for id_ in asset_ids:\\n        url = f\\\"{COINGECKO_BASE}/coins/{id_}/market_chart\\\"\\n        params = {\\\"vs_currency\\\": currency, \\\"days\\\": days, \\\"interval\\\": \\\"daily\\\"}\\n        \\n        resp = requests.get(url, params=params, headers=headers, timeout=15)\\n        resp.raise_for_status()\\n        data = resp.json()\\n        \\n        prices[id_] = [p[1] for p in data[\\\"prices\\\"]]\\n    \\n    return prices\\n\\ndef compute_log_returns(prices: list[float]) -> np.ndarray:\\n    \\\"\\\"\\\"Convert prices to log returns.\\\"\\\"\\\"\\n    return np.diff(np.log(prices))\\n\\ndef historical_var(returns: np.ndarray, confidence: float = 0.95) -> float:\\n    \\\"\\\"\\\"Historical VaR: percentile of returns.\\\"\\\"\\\"\\n    return np.percentile(returns, (1 - confidence) * 100)\\n\\ndef parametric_var(returns: np.ndarray, confidence: float = 0.95) -> float:\\n    \\\"\\\"\\\"Parametric VaR: assume normal distribution.\\\"\\\"\\\"\\n    mu, sigma = returns.mean(), returns.std()\\n    z = stats.norm.ppf(1 - confidence)\\n    return mu + z * sigma\\n\\ndef cvar(returns: np.ndarray, confidence: float = 0.95) -> float:\\n    \\\"\\\"\\\"CVaR / Expected Shortfall: mean of returns below VaR.\\\"\\\"\\\"\\n    var = historical_var(returns, confidence)\\n    return returns[returns <= var].mean()\\n\\ndef monte_carlo_var(returns: np.ndarray, confidence: float = 0.95,\\n                    trials: int = 10000, horizon: int = 1) -> float:\\n    \\\"\\\"\\\"Monte Carlo VaR: simulate future returns from historical distribution.\\\"\\\"\\\"\\n    simulated_returns = np.random.choice(returns, size=(trials, horizon)).mean(axis=1)\\n    return np.percentile(simulated_returns, (1 - confidence) * 100)\\n\\ndef full_var_analysis(portfolio: list[dict], confidence: float = 0.95,\\n                      horizon: int = 1) -> dict:\\n    \\\"\\\"\\\"\\n    Run all three VaR methods on a portfolio.\\n    portfolio: [{\\\"id\\\": \\\"bitcoin\\\", \\\"value\\\": 10000}, ...]\\n    \\\"\\\"\\\"\\n    asset_ids = [p[\\\"id\\\"] for p in portfolio]\\n    weights = np.array([p[\\\"value\\\"] for p in portfolio])\\n    weights = weights / weights.sum()  # normalize\\n    \\n    prices = fetch_historical_prices(asset_ids, days=365)\\n    \\n    # Build combined portfolio returns\\n    min_len = min(len(prices[id_]) for id_ in asset_ids)\\n    aligned = np.array([prices[id_][-min_len:] for id_ in asset_ids])\\n    log_returns = np.diff(np.log(aligned), axis=1)\\n    \\n    # Weighted portfolio returns\\n    port_returns = (log_returns.T @ weights).flatten()\\n    \\n    results = {\\n        \\\"var_historical\\\": historical_var(port_returns, confidence),\\n        \\\"var_parametric\\\": parametric_var(port_returns, confidence),\\n        \\\"var_monte_carlo\\\": monte_carlo_var(port_returns, confidence, horizon=horizon),\\n        \\\"cvar\\\": cvar(port_returns, confidence),\\n        \\\"confidence\\\": confidence,\\n        \\\"horizon_days\\\": horizon,\\n        \\\"portfolio_value\\\": sum(p[\\\"value\\\"] for p in portfolio),\\n        \\\"max_loss_dollar\\\": abs(historical_var(port_returns, confidence))\\n                           * sum(p[\\\"value\\\"] for p in portfolio),\\n    }\\n    return results\\n\\n\\n# Example usage\\nif __name__ == \\\"__main__\\\":\\n    portfolio = [\\n        {\\\"id\\\": \\\"bitcoin\\\",  \\\"value\\\": 5000},\\n        {\\\"id\\\": \\\"ethereum\\\", \\\"value\\\": 3000},\\n        {\\\"id\\\": \\\"solana\\\",   \\\"value\\\": 2000},\\n    ]\\n    \\n    result = full_var_analysis(portfolio, confidence=0.95, horizon=1)\\n    print(\\\"=== VaR Analysis ===\\\")\\n    for k, v in result.items():\\n        print(f\\\"  {k}: {v}\\\")\\n```\\n\\n### Python: Position Sizing (Kelly + Half-Kelly)\\n```python\\ndef kelly_criterion(win_rate: float, avg_win: float, avg_loss: float) -> float:\\n    \\\"\\\"\\\"\\n    Kelly Criterion: f* = (bp - q) / b\\n    b = net odds received on the winning trade (avg_win / avg_loss)\\n    p = win probability (win_rate)\\n    q = 1 - p (loss probability)\\n    Returns the optimal fraction of bankroll to risk.\\n    \\\"\\\"\\\"\\n    if avg_loss == 0:\\n        raise ValueError(\\\"avg_loss cannot be zero\\\")\\n    \\n    b = avg_win / avg_loss   # net odds received\\n    p = win_rate\\n    q = 1 - p\\n    \\n    f_star = (b * p - q) / b\\n    \\n    if f_star <= 0:\\n        return 0.0  # No positive edge\\n    return min(f_star, 1.0)  # Cap at 100%\\n\\ndef half_kelly(position_value: float, kelly_fraction: float = 0.5) -> dict:\\n    \\\"\\\"\\\"Apply half-Kelly (or custom multiplier) for more conservative sizing.\\\"\\\"\\\"\\n    return {\\n        \\\"full_kelly_pct\\\": kelly_fraction * 100,\\n        \\\"rationale\\\": \\\"Half-Kelly reduces volatility by 50% while retaining 75% of the geometric growth edge.\\\",\\n        \\\"risk_note\\\": \\\"Full Kelly has high variance \\u2014 most practitioners use 0.25\\u20130.50 fraction.\\\",\\n    }\\n\\ndef fixed_fractional(bankroll: float, risk_pct: float, entry_price: float,\\n                     stop_loss_pct: float) -> dict:\\n    \\\"\\\"\\\"\\n    Fixed fractional position sizing.\\n    risk_pct: fraction of bankroll to risk (e.g., 0.02 for 2%)\\n    stop_loss_pct: percentage below entry to set stop (e.g., 0.05 for 5%)\\n    \\\"\\\"\\\"\\n    risk_amount = bankroll * risk_pct\\n    max_position = risk_amount / stop_loss_pct\\n    \\n    shares = max_position / entry_price  # or contracts for derivatives\\n    \\n    return {\\n        \\\"bankroll\\\": bankroll,\\n        \\\"risk_amount_dollar\\\": risk_amount,\\n        \\\"max_position_dollar\\\": max_position,\\n        \\\"shares_or_contracts\\\": shares,\\n        \\\"entry_price\\\": entry_price,\\n        \\\"stop_loss_price\\\": entry_price * (1 - stop_loss_pct),\\n        \\\"actual_risk_pct\\\": (shares * entry_price * stop_loss_pct) / bankroll,\\n    }\\n\\n\\nif __name__ == \\\"__main__\\\":\\n    # Example: BTC trade with 60% win rate, avg win 10%, avg loss 5%\\n    kelly = kelly_criterion(win_rate=0.60, avg_win=0.10, avg_loss=0.05)\\n    print(f\\\"Kelly fraction: {kelly:.4f} ({kelly*100:.2f}%)\\\")\\n    # Kelly recommends betting 70% of bankroll \\u2014 extremely aggressive!\\n    # Half-Kelly: 35%\\n    \\n    # Fixed fractional example\\n    result = fixed_fractional(\\n        bankroll=10_000,\\n        risk_pct=0.02,      # Risk 2% of $10,000 = $200\\n        entry_price=50_000,\\n        stop_loss_pct=0.05  # 5% stop = $2,500 loss if hit\\n    )\\n    print(result)\\n```\\n\\n### Python: Monte Carlo Portfolio Simulation\\n```python\\nimport numpy as np\\nimport matplotlib.pyplot as plt\\nfrom datetime import datetime, timedelta\\n\\ndef monte_carlo_portfolio(prices: dict[str, list[float]],\\n                          weights: np.ndarray,\\n                          initial_value: float = 10_000,\\n                          trials: int = 10_000,\\n                          horizon_days: int = 30) -> dict:\\n    \\\"\\\"\\\"\\n    Simulate future portfolio values using Geometric Brownian Motion\\n    fitted to historical log returns.\\n    \\\"\\\"\\\"\\n    asset_ids = list(prices.keys())\\n    min_len = min(len(prices[id_]) for id_ in asset_ids)\\n    aligned = np.array([prices[id_][-min_len:] for id_ in asset_ids])\\n    \\n    # Daily log returns\\n    log_returns = np.diff(np.log(aligned), axis=1)\\n    \\n    # Portfolio log returns\\n    port_log_returns = (log_returns.T @ weights).flatten()\\n    \\n    # Fit normal distribution to portfolio log returns\\n    mu = port_log_returns.mean()\\n    sigma = port_log_returns.std()\\n    \\n    # Simulate\\n    dt = 1 / 252  # daily step\\n    drift = (mu - 0.5 * sigma**2) * dt\\n    diffusion = sigma * np.sqrt(dt)\\n    \\n    paths = np.zeros((trials, horizon_days))\\n    values = np.full(trials, initial_value)\\n    \\n    for t in range(horizon_days):\\n        daily_returns = np.exp(drift + diffusion * np.random.standard_normal(trials))\\n        values = values * daily_returns\\n        paths[:, t] = values\\n    \\n    final_values = paths[:, -1]\\n    \\n    return {\\n        \\\"mean\\\": final_values.mean(),\\n        \\\"median\\\": np.median(final_values),\\n        \\\"std\\\": final_values.std(),\\n        \\\"var_95\\\": np.percentile(final_values, 5),\\n        \\\"var_99\\\": np.percentile(final_values, 1),\\n        \\\"cvar_95\\\": final_values[final_values <= np.percentile(final_values, 5)].mean(),\\n        \\\"prob_loss\\\": (final_values < initial_value).mean(),\\n        \\\"paths\\\": paths,\\n        \\\"horizon_days\\\": horizon_days,\\n        \\\"trials\\\": trials,\\n    }\\n\\ndef plot_simulation(paths: np.ndarray, initial_value: float, horizon_days: int,\\n                    output_path: str = None):\\n    \\\"\\\"\\\"Plot Monte Carlo simulation fan chart.\\\"\\\"\\\"\\n    percentiles = [5, 25, 50, 75, 95]\\n    pct_values = {p: np.percentile(paths, p, axis=0) for p in percentiles}\\n    \\n    x = np.arange(horizon_days)\\n    fig, ax = plt.subplots(figsize=(14, 8))\\n    \\n    # Fan between 5th and 95th percentile\\n    ax.fill_between(x, pct_values[5], pct_values[95], alpha=0.2, color=\\\"blue\\\", label=\\\"5th\\u201395th pct\\\")\\n    ax.fill_between(x, pct_values[25], pct_values[75], alpha=0.3, color=\\\"blue\\\", label=\\\"25th\\u201375th pct\\\")\\n    ax.plot(x, pct_values[50], color=\\\"blue\\\", linewidth=2, label=\\\"Median\\\")\\n    ax.axhline(initial_value, color=\\\"red\\\", linestyle=\\\"--\\\", linewidth=1.5, label=\\\"Initial\\\")\\n    \\n    ax.set_title(\\\"Monte Carlo Portfolio Simulation\\\", fontsize=16)\\n    ax.set_xlabel(\\\"Days\\\")\\n    ax.set_ylabel(\\\"Portfolio Value ($)\\\")\\n    ax.legend()\\n    ax.grid(True, alpha=0.3)\\n    \\n    if output_path:\\n        plt.savefig(output_path, bbox_inches=\\\"tight\\\", dpi=150)\\n        plt.close()\\n    else:\\n        plt.show()\\n    \\n    return \\\"Plot rendered\\\"\\n```\\n\\n### Python: Drawdown Analysis\\n```python\\nimport numpy as np\\n\\ndef compute_drawdowns(prices: list[float]) -> dict:\\n    \\\"\\\"\\\"\\n    Compute drawdown series and statistics from a price series.\\n    \\\"\\\"\\\"\\n    prices = np.array(prices)\\n    cumulative_max = np.maximum.accumulate(prices)\\n    drawdowns = (prices - cumulative_max) / cumulative_max  # as negative fractions\\n    \\n    max_dd = drawdowns.min()  # most negative = worst drawdown\\n    \\n    # Find peak and trough of max drawdown\\n    trough_idx = np.argmin(drawdowns)\\n    peak_idx = np.argmax(prices[:trough_idx + 1])\\n    \\n    return {\\n        \\\"max_drawdown_pct\\\": max_dd * 100,\\n        \\\"max_drawdown_duration_days\\\": trough_idx - peak_idx,\\n        \\\"current_drawdown_pct\\\": drawdowns[-1] * 100,\\n        \\\"drawdown_series\\\": drawdowns.tolist(),\\n        \\\"peak_price\\\": prices[peak_idx],\\n        \\\"trough_price\\\": prices[trough_idx],\\n        \\\"peak_date_idx\\\": int(peak_idx),\\n        \\\"trough_date_idx\\\": int(trough_idx),\\n    }\\n\\ndef annualized_return(prices: list[float], days: int = 365) -> float:\\n    \\\"\\\"\\\"Simple annualized return from price series.\\\"\\\"\\\"\\n    if len(prices) < 2:\\n        return 0.0\\n    total_return = (prices[-1] / prices[0]) - 1\\n    n_years = len(prices) / 365.0\\n    return (1 + total_return) ** (1 / n_years) - 1\\n\\ndef sharpe_ratio(prices: list[float], risk_free_rate: float = 0.04) -> float:\\n    \\\"\\\"\\\"Annualized Sharpe Ratio.\\\"\\\"\\\"\\n    log_returns = np.diff(np.log(prices))\\n    excess = log_returns.mean() * 365 - risk_free_rate\\n    return excess / (log_returns.std() * np.sqrt(365))\\n\\ndef sortino_ratio(prices: list[float], risk_free_rate: float = 0.04) -> float:\\n    \\\"\\\"\\\"Annualized Sortino Ratio (downside deviation only).\\\"\\\"\\\"\\n    log_returns = np.diff(np.log(prices))\\n    downside_returns = log_returns[log_returns < 0]\\n    downside_std = downside_returns.std() * np.sqrt(365)\\n    if downside_std == 0:\\n        return 0.0\\n    return (log_returns.mean() * 365 - risk_free_rate) / downside_std\\n```\\n\\n## Pitfalls\\n\\n1. **Historical data gaps**: CoinGecko daily data may have missing days (weekends for some assets). Pad with last known value or use `/coins/{id}/market_chart` with `interval=daily` and verify data completeness.\\n2. **VaR assumes normal distribution**: Crypto returns are well-documented to have fat tails. Parametric VaR will **underestimate** tail risk. Always cross-check with historical VaR and Monte Carlo.\\n3. **Monte Carlo with GBM**: Geometric Brownian Motion assumes continuous prices and no jumps. Crypto has flash crashes and sudden pumps \\u2014 consider adding jump-diffusion or regime-switching models for production use.\\n4. **Kelly over-leveraging**: Full Kelly (`f*`) is mathematically optimal for infinite iterations but creates wild bankroll swings. Always apply a multiplier (0.25\\u20130.50) unless you have deep pockets and high risk tolerance.\\n5. **Look-ahead bias**: When backtesting, ensure you only use data available at each point in time. Future peeking inflates Sharpe ratios dramatically.\\n6. **Correlation instability**: Crypto correlations spike during market stress (crashes). A \\\"diversified\\\" crypto portfolio may not diversify when you need it most.\\n7. **Stop-loss execution**: `fixed_fractional` stop-loss prices are ideal \\u2014 actual fills suffer slippage, especially in illiquid alts during volatility spikes. Add 1\\u20133% buffer for realistic risk.\\n8. **Short data history**: Some alts have < 6 months of history. VaR on 30 days of data is statistically unreliable. Require at least 180 days for 95% confidence VaR.\\n\"}"
+          }
+        }
+      ]
+    },
+    {
+      "role": "tool",
+      "content": "{\"bytes_written\": 10889, \"dirs_created\": true}",
+      "tool_call_id": "call_function_udgd1gayqv9w_1"
+    },
+    {
+      "role": "tool",
+      "content": "{\"bytes_written\": 16732, \"dirs_created\": true}",
+      "tool_call_id": "call_function_udgd1gayqv9w_2"
+    },
+    {
+      "role": "assistant",
+      "content": "",
+      "reasoning": "Both files have been written successfully. Let me verify they exist and check their structure.",
+      "finish_reason": "tool_calls",
+      "reasoning_content": "Both files have been written successfully. Let me verify they exist and check their structure.",
+      "reasoning_details": [
+        {
+          "signature": "32982f43e413a6fe97ece0e44ebbd018ef5bea7bdc7fa8c0ee685a78b3d1ab33",
+          "thinking": "Both files have been written successfully. Let me verify they exist and check their structure.",
+          "type": "thinking"
+        }
+      ],
+      "tool_calls": [
+        {
+          "id": "call_function_cmr15karmn2v_1",
+          "call_id": "call_function_cmr15karmn2v_1",
+          "response_item_id": "fc_function_cmr15karmn2v_1",
+          "type": "function",
+          "function": {
+            "name": "terminal",
+            "arguments": "{\"command\": \"ls -lh ~/.hermes/skills/trading/\"}"
+          }
+        },
+        {
+          "id": "call_function_cmr15karmn2v_2",
+          "call_id": "call_function_cmr15karmn2v_2",
+          "response_item_id": "fc_function_cmr15karmn2v_2",
+          "type": "function",
+          "function": {
+            "name": "terminal",
+            "arguments": "{\"command\": \"wc -l ~/.hermes/skills/trading/*.md\"}"
+          }
+        }
+      ]
+    },
+    {
+      "role": "tool",
+      "content": "{\"output\": \"total 128K\\ndrwxrwxr-x 2 marco marco 4,0K apr 27 20:34 alpaca-paper-trading-crypto-myth\\ndrwxrwxr-x 2 marco marco 4,0K mag  3 15:19 automated-trading-bot\\ndrwxrwxr-x 3 marco marco 4,0K mag  1 18:11 backtest-vectorized-crypto\\ndrwxrwxr-x 2 marco marco 4,0K mag  3 15:10 binance-trading\\ndrwxrwxr-x 2 marco marco 4,0K mag  3 15:10 bybit-hyperliquid-trading\\ndrwxrwxr-x 2 marco marco 4,0K apr 28 19:00 crypto-backtest-engine\\ndrwxrwxr-x 2 marco marco 4,0K mag  3 14:56 crypto-paper-trader\\n-rw-rw-r-- 1 marco marco  17K mag  3 15:23 crypto-risk-management.md\\ndrwxrwxr-x 3 marco marco 4,0K mag  1 18:57 crypto-strategy-backtester\\ndrwxrwxr-x 2 marco marco 4,0K apr 29 18:38 crypto-trading-strategy\\ndrwxrwxr-x 3 marco marco 4,0K mag  3 15:08 dyor-onchain-analytics\\ndrwxrwxr-x 2 marco marco 4,0K apr 28 11:27 hyperliquid-paper-trading\\ndrwxrwxr-x 3 marco marco 4,0K mag  2 16:21 hyperperfect-trading-strategies\\ndrwxrwxr-x 2 marco marco 4,0K mag  3 15:20 multi-timeframe-analysis\\n-rw-rw-r-- 1 marco marco  11K mag  3 15:23 portfolio-heatmap.md\\ndrwxrwxr-x 2 marco marco 4,0K mag  1 18:56 realistic-crypto-backtester\\n-rw-rw-r-- 1 marco marco 6,6K mag  3 15:18 sentiment-technical-confluence.md\\n-rw-rw-r-- 1 marco marco  374 mag  3 15:18 skill.json\\ndrwxrwxr-x 3 marco marco 4,0K mag  1 18:52 smart-money-crypto-strategy\\ndrwxrwxr-x 3 marco marco 4,0K mag  1 18:52 smart-money-fusion\\ndrwxrwxr-x 3 marco marco 4,0K mag  3 14:03 smart-money-paper-trader\\ndrwxrwxr-x 2 marco marco 4,0K apr 29 16:26 sr-zone-paper-trader\\ndrwxrwxr-x 2 marco marco 4,0K apr 27 04:06 the-better-traders-course\\ndrwxrwxr-x 2 marco marco 4,0K apr 28 04:06 trading-backtest-validation\\ndrwxrwxr-x 2 marco marco 4,0K apr 28 04:04 wealthyeducation-trading-backtest\", \"exit_code\": 0, \"error\": null}",
+      "tool_call_id": "call_function_cmr15karmn2v_1"
+    },
+    {
+      "role": "tool",
+      "content": "{\"output\": \"430 /home/marco/.hermes/skills/trading/crypto-risk-management.md\\n  333 /home/marco/.hermes/skills/trading/portfolio-heatmap.md\\n  205 /home/marco/.hermes/skills/trading/sentiment-technical-confluence.md\\n  968 total\", \"exit_code\": 0, \"error\": null}",
+      "tool_call_id": "call_function_cmr15karmn2v_2"
+    },
+    {
+      "role": "assistant",
+      "content": "## Summary\n\nCreated two comprehensive trading skills at `~/.hermes/skills/trading/`:\n\n### Files Created\n\n| File | Size | Lines |\n|------|------|-------|\n| `portfolio-heatmap.md` | 11 KB | 333 |\n| `crypto-risk-management.md` | 17 KB | 430 |\n\n---\n\n### `portfolio-heatmap.md`\n**Purpose**: Visualizes portfolio allocation as a treemap heatmap (tile size = value, color = performance)\n\n**Features**:\n- Commands: `build`, `snapshot`, `compare`, `alert add/remove`\n- Sources: crypto (CoinGecko), stocks (Yahoo Finance), CSV/JSON import\n- Supports 1D/7D/30D/1Y/ALL periods and multi-currency\n- Snapshot save/compare for historical tracking\n- Rebalance drift alerts\n\n**Code examples**: Full Python heatmap builder with `squarify`/`matplotlib`, snapshot save/load/compare, CSV import format\n\n---\n\n### `crypto-risk-management.md`\n**Purpose**: Comprehensive risk analytics for crypto portfolios\n\n**Features**:\n- Commands: `var`, `drawdown`, `position-size`, `risk-metrics`, `simulate`, `correlation`\n- VaR via 3 methods: historical, parametric (normal), Monte Carlo\n- CVaR (Expected Shortfall), drawdown metrics, Sharpe/Sortino/Calmar ratios\n- Kelly Criterion + Half-Kelly position sizing, Fixed Fractional method\n- Monte Carlo simulation with fan chart plotting\n\n**Code examples**: Full VaR analysis pipeline, Kelly/fixed-fractional position sizing, Monte Carlo GBM simulation, drawdown/Sharpe/Sortino calculators\n\n---\n\n**Pitfalls documented** for both skills include: CoinGecko rate limits, incorrect asset ID mapping, Yahoo API breakage, VaR's normal-distribution assumption underestimating crypto tail risk, Kelly over-leveraging, correlation instability during market stress, and stop-loss slippage in illiquid alts.",
+      "reasoning": "Both files were created successfully. Let me provide a summary.",
+      "finish_reason": "stop",
+      "reasoning_content": "Both files were created successfully. Let me provide a summary.",
+      "reasoning_details": [
+        {
+          "signature": "69dd40c28911b1a7ab898acdd1752d1ade62cfdffd3a5514edce5cee0431bc67",
+          "thinking": "Both files were created successfully. Let me provide a summary.",
+          "type": "thinking"
+        }
+      ]
+    }
+  ]
+}

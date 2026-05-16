@@ -1,0 +1,1996 @@
+{
+  "session_id": "cron_04b5c54a86f2_20260515_084011",
+  "model": "MiniMax-M2.7-highspeed",
+  "base_url": "https://api.minimax.io/anthropic",
+  "platform": "cron",
+  "session_start": "2026-05-15T08:40:18.587629",
+  "last_updated": "2026-05-15T08:40:39.584305",
+  "system_prompt": "You are Hermes Agent, an intelligent AI assistant created by Nous Research. You are helpful, knowledgeable, and direct. You assist users with a wide range of tasks including answering questions, writing and editing code, analyzing information, creative work, and executing actions via your tools. You communicate clearly, admit uncertainty when appropriate, and prioritize being genuinely useful over being verbose unless otherwise directed below. Be targeted and efficient in your exploration and investigations.\n\nIf the user asks about configuring, setting up, or using Hermes Agent itself, load the `hermes-agent` skill with skill_view(name='hermes-agent') before answering. Docs: https://hermes-agent.nousresearch.com/docs\n\nYou have persistent memory across sessions. Save durable facts using the memory tool: user preferences, environment details, tool quirks, and stable conventions. Memory is injected into every turn, so keep it compact and focused on facts that will still matter later.\nPrioritize what reduces future user steering — the most valuable memory is one that prevents the user from having to correct or remind you again. User preferences and recurring corrections matter more than procedural task details.\nDo NOT save task progress, session outcomes, completed-work logs, or temporary TODO state to memory; use session_search to recall those from past transcripts. Specifically: do not record PR numbers, issue numbers, commit SHAs, 'fixed bug X', 'submitted PR Y', 'Phase N done', file counts, or any artifact that will be stale in 7 days. If a fact will be stale in a week, it does not belong in memory. If you've discovered a new way to do something, solved a problem that could be necessary later, save it as a skill with the skill tool.\nWrite memories as declarative facts, not instructions to yourself. 'User prefers concise responses' ✓ — 'Always respond concisely' ✗. 'Project uses pytest with xdist' ✓ — 'Run tests with pytest -n 4' ✗. Imperative phrasing gets re-read as a directive in later sessions and can cause repeated work or override the user's current request. Procedures and workflows belong in skills, not memory. When the user references something from a past conversation or you suspect relevant cross-session context exists, use session_search to recall it before asking them to repeat themselves. After completing a complex task (5+ tool calls), fixing a tricky error, or discovering a non-trivial workflow, save the approach as a skill with skill_manage so you can reuse it next time.\nWhen using a skill and finding it outdated, incomplete, or wrong, patch it immediately with skill_manage(action='patch') — don't wait to be asked. Skills that aren't maintained become liabilities.\n\n## Skills (mandatory)\nBefore replying, scan the skills below. If a skill matches or is even partially relevant to your task, you MUST load it with skill_view(name) and follow its instructions. Err on the side of loading — it is always better to have context you don't need than to miss critical steps, pitfalls, or established workflows. Skills contain specialized knowledge — API endpoints, tool-specific commands, and proven workflows that outperform general-purpose approaches. Load the skill even if you think you could handle the task with basic tools like web_search or terminal. Skills also encode the user's preferred approach, conventions, and quality standards for tasks like code review, planning, and testing — load them even for tasks you already know how to do, because the skill defines how it should be done here.\nWhenever the user asks you to configure, set up, install, enable, disable, modify, or troubleshoot Hermes Agent itself — its CLI, config, models, providers, tools, skills, voice, gateway, plugins, or any feature — load the `hermes-agent` skill first. It has the actual commands (e.g. `hermes config set …`, `hermes tools`, `hermes setup`) so you don't have to guess or invent workarounds.\nIf a skill has issues, fix it with skill_manage(action='patch').\nAfter difficult/iterative tasks, offer to save as a skill. If a skill you loaded was missing steps, had wrong commands, or needed pitfalls you discovered, update it before finishing.\n\n<available_skills>\n  37signals-way:\n    - 37signals-way: Build lean, opinionated products using the 37signals phil...\n  agent-hardening:\n    - agent-hardening: Comprehensive security hardening for Hermes Agent. Detect...\n  agentcash:\n    - agentcash: Pay-per-call x402/MPP APIs (USDC on Base, Solana, Tempo)....\n  agentcash-onboarding:\n    - agentcash-onboarding: Set up AgentCash for your AI agent — wallet, core skill, ...\n  api-builder:\n    - api-builder: Design, scaffold, and document REST/GraphQL APIs with Ope...\n  arxiv-watcher:\n    - arxiv-watcher: Monitor ArXiv for new papers by topic, author, or keyword...\n  automation:\n    - automatic-model-selection-integration: Automatically integrate OpenRouter cost-optimization into...\n    - community-skills-installation: Install and verify community skills from GitHub repositor...\n    - proactive-suggestion-engine: Proactive failure pattern detection — monitors cron jobs,...\n    - self-improvement-operating-loop: Evolutionary self-improvement loop for Hermes Agent using...\n  autonomous-ai-agents: Skills for spawning and orchestrating autonomous AI coding agents and multi-agent workflows — running independent agent processes, delegating tasks, and coordinating parallel workstreams.\n    - autonomous-employee: Act as Marco's proactive autonomous employee. Review busi...\n    - claude-code: Delegate coding to Claude Code CLI (features, PRs).\n    - codex: Delegate coding to OpenAI Codex CLI (features, PRs).\n    - hermes-agent: Configure, extend, or contribute to Hermes Agent.\n    - opencode: Delegate coding to OpenCode CLI (features, PR review).\n    - orchestrator-coo: Act as COO orchestrator - delegate ALL tasks to sandboxed...\n    - space-agent-setup: Install and run Space Agent on Surface Pro 3 — release Ap...\n    - supervisory-ai: High-performance supervisory AI system - orchestrator, de...\n  black-forest-labs/skills:\n    - bfl-api: BFL FLUX API integration guide covering endpoints, async ...\n    - flux-best-practices: Comprehensive guide for BFL FLUX image generation models....\n  blue-ocean-strategy:\n    - blue-ocean-strategy: Create uncontested market space using value innovation in...\n  browser-harness:\n    - browser-harness: Direct browser control via CDP using browser-use/browser-...\n  caveman:\n    - caveman: Ultra-compressed communication mode. Cuts token usage ~75...\n  clean-architecture:\n    - clean-architecture: Structure software around the Dependency Rule: source cod...\n  clean-code:\n    - clean-code: Write readable, maintainable code through disciplined nam...\n  contagious:\n    - contagious: Engineer word-of-mouth and virality using the STEPPS fram...\n  continuous-discovery:\n    - continuous-discovery: Build a weekly cadence of customer touchpoints using Oppo...\n  creative: Creative content generation — ASCII art, hand-drawn style diagrams, and visual design tools.\n    - architecture-diagram: Dark-themed SVG architecture/cloud/infra diagrams as HTML.\n    - ascii-art: ASCII art: pyfiglet, cowsay, boxes, image-to-ascii.\n    - ascii-video: ASCII video: convert video/audio to colored ASCII MP4/GIF.\n    - baoyu-comic: Knowledge comic creator supporting multiple art styles an...\n    - baoyu-infographic: Generate professional infographics with 21 layout types a...\n    - blender-mcp: Control Blender directly from Hermes via socket connectio...\n    - claude-design: Design one-off HTML artifacts (landing, deck, prototype).\n    - comfyui: Generate images, video, and audio with ComfyUI — install,...\n    - concept-diagrams: Generate flat, minimal light/dark-aware SVG diagrams as s...\n    - content-factory: Design spec for a fully automated Content Factory inside ...\n    - design-md: Author/validate/export Google's DESIGN.md token spec files.\n    - excalidraw: Hand-drawn Excalidraw JSON diagrams (arch, flow, seq).\n    - humanizer: Humanize text: strip AI-isms and add real voice.\n    - ideation: Generate project ideas via creative constraints.\n    - manim-video: Manim CE animations: 3Blue1Brown math/algo videos.\n    - meme-generation: Generate real meme images by picking a template and overl...\n    - multi-modal-output: Generate video, animation, and PDF output directly. Integ...\n    - p5js: p5.js sketches: gen art, shaders, interactive, 3D.\n    - pixel-art: Pixel art w/ era palettes (NES, Game Boy, PICO-8).\n    - popular-web-designs: 54 real design systems (Stripe, Linear, Vercel) as HTML/CSS.\n    - pretext: Use when building creative browser demos with @chenglou/p...\n    - sketch: Throwaway HTML mockups: 2-3 design variants to compare.\n    - songwriting-and-ai-music: Songwriting craft and Suno AI music prompts.\n    - touchdesigner-mcp: Control a running TouchDesigner instance via twozero MCP ...\n  cro-methodology:\n    - cro-methodology: Audit websites and landing pages for conversion issues an...\n  crossing-the-chasm:\n    - crossing-the-chasm: Navigate the technology adoption lifecycle from early ado...\n  data-analyst:\n    - data-analyst: SQL queries, spreadsheet analysis, charts, and statistica...\n  data-enrichment:\n    - data-enrichment: Enrich contact, company, and influencer data using x402-p...\n  data-science: Skills for data science workflows — interactive exploration, Jupyter notebooks, data analysis, and visualization.\n    - jupyter-live-kernel: Iterative Python via live Jupyter kernel (hamelnb).\n  ddia-systems:\n    - ddia-systems: Design data systems by understanding storage engines, rep...\n  design-everyday-things:\n    - design-everyday-things: Apply foundational design principles: affordances, signif...\n  design-sprint:\n    - design-sprint: Run a structured 5-day process to prototype, test, and va...\n  devops:\n    - cron-alert-noise-reduction: Reduce alert fatigue from cron jobs — intelligent dedupli...\n    - cron-conditional-execution\n    - cron-job-recovery: Automatic recovery and restart for failed cron jobs — det...\n    - docker-management: Manage Docker containers, images, volumes, networks, and ...\n    - hermes-auto-update-cron: Setup cron job for automatic Hermes Agent code updates — ...\n    - hermes-context-maintenance: Automatic context window maintenance for Hermes Agent — c...\n    - hermes-discord-gateway-setup: Discord bot token management and gateway troubleshooting ...\n    - hermes-gateway-troubleshooting: Diagnose and fix Hermes messaging gateway connectivity is...\n    - hermes-health-check: Health check process for the Hermes system.\n    - hermes-model-management: Manage Hermes agent model configuration — change default ...\n    - hermes-multi-gateway-pm2: Run Hermes messaging gateway with Discord and Telegram to...\n    - hermes-openai-whisper-stt: Configure OpenAI Whisper for voice message transcription ...\n    - hermes-permanent-agent-team: Spawn a permanent team of specialized AI agents that work...\n    - hermes-persistent-gateway-pm2: Setup Hermes messaging gateway to run 24/7 via PM2 with a...\n    - hermes-vision-troubleshooting: Diagnose and fix `vision_analyze` tool failures, especial...\n    - hermes-voice-call: Real-time voice calling with Hermes Agent via Pipecat + D...\n    - hermes-voice-call-setup: Real-time voice call setup with Hermes via Pipecat on VPS...\n    - hermes-vps-migration: Backup Hermes agent to GitHub and restore on a new VPS. C...\n    - hermes-webui-ops: Operate and troubleshoot Hermes WebUI on Surface Pro 3 — ...\n    - hermes-workspace-ops: Install, build, and operate hermes-workspace (outsourc-e/...\n    - jupiter-trading-setup: Jupiter trading infrastructure setup — configure Jupiter ...\n    - jupiter-wallet-integration: Jupiter wallet integration for Hermes Agent — connect Sol...\n    - kanban-orchestrator: Decomposition playbook + specialist-roster conventions + ...\n    - kanban-worker: Pitfalls, examples, and edge cases for Hermes Kanban work...\n    - mercury-add-custom-provider: Add a custom LLM provider to Mercury Agent (e.g. MiniMax)...\n    - mercury-add-minimax-provider: Add MiniMax as a provider to Mercury agent (MiniMax-M2.7-...\n    - mercury-minimax-provider: Add MiniMax as a native provider to Mercury Agent (cosmic...\n    - minimax-api-debugging: Debug 400 errors and API integration issues with MiniMax-...\n    - mission-control-deploy: Deploy Mission Control AI agent dashboard on a VPS\n    - observability-dashboard: Single command system health overview — active fronts, cr...\n    - portfolio-brief-with-x-sentiment: Generate portfolio brief enriched with X/Twitter sentimen...\n    - remotion-vps-installer: Install Remotion on a VPS for server-side video rendering...\n    - remotion-vps-setup: Configure and deploy Remotion projects on VPS — project s...\n    - system-maintenance: System maintenance and resilience layer - memory hygiene,...\n    - vps-failover-gateway: Hermes Discord/Telegram gateway failover from VPS to Surface\n    - webhook-subscriptions: Webhook subscriptions: event-driven agent runs.\n  diagnose:\n    - diagnose: Disciplined diagnosis loop for hard bugs and performance ...\n  diagram-maker:\n    - diagram-maker: Generate syntactically correct Mermaid diagrams from natu...\n  discord-message-content-intent:\n    - discord-message-content-intent: Understand Discord Message Content Intent levels and what...\n  docker-manager:\n    - docker-manager: Build, run, and manage Docker containers and images. Use ...\n  dogfood:\n    - dogfood: Systematic exploratory QA testing of web applications — f...\n  domain-driven-design:\n    - domain-driven-design: Model software around the business domain using bounded c...\n  drive-motivation:\n    - drive-motivation: Design motivation systems using Autonomy, Mastery, and Pu...\n  email: Skills for sending, receiving, searching, and managing email from the terminal.\n    - agentmail: Manage emails via AgentMail API — list, read, send, reply...\n    - email: Send emails, buy forwarding inboxes, manage custom subdom...\n    - himalaya: Himalaya CLI: IMAP/SMTP email from terminal.\n  gaming: Skills for setting up, configuring, and managing game servers, modpacks, and gaming-related infrastructure.\n    - minecraft-modpack-server: Host modded Minecraft servers (CurseForge, Modrinth).\n    - pokemon-player: Play Pokemon via headless emulator + RAM reads.\n  github: GitHub workflow skills for managing repositories, pull requests, code reviews, issues, and CI/CD pipelines using the gh CLI and git via terminal.\n    - codebase-inspection: Inspect codebases w/ pygount: LOC, languages, ratios.\n    - github-auth: GitHub auth setup: HTTPS tokens, SSH keys, gh CLI login.\n    - github-code-review: Review PRs: diffs, inline comments via gh or REST.\n    - github-issues: Create, triage, label, assign GitHub issues via gh or REST.\n    - github-pr-workflow: GitHub PR lifecycle: branch, commit, open, CI, merge.\n    - github-repo-management: Clone, create, fork, configure, and manage GitHub reposit...\n  github-workflow:\n    - github-workflow: Complete GitHub workflow — repos, branches, commits, PRs,...\n  grill-me:\n    - grill-me: Interview the user relentlessly about a plan or design un...\n  handoff:\n    - handoff: Compact the current conversation into a handoff document ...\n  health-fitness:\n    - health-fitness: Health and fitness tracking for Marco — workout logging, ...\n    - workout-plan-builder: Build personalized gym workout plans for Marco Olivero. C...\n  hermes-gateway-restart-notification:\n    - hermes-gateway-restart-notification: This skill manages the notification process for when the ...\n  hermeshub-reviewer:\n    - hermeshub-reviewer: Agent-to-agent feedback protocol for HermesHub. Register ...\n  high-perf-browser:\n    - high-perf-browser: Optimize web performance through network protocols, resou...\n  hindsight-local:\n    - hindsight-local: Store user preferences, learnings from tasks, and procedu...\n  hooked-ux:\n    - hooked-ux: Design habit-forming product loops using the Hook Model (...\n  hundred-million-offers:\n    - hundred-million-offers: Create irresistible offers using the Value Equation, bonu...\n  hyperframes:\n    - hyperframes: Create video compositions, animations, title cards, overl...\n  hyperframes-cli:\n    - hyperframes-cli: HyperFrames CLI dev loop — `npx hyperframes` for scaffold...\n  improve-retention:\n    - improve-retention: Diagnose and fix retention problems using behavior design...\n  influence-psychology:\n    - influence-psychology: Apply the six principles of ethical persuasion (reciproci...\n  inspired-product:\n    - inspired-product: Build empowered product teams using discovery and deliver...\n  integration:\n    - omi-obsidian-integration-status: Omi + Obsidian integration status - what's available on m...\n  ios-hig-design:\n    - ios-hig-design: Design native iOS interfaces following Apple Human Interf...\n  jobs-to-be-done:\n    - jobs-to-be-done: Discover what customers truly need by analyzing the \"job\"...\n  lean-startup:\n    - lean-startup: Design MVPs, validated learning experiments, and pivot-or...\n  lean-ux:\n    - lean-ux: Apply lean thinking to UX: hypothesis-driven design, coll...\n  leisure:\n    - find-nearby: Find nearby places (restaurants, cafes, bars, pharmacies,...\n  local-search:\n    - local-search: Search for places, businesses, and locations using Google...\n  made-to-stick:\n    - made-to-stick: Craft messages that are understood, remembered, and drive...\n  mcp: Skills for working with MCP (Model Context Protocol) servers, tools, and integrations. Includes the built-in native MCP client (configure servers in config.yaml for automatic tool discovery) and the mcporter CLI bridge for ad-hoc server interaction.\n    - mcporter: Use the mcporter CLI to list, configure, auth, and call M...\n    - native-mcp: Built-in MCP (Model Context Protocol) client that connect...\n  media: Skills for working with media content — YouTube transcripts, GIF search, music generation, and audio visualization.\n    - gif-search: Search/download GIFs from Tenor via curl + jq.\n    - heartmula: HeartMuLa: Suno-like song generation from lyrics + tags.\n    - songsee: Audio spectrograms/features (mel, chroma, MFCC) via CLI.\n    - spotify: Spotify: play, search, queue, manage playlists and devices.\n    - youtube-content: YouTube transcripts to summaries, threads, blogs.\n    - youtube-video-analysis: Analyze YouTube videos for Marco - extract metadata, summ...\n  media-generation:\n    - media-generation: Generate images and videos using x402-protected AI models...\n  microinteractions:\n    - microinteractions: Design the small details -- triggers, rules, feedback, lo...\n  mlops: Knowledge and Tools for Machine Learning Operations - tools and frameworks for training, fine-tuning, deploying, and optimizing ML/AI models\n    - auto-model-routing: Automatically select the best LLM model for a given task ...\n    - huggingface-hub: HuggingFace hf CLI: search/download/upload models, datasets.\n    - model-routing-strategy: Cost-optimized model routing strategy for Hermes Agent — ...\n    - ollama-open-webui-local-install: Install Ollama (local bare-metal) + Open WebUI (docker) o...\n    - openrouter-model-selection: Complete framework for intelligent LLM model selection to...\n    - setup-shell-automation: Shell automation utilities for common VPS tasks — cron-ba...\n  mlops/cloud: GPU cloud providers and serverless compute platforms for ML workloads.\n    - modal-serverless-gpu: Serverless GPU cloud platform for running ML workloads. U...\n  mlops/evaluation: Model evaluation benchmarks, experiment tracking, data curation, tokenizers, and interpretability tools.\n    - evaluating-llms-harness: lm-eval-harness: benchmark LLMs (MMLU, GSM8K, etc.).\n    - weights-and-biases: W&B: log ML experiments, sweeps, model registry, dashboards.\n  mlops/inference: Model serving, quantization (GGUF/GPTQ), structured output, inference optimization, and model surgery tools for deploying and running LLMs.\n    - gguf-quantization: GGUF format and llama.cpp quantization for efficient CPU/...\n    - guidance: Control LLM output with regex and grammars, guarantee val...\n    - llama-cpp: Runs LLM inference on CPU, Apple Silicon, and consumer GP...\n    - obliteratus: OBLITERATUS: abliterate LLM refusals (diff-in-means).\n    - outlines: Outlines: structured JSON/regex/Pydantic LLM generation.\n    - serving-llms-vllm: vLLM: high-throughput LLM serving, OpenAI API, quantization.\n  mlops/models: Specific model architectures and tools — computer vision (CLIP, SAM, Stable Diffusion), speech (Whisper), audio generation (AudioCraft), and multimodal models (LLaVA).\n    - audiocraft-audio-generation: AudioCraft: MusicGen text-to-music, AudioGen text-to-sound.\n    - clip: OpenAI's model connecting vision and language. Enables ze...\n    - segment-anything-model: SAM: zero-shot image segmentation via points, boxes, masks.\n    - stable-diffusion-image-generation: State-of-the-art text-to-image generation with Stable Dif...\n    - whisper: OpenAI's general-purpose speech recognition model. Suppor...\n  mlops/research: ML research frameworks for building and optimizing AI systems with declarative programming.\n    - dspy: DSPy: declarative LM programs, auto-optimize prompts, RAG.\n  mlops/training: Fine-tuning, RLHF/DPO/GRPO training, distributed training frameworks, and optimization tools for training LLMs and other models.\n    - axolotl: Axolotl: YAML LLM fine-tuning (LoRA, DPO, GRPO).\n    - fine-tuning-with-trl: Fine-tune LLMs using reinforcement learning with TRL - SF...\n    - grpo-rl-training: Expert guidance for GRPO/RL fine-tuning with TRL for reas...\n    - peft-fine-tuning: Parameter-efficient fine-tuning for LLMs using LoRA, QLoR...\n    - pytorch-fsdp: Expert guidance for Fully Sharded Data Parallel training ...\n    - unsloth: Unsloth: 2-5x faster LoRA/QLoRA fine-tuning, less VRAM.\n  mom-test:\n    - mom-test: Talk to customers without leading them using Mom Test rul...\n  negotiation:\n    - negotiation: Prepare and execute negotiations using tactical empathy, ...\n  networking:\n    - cloudflare-quick-tunnel: Expose local services to the internet via Cloudflare quic...\n  news-shopping:\n    - news-shopping: Search Google News and Google Shopping using Serper APIs ...\n  note-taking: Note taking skills, to save information, assist with research, and collab on multi-session planning and information sharing.\n    - obsidian: Read, search, and create notes in the Obsidian vault.\n  obsidian-hermes-memory:\n    - obsidian-hermes-memory: Manage Marco's Obsidian Knowledge Graph / Memory Vault sy...\n  obviously-awesome:\n    - obviously-awesome: Define product positioning by mapping competitive alterna...\n  one-page-marketing:\n    - one-page-marketing: Build a complete marketing plan covering the full custome...\n  openclaw-imports:\n    - qmd: FlowState-QMD gives coding agents anticipatory project me...\n  openrouter-cost-optimization:\n    - setup-shell-automation: Shell automation utilities for common VPS tasks — cron-ba...\n  people-property:\n    - people-property: Search for people and properties using Whitepages APIs vi...\n  phone-calls:\n    - phone-calls: Make AI phone calls, buy phone numbers, and get call tran...\n  pragmatic-programmer:\n    - pragmatic-programmer: Apply meta-principles of software craftsmanship: DRY, ort...\n  predictable-revenue:\n    - predictable-revenue: Build a scalable outbound B2B sales process with speciali...\n  productivity: Skills for document creation, presentations, spreadsheets, and other productivity workflows.\n    - agent-heartbeat-suggestions: Periodic suggestions for the agent during heartbeats — ch...\n    - airtable: Airtable REST API via curl. Records CRUD, filters, upserts.\n    - context-cross-reference: Internal operating pattern for multi-front project coordi...\n    - cos-chief-of-staff: Chief of Staff skill for Hermes Agent — coordinates the e...\n    - cos-daily-task-manager: Daily task management for the Chief of Staff suite — trac...\n    - cos-executive-assistant: Executive assistant skill for the Chief of Staff suite — ...\n    - cos-overnight-logger: Overnight monitoring and logging for the Chief of Staff s...\n    - cos-proactive-reporting: Proactive reporting for the Chief of Staff suite — schedu...\n    - cos-relationship-manager: Relationship manager for the Chief of Staff suite — track...\n    - daily-brief: Generate high-signal daily briefing under 3 min. Based on...\n    - daily-memory-system: Generate daily memory notes in Obsidian vault using LLM s...\n    - decision-log: Prompt to save strategic decisions with reasoning, altern...\n    - deep-research-workflow: Run iterative deep research sessions — multi-video analys...\n    - elevenlabs-italian-tts: DISCONTINUED — ElevenLabs key is invalid (401). Use morni...\n    - google-workspace: Gmail, Calendar, Drive, Contacts, Sheets, and Docs integr...\n    - ios-web-clip: Create an iOS Web Clip — an HTML page that can be added t...\n    - linear: Linear: manage issues, projects, teams via GraphQL + curl.\n    - maps: Geocode, POIs, routes, timezones via OpenStreetMap/OSRM.\n    - marco-palestra-notion: Notion workspace for Marco's gym workout tracking — SCHED...\n    - morning-brief-audio-hq: High-quality audio morning briefing — synthesizes the dai...\n    - morning-brief-cronjob: Morning brief cron job — automated scheduler that trigger...\n    - morning-brief-italian-voice: Italian voice TTS for Marco — Edge TTS primary, MP3→OGG c...\n    - nano-pdf: Edit PDF text/typos/titles via nano-pdf CLI (NL prompts).\n    - notion: Notion API for creating and managing pages, databases, an...\n    - notion-mcp-setup: Setup Notion MCP server with internal integration token f...\n    - ocr-and-documents: Extract text from PDFs/scans (pymupdf, marker-pdf).\n    - powerpoint: Create, read, edit .pptx decks, slides, notes, templates.\n    - semantic-skill-routing: Automatically route tasks to the most relevant skills usi...\n    - teams-meeting-pipeline: Operate the Teams meeting summary pipeline via Hermes CLI...\n    - telephony: Give Hermes phone capabilities without core tool changes....\n    - tts-italian-voice: DISCONTINUED — ElevenLabs key is invalid (401). Use morni...\n    - wundertrading-api-direct: Direct REST API access for WunderTrading when MCP fails\n  project-planner:\n    - project-planner: Project planning — break down tasks, estimate timelines, ...\n  qmd:\n    - qmd: FlowState-QMD gives coding agents anticipatory project me...\n  react-reasoning:\n    - react-reasoning: ReAct (Reasoning + Acting) framework — interleave chain-o...\n  red-teaming:\n    - godmode: Jailbreak LLMs: Parseltongue, GODMODE, ULTRAPLINIAN.\n  refactoring-patterns:\n    - refactoring-patterns: Apply named refactoring transformations to improve code s...\n  refactoring-ui:\n    - refactoring-ui: Audit and fix visual hierarchy, spacing, color, and depth...\n  relay-for-telegram:\n    - relay-for-telegram: Access and search Telegram message history using AI. Sear...\n  release-it:\n    - release-it: Build production-ready systems with stability patterns: c...\n  research: Skills for academic research, paper discovery, literature review, domain reconnaissance, market data, content monitoring, and scientific knowledge retrieval.\n    - arxiv: Search arXiv papers by keyword, author, category, or ID.\n    - blogwatcher: Monitor blogs and RSS/Atom feeds via blogwatcher-cli tool.\n    - deep-research: Trigger deep research mode using Perplexity Sonar Deep Re...\n    - deep-research-iterative: Iterative deep research loop using Perplexity Sonar Deep ...\n    - duckduckgo-search: Free web search via DuckDuckGo — text, news, images, vide...\n    - llm-wiki: Karpathy's LLM Wiki — build and maintain a persistent, in...\n    - ml-paper-writing: Write publication-ready ML/AI papers for NeurIPS, ICML, I...\n    - parallel-cli: Optional vendor skill for Parallel CLI — agent-native web...\n    - polymarket: Query Polymarket: markets, prices, orderbooks, history.\n    - public-apis: Cerca API gratuite in public-apis (340k stellette, 1436 A...\n  scorecard-marketing:\n    - scorecard-marketing: Build quiz and assessment funnels that generate qualified...\n  security:\n    - bitwarden-cli: Bitwarden CLI per credential management — usa BW_SESSION ...\n    - bitwarden-vault-backup-gpg: Extract Bitwarden CLI vault items and encrypt to AES256 G...\n    - bitwarden-vault-unlock: Unlock Bitwarden vault when BW_SESSION is expired\n    - hermes-security-hardening: Complete security hardening and audit process for Hermes ...\n    - pass-password-store: Linux password manager CLI — già installato sul Surface\n  security-auditor:\n    - security-auditor: Scan code for vulnerabilities, secret leaks, dependency i...\n  security-health-check:\n    - security-health-check\n  slack-bot:\n    - slack-bot: Send messages, monitor channels, react to posts, and mana...\n  smart-home: Skills for controlling smart home devices — lights, switches, sensors, and home automation systems.\n    - linux-no-freeze: Prevent Ubuntu Linux desktop from suspending, blanking, o...\n    - openhue: Control Philips Hue lights, scenes, rooms via OpenHue CLI.\n  social-intelligence:\n    - social-intelligence: Search and monitor Reddit using x402-protected APIs. Also...\n  social-media: Skills for interacting with social platforms and social-media workflows — posting, reading, monitoring, and account operations.\n    - xitter: Interact with X/Twitter via the x-cli terminal client usi...\n    - xurl: Interact with X/Twitter via xurl, the official X API CLI....\n  social-scraping:\n    - social-scraping: Scrape social media profiles, posts, comments, followers,...\n  software-design-philosophy:\n    - software-design-philosophy: Manage software complexity through deep modules, informat...\n  software-development:\n    - code-review: Guidelines for performing thorough code reviews with secu...\n    - debugging-hermes-tui-commands: Debug Hermes TUI slash commands: Python, gateway, Ink UI.\n    - hermes-agent-skill-authoring: Author in-repo SKILL.md: frontmatter, validator, structure.\n    - node-inspect-debugger: Debug Node.js via --inspect + Chrome DevTools Protocol CLI.\n    - plan: Plan mode: write markdown plan to .hermes/plans/, no exec.\n    - python-debugpy: Debug Python: pdb REPL + debugpy remote (DAP).\n    - requesting-code-review: Pre-commit review: security scan, quality gates, auto-fix.\n    - spike: Throwaway experiments to validate an idea before build.\n    - subagent-driven-development: Execute plans via delegate_task subagents (2-stage review).\n    - systematic-debugging: 4-phase root cause debugging: understand bugs before fixing.\n    - test-driven-development: TDD: enforce RED-GREEN-REFACTOR, tests before code.\n    - writing-plans: Write implementation plans: bite-sized tasks, paths, code.\n  storybrand-messaging:\n    - storybrand-messaging: Clarify brand messaging using narrative structure that po...\n  system-design:\n    - system-design: Design scalable distributed systems using structured appr...\n  system-maintenance:\n    - complete-app-uninstall: Completely remove a program from Surface Pro 3 (LXQt Ubun...\n    - find-installed-apps-surface: Find installed applications on Marco's Surface Pro 3 (Lub...\n    - firefox-esr-launch-on-surface: Launch Firefox ESR on Surface Pro 3 (LXQt Ubuntu) — bypas...\n    - sudo-password-delivery: How to run sudo commands in non-TTY environments (Hermes ...\n    - surface-gui-app-launch: Launch GUI applications on Surface Pro 3 (LXQt Ubuntu) fr...\n  tdd:\n    - tdd: Test-driven development with red-green-refactor loop. Use...\n  test-runner:\n    - test-runner: Write and run tests across languages — scaffolding, execu...\n  top-design:\n    - top-design: Create award-winning, immersive web experiences at the le...\n  traction-eos:\n    - traction-eos: Implement the Entrepreneurial Operating System (EOS) to a...\n  trading:\n    - alpaca-crypto-paper-trader: Automated multi-strategy crypto paper trading via Alpaca ...\n    - automated-trading-bot: Build and run a fully automated crypto trading bot with r...\n    - backtest-vectorized-crypto: Framework per backtest vettorizzato di strategie crypto s...\n    - binance-trading: Binance spot and futures trading via python-requests — AP...\n    - bybit-hyperliquid-trading: Bybit spot/perpetual and Hyperliquid trading setup — API ...\n    - crypto-backtest-engine: Realistic vectorized crypto backtest framework — avoids t...\n    - crypto-paper-trader: Build a local crypto paper trader using Binance public AP...\n    - crypto-strategy-backtester: Crypto strategy backtester using Support/Resistance based...\n    - crypto-trading-strategy: Crypto trading strategy combining technical analysis, sen...\n    - dex-analytics: Analyze decentralized exchange (DEX) data including pool ...\n    - funding-rate-liquidations: Track funding rates across exchanges (Binance, Bybit, Hyp...\n    - hyperliquid-paper-trading: Hyperliquid paper trading setup — wallet auth, testnet AP...\n    - hyperperfect-trading-strategies: Top crypto trading strategies discovered via backtesting ...\n    - multi-timeframe-analysis: Perform multi-timeframe analysis (MTF) for trading — comb...\n    - realistic-crypto-backtester: Build realistic crypto strategy backtesters — avoid 3 fat...\n    - smart-money-crypto-strategy: Marco's institutional-grade crypto trading system — Smart...\n    - smart-money-fusion: Alpha Seeker trading strategy — Smart Money Fusion (SMF)....\n    - smart-money-paper-trader: Automated crypto paper trading with Smart Money detection...\n    - sr-zone-paper-trader: S/R Zone-based crypto paper trader — finds support/resist...\n    - the-better-traders-course: Access and scrape The Better Traders Kartra-based trading...\n    - trading-backtest-validation: Lezione critica sul gap tra simulazione Monte Carlo e bac...\n    - wealthyeducation-trading-backtest: Massive crypto trading backtest framework — scrape Wealth...\n    - whale-alert-monitoring: Monitor and analyze large cryptocurrency transactions (wh...\n  upload-and-share:\n    - upload-and-share: Upload files to the cloud and get shareable public URLs u...\n  ux-heuristics:\n    - ux-heuristics: Evaluate and improve interface usability using heuristic ...\n  vectorized-crypto-backtester:\n    - vectorized-crypto-backtester: Build fast crypto backtesters using vectorized numpy + pa...\n  weather-plugin:\n    - weather-plugin: Guide for using the weather plugin — data queries, radar ...\n  web:\n    - scrapegraph-ai: LLM-driven web scraping con ScrapeGraphAI — estrazione st...\n  web-checks:\n    - openrouter-model-check: A skill to check pricing and availability of models on Op...\n  web-development:\n    - browser-harness: Browser automation harness for Hermes Agent — headless Ch...\n    - page-agent: Embed alibaba/page-agent into your own web application — ...\n    - udemy-course-scraping: Scrape Udemy course content using Firefox ESR with real b...\n    - udemy-scraper: Scrape Udemy course content (text/descriptions/curriculum...\n    - udemy-scraper-from-firefox-session: Scrape Udemy course content using an active Firefox brows...\n    - wealthyeducation-scraper: Scrape WealthyEducation.com course content — public pages...\n  web-research:\n    - web-research: Neural web search and content extraction using x402-prote...\n  web-researcher:\n    - web-researcher: Use this skill for deep research, fact-checking, or findi...\n  web-typography:\n    - web-typography: Select, pair, and implement typefaces for web projects. U...\n  wondelai:\n    - blue-ocean-strategy: Create uncontested market space using value innovation in...\n    - clean-architecture: Structure software around the Dependency Rule: source cod...\n    - clean-code: Write readable, maintainable code through disciplined nam...\n    - contagious: Engineer word-of-mouth and virality using the STEPPS fram...\n    - continuous-discovery: Build a weekly cadence of customer touchpoints using Oppo...\n    - cro-methodology: Audit websites and landing pages for conversion issues an...\n    - crossing-the-chasm: Navigate the technology adoption lifecycle from early ado...\n    - ddia-systems: Design data systems by understanding storage engines, rep...\n    - design-everyday-things: Apply foundational design principles: affordances, signif...\n    - design-sprint: Run a structured 5-day process to prototype, test, and va...\n    - domain-driven-design: Model software around the business domain using bounded c...\n    - drive-motivation: Design motivation systems using Autonomy, Mastery, and Pu...\n    - high-perf-browser: Optimize web performance through network protocols, resou...\n    - hooked-ux: Design habit-forming product loops using the Hook Model (...\n    - hundred-million-offers: Create irresistible offers using the Value Equation, bonu...\n    - improve-retention: Diagnose and fix retention problems using behavior design...\n    - influence-psychology: Apply the six principles of ethical persuasion (reciproci...\n    - inspired-product: Build empowered product teams using discovery and deliver...\n    - ios-hig-design: Design native iOS interfaces following Apple Human Interf...\n    - jobs-to-be-done: Discover what customers truly need by analyzing the \"job\"...\n    - lean-startup: Design MVPs, validated learning experiments, and pivot-or...\n    - lean-ux: Apply lean thinking to UX: hypothesis-driven design, coll...\n    - made-to-stick: Craft messages that are understood, remembered, and drive...\n    - microinteractions: Design the small details -- triggers, rules, feedback, lo...\n    - mom-test: Talk to customers without leading them using Mom Test rul...\n    - negotiation: Prepare and execute negotiations using tactical empathy, ...\n    - obviously-awesome: Define product positioning by mapping competitive alterna...\n    - one-page-marketing: Build a complete marketing plan covering the full custome...\n    - pragmatic-programmer: Apply meta-principles of software craftsmanship: DRY, ort...\n    - predictable-revenue: Build a scalable outbound B2B sales process with speciali...\n    - refactoring-patterns: Apply named refactoring transformations to improve code s...\n    - refactoring-ui: Audit and fix visual hierarchy, spacing, color, and depth...\n    - release-it: Build production-ready systems with stability patterns: c...\n    - scorecard-marketing: Build quiz and assessment funnels that generate qualified...\n    - software-design-philosophy: Manage software complexity through deep modules, informat...\n    - storybrand-messaging: Clarify brand messaging using narrative structure that po...\n    - system-design: Design scalable distributed systems using structured appr...\n    - top-design: Create award-winning, immersive web experiences at the le...\n    - traction-eos: Implement the Entrepreneurial Operating System (EOS) to a...\n    - ux-heuristics: Evaluate and improve interface usability using heuristic ...\n    - web-typography: Select, pair, and implement typefaces for web projects. U...\n  wondelai/.claude/skills:\n    - blue-ocean-strategy: Create uncontested market space using value innovation in...\n    - cro-methodology: Audit websites and landing pages for conversion issues an...\n    - crossing-the-chasm: Navigate the technology adoption lifecycle from early ado...\n    - design-everyday-things: Apply foundational design principles: affordances, signif...\n    - design-sprint: Run a structured 5-day process to prototype, test, and va...\n    - drive-motivation: Design motivation systems using Autonomy, Mastery, and Pu...\n    - hooked-ux: Design habit-forming product loops using the Hook Model (...\n    - influence-psychology: Apply the six principles of ethical persuasion (reciproci...\n    - ios-hig-design: Design native iOS interfaces following Apple Human Interf...\n    - jobs-to-be-done: Discover what customers truly need by analyzing the \"job\"...\n    - lean-startup: Design MVPs, validated learning experiments, and pivot-or...\n    - made-to-stick: Craft messages that are understood, remembered, and drive...\n    - negotiation: Prepare and execute negotiations using tactical empathy, ...\n    - predictable-revenue: Build a scalable outbound B2B sales process with speciali...\n    - refactoring-ui: Audit and fix visual hierarchy, spacing, color, and depth...\n    - scorecard-marketing: Build quiz and assessment funnels that generate qualified...\n    - storybrand-messaging: Clarify brand messaging using narrative structure that po...\n    - top-design: Create award-winning, immersive web experiences at the le...\n    - traction-eos: Implement the Entrepreneurial Operating System (EOS) to a...\n    - ux-heuristics: Evaluate and improve interface usability using heuristic ...\n    - web-typography: Select, pair, and implement typefaces for web projects. U...\n  wondelai/.cursor/skills:\n    - blue-ocean-strategy: Create uncontested market space using value innovation in...\n    - cro-methodology: Audit websites and landing pages for conversion issues an...\n    - crossing-the-chasm: Navigate the technology adoption lifecycle from early ado...\n    - design-everyday-things: Apply foundational design principles: affordances, signif...\n    - design-sprint: Run a structured 5-day process to prototype, test, and va...\n    - drive-motivation: Design motivation systems using Autonomy, Mastery, and Pu...\n    - hooked-ux: Design habit-forming product loops using the Hook Model (...\n    - influence-psychology: Apply the six principles of ethical persuasion (reciproci...\n    - ios-hig-design: Design native iOS interfaces following Apple Human Interf...\n    - jobs-to-be-done: Discover what customers truly need by analyzing the \"job\"...\n    - lean-startup: Design MVPs, validated learning experiments, and pivot-or...\n    - made-to-stick: Craft messages that are understood, remembered, and drive...\n    - negotiation: Prepare and execute negotiations using tactical empathy, ...\n    - predictable-revenue: Build a scalable outbound B2B sales process with speciali...\n    - refactoring-ui: Audit and fix visual hierarchy, spacing, color, and depth...\n    - scorecard-marketing: Build quiz and assessment funnels that generate qualified...\n    - storybrand-messaging: Clarify brand messaging using narrative structure that po...\n    - top-design: Create award-winning, immersive web experiences at the le...\n    - traction-eos: Implement the Entrepreneurial Operating System (EOS) to a...\n    - ux-heuristics: Evaluate and improve interface usability using heuristic ...\n    - web-typography: Select, pair, and implement typefaces for web projects. U...\n  wondelai/.pi/skills:\n    - blue-ocean-strategy: Create uncontested market space using value innovation in...\n    - cro-methodology: Audit websites and landing pages for conversion issues an...\n    - crossing-the-chasm: Navigate the technology adoption lifecycle from early ado...\n    - design-everyday-things: Apply foundational design principles: affordances, signif...\n    - design-sprint: Run a structured 5-day process to prototype, test, and va...\n    - drive-motivation: Design motivation systems using Autonomy, Mastery, and Pu...\n    - hooked-ux: Design habit-forming product loops using the Hook Model (...\n    - influence-psychology: Apply the six principles of ethical persuasion (reciproci...\n    - ios-hig-design: Design native iOS interfaces following Apple Human Interf...\n    - jobs-to-be-done: Discover what customers truly need by analyzing the \"job\"...\n    - lean-startup: Design MVPs, validated learning experiments, and pivot-or...\n    - made-to-stick: Craft messages that are understood, remembered, and drive...\n    - negotiation: Prepare and execute negotiations using tactical empathy, ...\n    - predictable-revenue: Build a scalable outbound B2B sales process with speciali...\n    - refactoring-ui: Audit and fix visual hierarchy, spacing, color, and depth...\n    - scorecard-marketing: Build quiz and assessment funnels that generate qualified...\n    - storybrand-messaging: Clarify brand messaging using narrative structure that po...\n    - top-design: Create award-winning, immersive web experiences at the le...\n    - traction-eos: Implement the Entrepreneurial Operating System (EOS) to a...\n    - ux-heuristics: Evaluate and improve interface usability using heuristic ...\n    - web-typography: Select, pair, and implement typefaces for web projects. U...\n  wondelai/.windsurf/skills:\n    - blue-ocean-strategy: Create uncontested market space using value innovation in...\n    - cro-methodology: Audit websites and landing pages for conversion issues an...\n    - crossing-the-chasm: Navigate the technology adoption lifecycle from early ado...\n    - design-everyday-things: Apply foundational design principles: affordances, signif...\n    - design-sprint: Run a structured 5-day process to prototype, test, and va...\n    - drive-motivation: Design motivation systems using Autonomy, Mastery, and Pu...\n    - hooked-ux: Design habit-forming product loops using the Hook Model (...\n    - influence-psychology: Apply the six principles of ethical persuasion (reciproci...\n    - ios-hig-design: Design native iOS interfaces following Apple Human Interf...\n    - jobs-to-be-done: Discover what customers truly need by analyzing the \"job\"...\n    - lean-startup: Design MVPs, validated learning experiments, and pivot-or...\n    - made-to-stick: Craft messages that are understood, remembered, and drive...\n    - negotiation: Prepare and execute negotiations using tactical empathy, ...\n    - predictable-revenue: Build a scalable outbound B2B sales process with speciali...\n    - refactoring-ui: Audit and fix visual hierarchy, spacing, color, and depth...\n    - scorecard-marketing: Build quiz and assessment funnels that generate qualified...\n    - storybrand-messaging: Clarify brand messaging using narrative structure that po...\n    - top-design: Create award-winning, immersive web experiences at the le...\n    - traction-eos: Implement the Entrepreneurial Operating System (EOS) to a...\n    - ux-heuristics: Evaluate and improve interface usability using heuristic ...\n    - web-typography: Select, pair, and implement typefaces for web projects. U...\n  write-a-skill:\n    - write-a-skill: Create new agent skills with proper structure, progressiv...\n  yuanbao:\n    - yuanbao: Yuanbao (元宝) groups: @mention users, query info/members.\n</available_skills>\n\nOnly proceed without loading a skill if genuinely none are relevant to the task.\n\nHost: Linux (6.17.0-23-generic)\nUser home directory: /home/marco\nCurrent working directory: /home/marco/.hermes/hermes-agent\n\nYou are running as a scheduled cron job. There is no user present — you cannot ask questions, request clarification, or wait for follow-up. Execute the task fully and autonomously, making reasonable decisions where needed. Your final response is automatically delivered to the job's configured destination — put the primary content directly in your response.\n\nConversation started: Friday, May 15, 2026 08:40 AM\nModel: MiniMax-M2.7-highspeed\nProvider: minimax",
+  "tools": [
+    {
+      "type": "function",
+      "function": {
+        "name": "browser_back",
+        "description": "Navigate back to the previous page in browser history. Requires browser_navigate to be called first.",
+        "parameters": {
+          "type": "object",
+          "properties": {}
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "browser_click",
+        "description": "Click on an element identified by its ref ID from the snapshot (e.g., '@e5'). The ref IDs are shown in square brackets in the snapshot output. Requires browser_navigate and browser_snapshot to be called first.",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "ref": {
+              "type": "string",
+              "description": "The element reference from the snapshot (e.g., '@e5', '@e12')"
+            }
+          },
+          "required": [
+            "ref"
+          ]
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "browser_console",
+        "description": "Get browser console output and JavaScript errors from the current page. Returns console.log/warn/error/info messages and uncaught JS exceptions. Use this to detect silent JavaScript errors, failed API calls, and application warnings. Requires browser_navigate to be called first. When 'expression' is provided, evaluates JavaScript in the page context and returns the result — use this for DOM inspection, reading page state, or extracting data programmatically.",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "clear": {
+              "type": "boolean",
+              "default": false,
+              "description": "If true, clear the message buffers after reading"
+            },
+            "expression": {
+              "type": "string",
+              "description": "JavaScript expression to evaluate in the page context. Runs in the browser like DevTools console — full access to DOM, window, document. Return values are serialized to JSON. Example: 'document.title' or 'document.querySelectorAll(\"a\").length'"
+            }
+          }
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "browser_get_images",
+        "description": "Get a list of all images on the current page with their URLs and alt text. Useful for finding images to analyze with the vision tool. Requires browser_navigate to be called first.",
+        "parameters": {
+          "type": "object",
+          "properties": {}
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "browser_navigate",
+        "description": "Navigate to a URL in the browser. Initializes the session and loads the page. Must be called before other browser tools. For plain-text endpoints — URLs ending in .md, .txt, .json, .yaml, .yml, .csv, .xml, raw.githubusercontent.com, or any documented API endpoint — prefer curl via the terminal tool or web_extract; the browser stack is overkill and much slower for these. Use browser tools when you need to interact with a page (click, fill forms, dynamic content). Returns a compact page snapshot with interactive elements and ref IDs — no need to call browser_snapshot separately after navigating.",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "url": {
+              "type": "string",
+              "description": "The URL to navigate to (e.g., 'https://example.com')"
+            }
+          },
+          "required": [
+            "url"
+          ]
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "browser_press",
+        "description": "Press a keyboard key. Useful for submitting forms (Enter), navigating (Tab), or keyboard shortcuts. Requires browser_navigate to be called first.",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "key": {
+              "type": "string",
+              "description": "Key to press (e.g., 'Enter', 'Tab', 'Escape', 'ArrowDown')"
+            }
+          },
+          "required": [
+            "key"
+          ]
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "browser_scroll",
+        "description": "Scroll the page in a direction. Use this to reveal more content that may be below or above the current viewport. Requires browser_navigate to be called first.",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "direction": {
+              "type": "string",
+              "enum": [
+                "up",
+                "down"
+              ],
+              "description": "Direction to scroll"
+            }
+          },
+          "required": [
+            "direction"
+          ]
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "browser_snapshot",
+        "description": "Get a text-based snapshot of the current page's accessibility tree. Returns interactive elements with ref IDs (like @e1, @e2) for browser_click and browser_type. full=false (default): compact view with interactive elements. full=true: complete page content. Snapshots over 8000 chars are truncated or LLM-summarized. Requires browser_navigate first. Note: browser_navigate already returns a compact snapshot — use this to refresh after interactions that change the page, or with full=true for complete content.",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "full": {
+              "type": "boolean",
+              "description": "If true, returns complete page content. If false (default), returns compact view with interactive elements only.",
+              "default": false
+            }
+          }
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "browser_type",
+        "description": "Type text into an input field identified by its ref ID. Clears the field first, then types the new text. Requires browser_navigate and browser_snapshot to be called first.",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "ref": {
+              "type": "string",
+              "description": "The element reference from the snapshot (e.g., '@e3')"
+            },
+            "text": {
+              "type": "string",
+              "description": "The text to type into the field"
+            }
+          },
+          "required": [
+            "ref",
+            "text"
+          ]
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "browser_vision",
+        "description": "Take a screenshot of the current page and analyze it with vision AI. Use this when you need to visually understand what's on the page - especially useful for CAPTCHAs, visual verification challenges, complex layouts, or when the text snapshot doesn't capture important visual information. Returns both the AI analysis and a screenshot_path that you can share with the user by including MEDIA:<screenshot_path> in your response. Requires browser_navigate to be called first.",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "question": {
+              "type": "string",
+              "description": "What you want to know about the page visually. Be specific about what you're looking for."
+            },
+            "annotate": {
+              "type": "boolean",
+              "default": false,
+              "description": "If true, overlay numbered [N] labels on interactive elements. Each [N] maps to ref @eN for subsequent browser commands. Useful for QA and spatial reasoning about page layout."
+            }
+          },
+          "required": [
+            "question"
+          ]
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "delegate_task",
+        "description": "Spawn one or more subagents to work on tasks in isolated contexts. Each subagent gets its own conversation, terminal session, and toolset. Only the final summary is returned -- intermediate tool results never enter your context window.\n\nTWO MODES (one of 'goal' or 'tasks' is required):\n1. Single task: provide 'goal' (+ optional context, toolsets)\n2. Batch (parallel): provide 'tasks' array with up to 3 items concurrently for this user (configured via delegation.max_concurrent_children in config.yaml). All run in parallel and results are returned together. Nested delegation is OFF for this user (max_spawn_depth=1): every child is a leaf and cannot delegate further. Raise delegation.max_spawn_depth in config.yaml to enable nesting.\n\nWHEN TO USE delegate_task:\n- Reasoning-heavy subtasks (debugging, code review, research synthesis)\n- Tasks that would flood your context with intermediate data\n- Parallel independent workstreams (research A and B simultaneously)\n\nWHEN NOT TO USE (use these instead):\n- Mechanical multi-step work with no reasoning needed -> use execute_code\n- Single tool call -> just call the tool directly\n- Tasks needing user interaction -> subagents cannot use clarify\n- Durable long-running work that must outlive the current turn -> use cronjob (action='create') or terminal(background=True, notify_on_complete=True) instead. delegate_task runs SYNCHRONOUSLY inside the parent turn: if the parent is interrupted (user sends a new message, /stop, /new) the child is cancelled with status='interrupted' and its work is discarded. Children cannot continue in the background.\n\nIMPORTANT:\n- Subagents have NO memory of your conversation. Pass all relevant info (file paths, error messages, constraints) via the 'context' field.\n- If the user is writing in a non-English language, or asked for output in a specific language / tone / style, say so in 'context' (e.g. \"respond in Chinese\", \"return output in Japanese\"). Otherwise subagents default to English and their summaries will contaminate your final reply with the wrong language.\n- Subagent summaries are SELF-REPORTS, not verified facts. A subagent that claims \"uploaded successfully\" or \"file written\" may be wrong. For operations with external side-effects (HTTP POST/PUT, remote writes, file creation at shared paths, publishing), require the subagent to return a verifiable handle (URL, ID, absolute path, HTTP status) and verify it yourself — fetch the URL, stat the file, read back the content — before telling the user the operation succeeded.\n- Leaf subagents (role='leaf', the default) CANNOT call: delegate_task, clarify, memory, send_message, execute_code.\n- Orchestrator subagents (role='orchestrator') retain delegate_task so they can spawn their own workers, but still cannot use clarify, memory, send_message, or execute_code. Orchestrators are bounded by max_spawn_depth=1 for this user and can be disabled globally via delegation.orchestrator_enabled=false.\n- Each subagent gets its own terminal session (separate working directory and state).\n- Results are always returned as an array, one entry per task.",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "goal": {
+              "type": "string",
+              "description": "What the subagent should accomplish. Be specific and self-contained -- the subagent knows nothing about your conversation history."
+            },
+            "context": {
+              "type": "string",
+              "description": "Background information the subagent needs: file paths, error messages, project structure, constraints. The more specific you are, the better the subagent performs."
+            },
+            "toolsets": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              },
+              "description": "Toolsets to enable for this subagent. Default: inherits your enabled toolsets. Available toolsets: 'browser', 'computer_use', 'cronjob', 'discord', 'discord_admin', 'feishu_doc', 'feishu_drive', 'file', 'homeassistant', 'image_gen', 'kanban', 'search', 'session_search', 'skills', 'spotify', 'terminal', 'todo', 'tts', 'video', 'vision', 'web', 'yuanbao'. Common patterns: ['terminal', 'file'] for code work, ['web'] for research, ['browser'] for web interaction, ['terminal', 'file', 'web'] for full-stack tasks."
+            },
+            "tasks": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "goal": {
+                    "type": "string",
+                    "description": "Task goal"
+                  },
+                  "context": {
+                    "type": "string",
+                    "description": "Task-specific context"
+                  },
+                  "toolsets": {
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    },
+                    "description": "Toolsets for this specific task. Available: 'browser', 'computer_use', 'cronjob', 'discord', 'discord_admin', 'feishu_doc', 'feishu_drive', 'file', 'homeassistant', 'image_gen', 'kanban', 'search', 'session_search', 'skills', 'spotify', 'terminal', 'todo', 'tts', 'video', 'vision', 'web', 'yuanbao'. Use 'web' for network access, 'terminal' for shell, 'browser' for web interaction."
+                  },
+                  "acp_command": {
+                    "type": "string",
+                    "description": "Per-task ACP command override (e.g. 'copilot'). Overrides the top-level acp_command for this task only. Do NOT set unless the user explicitly told you an ACP CLI is installed."
+                  },
+                  "acp_args": {
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    },
+                    "description": "Per-task ACP args override. Leave empty unless acp_command is set."
+                  },
+                  "role": {
+                    "type": "string",
+                    "enum": [
+                      "leaf",
+                      "orchestrator"
+                    ],
+                    "description": "Per-task role override. See top-level 'role' for semantics."
+                  }
+                },
+                "required": [
+                  "goal"
+                ]
+              },
+              "description": "Batch mode: tasks to run in parallel (up to 3 for this user, set via delegation.max_concurrent_children). Each gets its own subagent with isolated context and terminal session. When provided, top-level goal/context/toolsets are ignored."
+            },
+            "role": {
+              "type": "string",
+              "enum": [
+                "leaf",
+                "orchestrator"
+              ],
+              "description": "Role of the child agent. 'leaf' (default) = focused worker, cannot delegate further. 'orchestrator' = can use delegate_task to spawn its own workers. Nesting is OFF for this user (max_spawn_depth=1); 'orchestrator' is silently forced to 'leaf'. Raise delegation.max_spawn_depth in config.yaml to enable."
+            },
+            "acp_command": {
+              "type": "string",
+              "description": "Override ACP command for child agents (e.g. 'copilot'). When set, children use ACP subprocess transport instead of inheriting the parent's transport. Requires an ACP-compatible CLI (currently GitHub Copilot CLI via 'copilot --acp --stdio'). See agent/copilot_acp_client.py for the implementation. IMPORTANT: Do NOT set this unless the user has explicitly told you a specific ACP-compatible CLI is installed and configured. Leave empty to use the parent's default transport (Hermes subagents)."
+            },
+            "acp_args": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              },
+              "description": "Arguments for the ACP command (default: ['--acp', '--stdio']). Only used when acp_command is set. Leave empty unless acp_command is explicitly provided."
+            }
+          }
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "execute_code",
+        "description": "Run a Python script that can call Hermes tools programmatically. Use this when you need 3+ tool calls with processing logic between them, need to filter/reduce large tool outputs before they enter your context, need conditional branching (if X then Y else Z), or need to loop (fetch N pages, process N files, retry on failure).\n\nUse normal tool calls instead when: single tool call with no processing, you need to see the full result and apply complex reasoning, or the task requires interactive user input.\n\nAvailable via `from hermes_tools import ...`:\n\n  read_file(path: str, offset: int = 1, limit: int = 500) -> dict\n    Lines are 1-indexed. Returns {\"content\": \"...\", \"total_lines\": N}\n  write_file(path: str, content: str) -> dict\n    Always overwrites the entire file.\n  search_files(pattern: str, target=\"content\", path=\".\", file_glob=None, limit=50) -> dict\n    target: \"content\" (search inside files) or \"files\" (find files by name). Returns {\"matches\": [...]}\n  patch(path: str, old_string: str, new_string: str, replace_all: bool = False) -> dict\n    Replaces old_string with new_string in the file.\n  terminal(command: str, timeout=None, workdir=None) -> dict\n    Foreground only (no background/pty). Returns {\"output\": \"...\", \"exit_code\": N}\n\nLimits: 5-minute timeout, 50KB stdout cap, max 50 tool calls per script. terminal() is foreground-only (no background or pty).\n\nScripts run in the session's working directory with the active venv's python, so project deps (pandas, etc.) and relative paths work like in terminal().\n\nPrint your final result to stdout. Use Python stdlib (json, re, math, csv, datetime, collections, etc.) for processing between tool calls.\n\nAlso available (no import needed — built into hermes_tools):\n  json_parse(text: str) — json.loads with strict=False; use for terminal() output with control chars\n  shell_quote(s: str) — shlex.quote(); use when interpolating dynamic strings into shell commands\n  retry(fn, max_attempts=3, delay=2) — retry with exponential backoff for transient failures",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "code": {
+              "type": "string",
+              "description": "Python code to execute. Import tools with `from hermes_tools import terminal, ...` and print your final result to stdout."
+            }
+          },
+          "required": [
+            "code"
+          ]
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "image_generate",
+        "description": "Generate high-quality images from text prompts. The underlying backend (FAL, OpenAI, etc.) and model are user-configured and not selectable by the agent. Returns either a URL or an absolute file path in the `image` field; display it with markdown ![description](url-or-path) and the gateway will deliver it.",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "prompt": {
+              "type": "string",
+              "description": "The text prompt describing the desired image. Be detailed and descriptive."
+            },
+            "aspect_ratio": {
+              "type": "string",
+              "enum": [
+                "landscape",
+                "square",
+                "portrait"
+              ],
+              "description": "The aspect ratio of the generated image. 'landscape' is 16:9 wide, 'portrait' is 16:9 tall, 'square' is 1:1.",
+              "default": "landscape"
+            }
+          },
+          "required": [
+            "prompt"
+          ]
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "mcp_github_add_issue_comment",
+        "description": "Add a comment to an existing issue",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "owner": {
+              "type": "string"
+            },
+            "repo": {
+              "type": "string"
+            },
+            "issue_number": {
+              "type": "number"
+            },
+            "body": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "owner",
+            "repo",
+            "issue_number",
+            "body"
+          ],
+          "additionalProperties": false,
+          "$schema": "http://json-schema.org/draft-07/schema#"
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "mcp_github_create_branch",
+        "description": "Create a new branch in a GitHub repository",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "owner": {
+              "type": "string",
+              "description": "Repository owner (username or organization)"
+            },
+            "repo": {
+              "type": "string",
+              "description": "Repository name"
+            },
+            "branch": {
+              "type": "string",
+              "description": "Name for the new branch"
+            },
+            "from_branch": {
+              "type": "string",
+              "description": "Optional: source branch to create from (defaults to the repository's default branch)"
+            }
+          },
+          "required": [
+            "owner",
+            "repo",
+            "branch"
+          ],
+          "additionalProperties": false,
+          "$schema": "http://json-schema.org/draft-07/schema#"
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "mcp_github_create_issue",
+        "description": "Create a new issue in a GitHub repository",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "owner": {
+              "type": "string"
+            },
+            "repo": {
+              "type": "string"
+            },
+            "title": {
+              "type": "string"
+            },
+            "body": {
+              "type": "string"
+            },
+            "assignees": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            "milestone": {
+              "type": "number"
+            },
+            "labels": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            }
+          },
+          "required": [
+            "owner",
+            "repo",
+            "title"
+          ],
+          "additionalProperties": false,
+          "$schema": "http://json-schema.org/draft-07/schema#"
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "mcp_github_create_or_update_file",
+        "description": "Create or update a single file in a GitHub repository",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "owner": {
+              "type": "string",
+              "description": "Repository owner (username or organization)"
+            },
+            "repo": {
+              "type": "string",
+              "description": "Repository name"
+            },
+            "path": {
+              "type": "string",
+              "description": "Path where to create/update the file"
+            },
+            "content": {
+              "type": "string",
+              "description": "Content of the file"
+            },
+            "message": {
+              "type": "string",
+              "description": "Commit message"
+            },
+            "branch": {
+              "type": "string",
+              "description": "Branch to create/update the file in"
+            },
+            "sha": {
+              "type": "string",
+              "description": "SHA of the file being replaced (required when updating existing files)"
+            }
+          },
+          "required": [
+            "owner",
+            "repo",
+            "path",
+            "content",
+            "message",
+            "branch"
+          ],
+          "additionalProperties": false,
+          "$schema": "http://json-schema.org/draft-07/schema#"
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "mcp_github_create_pull_request",
+        "description": "Create a new pull request in a GitHub repository",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "owner": {
+              "type": "string",
+              "description": "Repository owner (username or organization)"
+            },
+            "repo": {
+              "type": "string",
+              "description": "Repository name"
+            },
+            "title": {
+              "type": "string",
+              "description": "Pull request title"
+            },
+            "body": {
+              "type": "string",
+              "description": "Pull request body/description"
+            },
+            "head": {
+              "type": "string",
+              "description": "The name of the branch where your changes are implemented"
+            },
+            "base": {
+              "type": "string",
+              "description": "The name of the branch you want the changes pulled into"
+            },
+            "draft": {
+              "type": "boolean",
+              "description": "Whether to create the pull request as a draft"
+            },
+            "maintainer_can_modify": {
+              "type": "boolean",
+              "description": "Whether maintainers can modify the pull request"
+            }
+          },
+          "required": [
+            "owner",
+            "repo",
+            "title",
+            "head",
+            "base"
+          ],
+          "additionalProperties": false,
+          "$schema": "http://json-schema.org/draft-07/schema#"
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "mcp_github_create_pull_request_review",
+        "description": "Create a review on a pull request",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "owner": {
+              "type": "string",
+              "description": "Repository owner (username or organization)"
+            },
+            "repo": {
+              "type": "string",
+              "description": "Repository name"
+            },
+            "pull_number": {
+              "type": "number",
+              "description": "Pull request number"
+            },
+            "commit_id": {
+              "type": "string",
+              "description": "The SHA of the commit that needs a review"
+            },
+            "body": {
+              "type": "string",
+              "description": "The body text of the review"
+            },
+            "event": {
+              "type": "string",
+              "enum": [
+                "APPROVE",
+                "REQUEST_CHANGES",
+                "COMMENT"
+              ],
+              "description": "The review action to perform"
+            },
+            "comments": {
+              "type": "array",
+              "items": {
+                "anyOf": [
+                  {
+                    "type": "object",
+                    "properties": {
+                      "path": {
+                        "type": "string",
+                        "description": "The relative path to the file being commented on"
+                      },
+                      "position": {
+                        "type": "number",
+                        "description": "The position in the diff where you want to add a review comment"
+                      },
+                      "body": {
+                        "type": "string",
+                        "description": "Text of the review comment"
+                      }
+                    },
+                    "required": [
+                      "path",
+                      "position",
+                      "body"
+                    ],
+                    "additionalProperties": false
+                  },
+                  {
+                    "type": "object",
+                    "properties": {
+                      "path": {
+                        "type": "string",
+                        "description": "The relative path to the file being commented on"
+                      },
+                      "line": {
+                        "type": "number",
+                        "description": "The line number in the file where you want to add a review comment"
+                      },
+                      "body": {
+                        "type": "string",
+                        "description": "Text of the review comment"
+                      }
+                    },
+                    "required": [
+                      "path",
+                      "line",
+                      "body"
+                    ],
+                    "additionalProperties": false
+                  }
+                ]
+              },
+              "description": "Comments to post as part of the review (specify either position or line, not both)"
+            }
+          },
+          "required": [
+            "owner",
+            "repo",
+            "pull_number",
+            "body",
+            "event"
+          ],
+          "additionalProperties": false,
+          "$schema": "http://json-schema.org/draft-07/schema#"
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "mcp_github_create_repository",
+        "description": "Create a new GitHub repository in your account",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "name": {
+              "type": "string",
+              "description": "Repository name"
+            },
+            "description": {
+              "type": "string",
+              "description": "Repository description"
+            },
+            "private": {
+              "type": "boolean",
+              "description": "Whether the repository should be private"
+            },
+            "autoInit": {
+              "type": "boolean",
+              "description": "Initialize with README.md"
+            }
+          },
+          "required": [
+            "name"
+          ],
+          "additionalProperties": false,
+          "$schema": "http://json-schema.org/draft-07/schema#"
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "mcp_github_fork_repository",
+        "description": "Fork a GitHub repository to your account or specified organization",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "owner": {
+              "type": "string",
+              "description": "Repository owner (username or organization)"
+            },
+            "repo": {
+              "type": "string",
+              "description": "Repository name"
+            },
+            "organization": {
+              "type": "string",
+              "description": "Optional: organization to fork to (defaults to your personal account)"
+            }
+          },
+          "required": [
+            "owner",
+            "repo"
+          ],
+          "additionalProperties": false,
+          "$schema": "http://json-schema.org/draft-07/schema#"
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "mcp_github_get_file_contents",
+        "description": "Get the contents of a file or directory from a GitHub repository",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "owner": {
+              "type": "string",
+              "description": "Repository owner (username or organization)"
+            },
+            "repo": {
+              "type": "string",
+              "description": "Repository name"
+            },
+            "path": {
+              "type": "string",
+              "description": "Path to the file or directory"
+            },
+            "branch": {
+              "type": "string",
+              "description": "Branch to get contents from"
+            }
+          },
+          "required": [
+            "owner",
+            "repo",
+            "path"
+          ],
+          "additionalProperties": false,
+          "$schema": "http://json-schema.org/draft-07/schema#"
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "mcp_github_get_issue",
+        "description": "Get details of a specific issue in a GitHub repository.",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "owner": {
+              "type": "string"
+            },
+            "repo": {
+              "type": "string"
+            },
+            "issue_number": {
+              "type": "number"
+            }
+          },
+          "required": [
+            "owner",
+            "repo",
+            "issue_number"
+          ],
+          "additionalProperties": false,
+          "$schema": "http://json-schema.org/draft-07/schema#"
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "mcp_github_get_pull_request",
+        "description": "Get details of a specific pull request",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "owner": {
+              "type": "string",
+              "description": "Repository owner (username or organization)"
+            },
+            "repo": {
+              "type": "string",
+              "description": "Repository name"
+            },
+            "pull_number": {
+              "type": "number",
+              "description": "Pull request number"
+            }
+          },
+          "required": [
+            "owner",
+            "repo",
+            "pull_number"
+          ],
+          "additionalProperties": false,
+          "$schema": "http://json-schema.org/draft-07/schema#"
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "mcp_github_get_pull_request_comments",
+        "description": "Get the review comments on a pull request",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "owner": {
+              "type": "string",
+              "description": "Repository owner (username or organization)"
+            },
+            "repo": {
+              "type": "string",
+              "description": "Repository name"
+            },
+            "pull_number": {
+              "type": "number",
+              "description": "Pull request number"
+            }
+          },
+          "required": [
+            "owner",
+            "repo",
+            "pull_number"
+          ],
+          "additionalProperties": false,
+          "$schema": "http://json-schema.org/draft-07/schema#"
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "mcp_github_get_pull_request_files",
+        "description": "Get the list of files changed in a pull request",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "owner": {
+              "type": "string",
+              "description": "Repository owner (username or organization)"
+            },
+            "repo": {
+              "type": "string",
+              "description": "Repository name"
+            },
+            "pull_number": {
+              "type": "number",
+              "description": "Pull request number"
+            }
+          },
+          "required": [
+            "owner",
+            "repo",
+            "pull_number"
+          ],
+          "additionalProperties": false,
+          "$schema": "http://json-schema.org/draft-07/schema#"
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "mcp_github_get_pull_request_reviews",
+        "description": "Get the reviews on a pull request",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "owner": {
+              "type": "string",
+              "description": "Repository owner (username or organization)"
+            },
+            "repo": {
+              "type": "string",
+              "description": "Repository name"
+            },
+            "pull_number": {
+              "type": "number",
+              "description": "Pull request number"
+            }
+          },
+          "required": [
+            "owner",
+            "repo",
+            "pull_number"
+          ],
+          "additionalProperties": false,
+          "$schema": "http://json-schema.org/draft-07/schema#"
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "mcp_github_get_pull_request_status",
+        "description": "Get the combined status of all status checks for a pull request",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "owner": {
+              "type": "string",
+              "description": "Repository owner (username or organization)"
+            },
+            "repo": {
+              "type": "string",
+              "description": "Repository name"
+            },
+            "pull_number": {
+              "type": "number",
+              "description": "Pull request number"
+            }
+          },
+          "required": [
+            "owner",
+            "repo",
+            "pull_number"
+          ],
+          "additionalProperties": false,
+          "$schema": "http://json-schema.org/draft-07/schema#"
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "mcp_github_list_commits",
+        "description": "Get list of commits of a branch in a GitHub repository",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "owner": {
+              "type": "string"
+            },
+            "repo": {
+              "type": "string"
+            },
+            "sha": {
+              "type": "string"
+            },
+            "page": {
+              "type": "number"
+            },
+            "perPage": {
+              "type": "number"
+            }
+          },
+          "required": [
+            "owner",
+            "repo"
+          ],
+          "additionalProperties": false,
+          "$schema": "http://json-schema.org/draft-07/schema#"
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "mcp_github_list_issues",
+        "description": "List issues in a GitHub repository with filtering options",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "owner": {
+              "type": "string"
+            },
+            "repo": {
+              "type": "string"
+            },
+            "direction": {
+              "type": "string",
+              "enum": [
+                "asc",
+                "desc"
+              ]
+            },
+            "labels": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            "page": {
+              "type": "number"
+            },
+            "per_page": {
+              "type": "number"
+            },
+            "since": {
+              "type": "string"
+            },
+            "sort": {
+              "type": "string",
+              "enum": [
+                "created",
+                "updated",
+                "comments"
+              ]
+            },
+            "state": {
+              "type": "string",
+              "enum": [
+                "open",
+                "closed",
+                "all"
+              ]
+            }
+          },
+          "required": [
+            "owner",
+            "repo"
+          ],
+          "additionalProperties": false,
+          "$schema": "http://json-schema.org/draft-07/schema#"
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "mcp_github_list_pull_requests",
+        "description": "List and filter repository pull requests",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "owner": {
+              "type": "string",
+              "description": "Repository owner (username or organization)"
+            },
+            "repo": {
+              "type": "string",
+              "description": "Repository name"
+            },
+            "state": {
+              "type": "string",
+              "enum": [
+                "open",
+                "closed",
+                "all"
+              ],
+              "description": "State of the pull requests to return"
+            },
+            "head": {
+              "type": "string",
+              "description": "Filter by head user or head organization and branch name"
+            },
+            "base": {
+              "type": "string",
+              "description": "Filter by base branch name"
+            },
+            "sort": {
+              "type": "string",
+              "enum": [
+                "created",
+                "updated",
+                "popularity",
+                "long-running"
+              ],
+              "description": "What to sort results by"
+            },
+            "direction": {
+              "type": "string",
+              "enum": [
+                "asc",
+                "desc"
+              ],
+              "description": "The direction of the sort"
+            },
+            "per_page": {
+              "type": "number",
+              "description": "Results per page (max 100)"
+            },
+            "page": {
+              "type": "number",
+              "description": "Page number of the results"
+            }
+          },
+          "required": [
+            "owner",
+            "repo"
+          ],
+          "additionalProperties": false,
+          "$schema": "http://json-schema.org/draft-07/schema#"
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "mcp_github_merge_pull_request",
+        "description": "Merge a pull request",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "owner": {
+              "type": "string",
+              "description": "Repository owner (username or organization)"
+            },
+            "repo": {
+              "type": "string",
+              "description": "Repository name"
+            },
+            "pull_number": {
+              "type": "number",
+              "description": "Pull request number"
+            },
+            "commit_title": {
+              "type": "string",
+              "description": "Title for the automatic commit message"
+            },
+            "commit_message": {
+              "type": "string",
+              "description": "Extra detail to append to automatic commit message"
+            },
+            "merge_method": {
+              "type": "string",
+              "enum": [
+                "merge",
+                "squash",
+                "rebase"
+              ],
+              "description": "Merge method to use"
+            }
+          },
+          "required": [
+            "owner",
+            "repo",
+            "pull_number"
+          ],
+          "additionalProperties": false,
+          "$schema": "http://json-schema.org/draft-07/schema#"
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "mcp_github_push_files",
+        "description": "Push multiple files to a GitHub repository in a single commit",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "owner": {
+              "type": "string",
+              "description": "Repository owner (username or organization)"
+            },
+            "repo": {
+              "type": "string",
+              "description": "Repository name"
+            },
+            "branch": {
+              "type": "string",
+              "description": "Branch to push to (e.g., 'main' or 'master')"
+            },
+            "files": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "path": {
+                    "type": "string"
+                  },
+                  "content": {
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "path",
+                  "content"
+                ],
+                "additionalProperties": false
+              },
+              "description": "Array of files to push"
+            },
+            "message": {
+              "type": "string",
+              "description": "Commit message"
+            }
+          },
+          "required": [
+            "owner",
+            "repo",
+            "branch",
+            "files",
+            "message"
+          ],
+          "additionalProperties": false,
+          "$schema": "http://json-schema.org/draft-07/schema#"
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "mcp_github_search_code",
+        "description": "Search for code across GitHub repositories",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "q": {
+              "type": "string"
+            },
+            "order": {
+              "type": "string",
+              "enum": [
+                "asc",
+                "desc"
+              ]
+            },
+            "page": {
+              "type": "number",
+              "minimum": 1
+            },
+            "per_page": {
+              "type": "number",
+              "minimum": 1,
+              "maximum": 100
+            }
+          },
+          "required": [
+            "q"
+          ],
+          "additionalProperties": false,
+          "$schema": "http://json-schema.org/draft-07/schema#"
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "mcp_github_search_issues",
+        "description": "Search for issues and pull requests across GitHub repositories",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "q": {
+              "type": "string"
+            },
+            "order": {
+              "type": "string",
+              "enum": [
+                "asc",
+                "desc"
+              ]
+            },
+            "page": {
+              "type": "number",
+              "minimum": 1
+            },
+            "per_page": {
+              "type": "number",
+              "minimum": 1,
+              "maximum": 100
+            },
+            "sort": {
+              "type": "string",
+              "enum": [
+                "comments",
+                "reactions",
+                "reactions-+1",
+                "reactions--1",
+                "reactions-smile",
+                "reactions-thinking_face",
+                "reactions-heart",
+                "reactions-tada",
+                "interactions",
+                "created",
+                "updated"
+              ]
+            }
+          },
+          "required": [
+            "q"
+          ],
+          "additionalProperties": false,
+          "$schema": "http://json-schema.org/draft-07/schema#"
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "mcp_github_search_repositories",
+        "description": "Search for GitHub repositories",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "query": {
+              "type": "string",
+              "description": "Search query (see GitHub search syntax)"
+            },
+            "page": {
+              "type": "number",
+              "description": "Page number for pagination (default: 1)"
+            },
+            "perPage": {
+              "type": "number",
+              "description": "Number of results per page (default: 30, max: 100)"
+            }
+          },
+          "required": [
+            "query"
+          ],
+          "additionalProperties": false,
+          "$schema": "http://json-schema.org/draft-07/schema#"
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "mcp_github_search_users",
+        "description": "Search for users on GitHub",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "q": {
+              "type": "string"
+            },
+            "order": {
+              "type": "string",
+              "enum": [
+                "asc",
+                "desc"
+              ]
+            },
+            "page": {
+              "type": "number",
+              "minimum": 1
+            },
+            "per_page": {
+              "type": "number",
+              "minimum": 1,
+              "maximum": 100
+            },
+            "sort": {
+              "type": "string",
+              "enum": [
+                "followers",
+                "repositories",
+                "joined"
+              ]
+            }
+          },
+          "required": [
+            "q"
+          ],
+          "additionalProperties": false,
+          "$schema": "http://json-schema.org/draft-07/schema#"
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "mcp_github_update_issue",
+        "description": "Update an existing issue in a GitHub repository",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "owner": {
+              "type": "string"
+            },
+            "repo": {
+              "type": "string"
+            },
+            "issue_number": {
+              "type": "number"
+            },
+            "title": {
+              "type": "string"
+            },
+            "body": {
+              "type": "string"
+            },
+            "assignees": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            "milestone": {
+              "type": "number"
+            },
+            "labels": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            "state": {
+              "type": "string",
+              "enum": [
+                "open",
+                "closed"
+              ]
+            }
+          },
+          "required": [
+            "owner",
+            "repo",
+            "issue_number"
+          ],
+          "additionalProperties": false,
+          "$schema": "http://json-schema.org/draft-07/schema#"
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "mcp_github_update_pull_request_branch",
+        "description": "Update a pull request branch with the latest changes from the base branch",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "owner": {
+              "type": "string",
+              "description": "Repository owner (username or organization)"
+            },
+            "repo": {
+              "type": "string",
+              "description": "Repository name"
+            },
+            "pull_number": {
+              "type": "number",
+              "description": "Pull request number"
+            },
+            "expected_head_sha": {
+              "type": "string",
+              "description": "The expected SHA of the pull request's HEAD ref"
+            }
+          },
+          "required": [
+            "owner",
+            "repo",
+            "pull_number"
+          ],
+          "additionalProperties": false,
+          "$schema": "http://json-schema.org/draft-07/schema#"
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "memory",
+        "description": "Save durable information to persistent memory that survives across sessions. Memory is injected into future turns, so keep it compact and focused on facts that will still matter later.\n\nWHEN TO SAVE (do this proactively, don't wait to be asked):\n- User corrects you or says 'remember this' / 'don't do that again'\n- User shares a preference, habit, or personal detail (name, role, timezone, coding style)\n- You discover something about the environment (OS, installed tools, project structure)\n- You learn a convention, API quirk, or workflow specific to this user's setup\n- You identify a stable fact that will be useful again in future sessions\n\nPRIORITY: User preferences and corrections > environment facts > procedural knowledge. The most valuable memory prevents the user from having to repeat themselves.\n\nDo NOT save task progress, session outcomes, completed-work logs, or temporary TODO state to memory; use session_search to recall those from past transcripts.\nIf you've discovered a new way to do something, solved a problem that could be necessary later, save it as a skill with the skill tool.\n\nTWO TARGETS:\n- 'user': who the user is -- name, role, preferences, communication style, pet peeves\n- 'memory': your notes -- environment facts, project conventions, tool quirks, lessons learned\n\nACTIONS: add (new entry), replace (update existing -- old_text identifies it), remove (delete -- old_text identifies it).\n\nSKIP: trivial/obvious info, things easily re-discovered, raw data dumps, and temporary task state.",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "action": {
+              "type": "string",
+              "enum": [
+                "add",
+                "replace",
+                "remove"
+              ],
+              "description": "The action to perform."
+            },
+            "target": {
+              "type": "string",
+              "enum": [
+                "memory",
+                "user"
+              ],
+              "description": "Which memory store: 'memory' for personal notes, 'user' for user profile."
+            },
+            "content": {
+              "type": "string",
+              "description": "The entry content. Required for 'add' and 'replace'."
+            },
+            "old_text": {
+              "type": "string",
+              "description": "Short unique substring identifying the entry to replace or remove."
+            }
+          },
+          "required": [
+            "action",
+            "target"
+          ]
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "patch",
+        "description": "Targeted find-and-replace edits in files. Use this instead of sed/awk in terminal. Uses fuzzy matching (9 strategies) so minor whitespace/indentation differences won't break it. Returns a unified diff. Auto-runs syntax checks after editing.\n\nREPLACE MODE (mode='replace', default): find a unique string and replace it. REQUIRED PARAMETERS: mode, path, old_string, new_string.\nPATCH MODE (mode='patch'): apply V4A multi-file patches for bulk changes. REQUIRED PARAMETERS: mode, patch.",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "mode": {
+              "type": "string",
+              "enum": [
+                "replace",
+                "patch"
+              ],
+              "description": "Edit mode. 'replace' (default): requires path + old_string + new_string. 'patch': requires patch content only.",
+              "default": "replace"
+            },
+            "path": {
+              "type": "string",
+              "description": "REQUIRED when mode='replace'. File path to edit."
+            },
+            "old_string": {
+              "type": "string",
+              "description": "REQUIRED when mode='replace'. Exact text to find and replace. Must be unique in the file unless replace_all=true. Include surrounding context lines to ensure uniqueness."
+            },
+            "new_string": {
+              "type": "string",
+              "description": "REQUIRED when mode='replace'. Replacement text. Pass empty string '' to delete the matched text."
+            },
+            "replace_all": {
+              "type": "boolean",
+              "description": "Replace all occurrences instead of requiring a unique match (default: false)",
+              "default": false
+            },
+            "patch": {
+              "type": "string",
+              "description": "REQUIRED when mode='patch'. V4A format patch content. Format:\n*** Begin Patch\n*** Update File: path/to/file\n@@ context hint @@\n context line\n-removed line\n+added line\n*** End Patch"
+            }
+          },
+          "required": [
+            "mode"
+          ]
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "process",
+        "description": "Manage background processes started with terminal(background=true). Actions: 'list' (show all), 'poll' (check status + new output), 'log' (full output with pagination), 'wait' (block until done or timeout), 'kill' (terminate), 'write' (send raw stdin data without newline), 'submit' (send data + Enter, for answering prompts), 'close' (close stdin/send EOF).",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "action": {
+              "type": "string",
+              "enum": [
+                "list",
+                "poll",
+                "log",
+                "wait",
+                "kill",
+                "write",
+                "submit",
+                "close"
+              ],
+              "description": "Action to perform on background processes"
+            },
+            "session_id": {
+              "type": "string",
+              "description": "Process session ID (from terminal background output). Required for all actions except 'list'."
+            },
+            "data": {
+              "type": "string",
+              "description": "Text to send to process stdin (for 'write' and 'submit' actions)"
+            },
+            "timeout": {
+              "type": "integer",
+              "description": "Max seconds to block for 'wait' action. Returns partial output on timeout.",
+              "minimum": 1
+            },
+            "offset": {
+              "type": "integer",
+              "description": "Line offset for 'log' action (default: last 200 lines)"
+            },
+            "limit": {
+              "type": "integer",
+              "description": "Max lines to return for 'log' action",
+              "minimum": 1
+            }
+          },
+          "required": [
+            "action"
+          ]
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "read_file",
+        "description": "Read a text file with line numbers and pagination. Use this instead of cat/head/tail in terminal. Output format: 'LINE_NUM|CONTENT'. Suggests similar filenames if not found. Use offset and limit for large files. Reads exceeding ~100K characters are rejected; use offset and limit to read specific sections of large files. NOTE: Cannot read images or binary files — use vision_analyze for images.",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "path": {
+              "type": "string",
+              "description": "Path to the file to read (absolute, relative, or ~/path)"
+            },
+            "offset": {
+              "type": "integer",
+              "description": "Line number to start reading from (1-indexed, default: 1)",
+              "default": 1,
+              "minimum": 1
+            },
+            "limit": {
+              "type": "integer",
+              "description": "Maximum number of lines to read (default: 500, max: 2000)",
+              "default": 500,
+              "maximum": 2000
+            }
+          },
+          "required": [
+            "path"
+          ]
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "search_files",
+        "description": "Search file contents or find files by name. Use this instead of grep/rg/find/ls in terminal. Ripgrep-backed, faster than shell equivalents.\n\nContent search (target='content'): Regex search inside files. Output modes: full matches with line numbers, file paths only, or match counts.\n\nFile search (target='files'): Find files by glob pattern (e.g., '*.py', '*config*'). Also use this instead of ls — results sorted by modification time.",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "pattern": {
+              "type": "string",
+              "description": "Regex pattern for content search, or glob pattern (e.g., '*.py') for file search"
+            },
+            "target": {
+              "type": "string",
+              "enum": [
+                "content",
+                "files"
+              ],
+              "description": "'content' searches inside file contents, 'files' searches for files by name",
+              "default": "content"
+            },
+            "path": {
+              "type": "string",
+              "description": "Directory or file to search in (default: current working directory)",
+              "default": "."
+            },
+            "file_glob": {
+              "type": "string",
+              "description": "Filter files by pattern in grep mode (e.g., '*.py' to only search Python files)"
+            },
+            "limit": {
+              "type": "integer",
+              "description": "Maximum number of results to return (default: 50)",
+              "default": 50
+            },
+            "offset": {
+              "type": "integer",
+              "description": "Skip first N results for pagination (default: 0)",
+              "default": 0
+            },
+            "output_mode": {
+              "type": "string",
+              "enum": [
+                "content",
+                "files_only",
+                "count"
+              ],
+              "description": "Output format for grep mode: 'content' shows matching lines with line numbers, 'files_only' lists file paths, 'count' shows match counts per file",
+              "default": "content"
+            },
+            "context": {
+              "type": "integer",
+              "description": "Number of context lines before and after each match (grep mode only)",
+              "default": 0
+            }
+          },
+          "required": [
+            "pattern"
+          ]
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "session_search",
+        "description": "Search your long-term memory of past conversations, or browse recent sessions. This is your recall -- every past session is searchable, and this tool summarizes what happened.\n\nTWO MODES:\n1. Recent sessions (no query): Call with no arguments to see what was worked on recently. Returns titles, previews, and timestamps. Zero LLM cost, instant. Start here when the user asks what were we working on or what did we do recently.\n2. Keyword search (with query): Search for specific topics across all past sessions. Returns LLM-generated summaries of matching sessions.\n\nUSE THIS PROACTIVELY when:\n- The user says 'we did this before', 'remember when', 'last time', 'as I mentioned'\n- The user asks about a topic you worked on before but don't have in current context\n- The user references a project, person, or concept that seems familiar but isn't in memory\n- You want to check if you've solved a similar problem before\n- The user asks 'what did we do about X?' or 'how did we fix Y?'\n\nDon't hesitate to search when it is actually cross-session -- it's fast and cheap. Better to search and confirm than to guess or ask the user to repeat themselves.\n\nSearch syntax: keywords joined with OR for broad recall (elevenlabs OR baseten OR funding), phrases for exact match (\"docker networking\"), boolean (python NOT java), prefix (deploy*). IMPORTANT: Use OR between keywords for best results — FTS5 defaults to AND which misses sessions that only mention some terms. If a broad OR query returns nothing, try individual keyword searches in parallel. Returns summaries of the top matching sessions.",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "query": {
+              "type": "string",
+              "description": "Search query — keywords, phrases, or boolean expressions to find in past sessions. Omit this parameter entirely to browse recent sessions instead (returns titles, previews, timestamps with no LLM cost)."
+            },
+            "role_filter": {
+              "type": "string",
+              "description": "Optional: only search messages from specific roles (comma-separated). E.g. 'user,assistant' to skip tool outputs."
+            },
+            "limit": {
+              "type": "integer",
+              "description": "Max sessions to summarize (default: 3, max: 5).",
+              "default": 3
+            }
+          }
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "skill_manage",
+        "description": "Manage skills (create, update, delete). Skills are your procedural memory — reusable approaches for recurring task types. New skills go to ~/.hermes/skills/; existing skills can be modified wherever they live.\n\nActions: create (full SKILL.md + optional category), patch (old_string/new_string — preferred for fixes), edit (full SKILL.md rewrite — major overhauls only), delete, write_file, remove_file.\n\nOn delete, pass `absorbed_into=<umbrella>` when you're merging this skill's content into another one, or `absorbed_into=\"\"` when you're pruning it with no forwarding target. This lets the curator tell consolidation from pruning without guessing, so downstream consumers (cron jobs that reference the old skill name, etc.) get updated correctly. The target you name in `absorbed_into` must already exist — create/patch the umbrella first, then delete.\n\nCreate when: complex task succeeded (5+ calls), errors overcome, user-corrected approach worked, non-trivial workflow discovered, or user asks you to remember a procedure.\nUpdate when: instructions stale/wrong, OS-specific failures, missing steps or pitfalls found during use. If you used a skill and hit issues not covered by it, patch it immediately.\n\nAfter difficult/iterative tasks, offer to save as a skill. Skip for simple one-offs. Confirm with user before creating/deleting.\n\nGood skills: trigger conditions, numbered steps with exact commands, pitfalls section, verification steps. Use skill_view() to see format examples.\n\nPinned skills are protected from deletion only — skill_manage(action='delete') will refuse with a message pointing the user to `hermes curator unpin <name>`. Patches and edits go through on pinned skills so you can still improve them as pitfalls come up; pin only guards against irrecoverable loss.",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "action": {
+              "type": "string",
+              "enum": [
+                "create",
+                "patch",
+                "edit",
+                "delete",
+                "write_file",
+                "remove_file"
+              ],
+              "description": "The action to perform."
+            },
+            "name": {
+              "type": "string",
+              "description": "Skill name (lowercase, hyphens/underscores, max 64 chars). Must match an existing skill for patch/edit/delete/write_file/remove_file."
+            },
+            "content": {
+              "type": "string",
+              "description": "Full SKILL.md content (YAML frontmatter + markdown body). Required for 'create' and 'edit'. For 'edit', read the skill first with skill_view() and provide the complete updated text."
+            },
+            "old_string": {
+              "type": "string",
+              "description": "Text to find in the file (required for 'patch'). Must be unique unless replace_all=true. Include enough surrounding context to ensure uniqueness."
+            },
+            "new_string": {
+              "type": "string",
+              "description": "Replacement text (required for 'patch'). Can be empty string to delete the matched text."
+            },
+            "replace_all": {
+              "type": "boolean",
+              "description": "For 'patch': replace all occurrences instead of requiring a unique match (default: false)."
+            },
+            "category": {
+              "type": "string",
+              "description": "Optional category/domain for organizing the skill (e.g., 'devops', 'data-science', 'mlops'). Creates a subdirectory grouping. Only used with 'create'."
+            },
+            "file_path": {
+              "type": "string",
+              "description": "Path to a supporting file within the skill directory. For 'write_file'/'remove_file': required, must be under references/, templates/, scripts/, or assets/. For 'patch': optional, defaults to SKILL.md if omitted."
+            },
+            "file_content": {
+              "type": "string",
+              "description": "Content for the file. Required for 'write_file'."
+            },
+            "absorbed_into": {
+              "type": "string",
+              "description": "For 'delete' only — declares intent so the curator can tell consolidation from pruning without guessing. Pass the umbrella skill name when this skill's content was merged into another (the target must already exist). Pass an empty string when the skill is truly stale and being pruned with no forwarding target. Omitting the arg on delete is supported for backward compatibility but downstream tooling (e.g. cron-job skill reference rewriting) will have to guess at intent."
+            }
+          },
+          "required": [
+            "action",
+            "name"
+          ]
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "skill_view",
+        "description": "Skills allow for loading information about specific tasks and workflows, as well as scripts and templates. Load a skill's full content or access its linked files (references, templates, scripts). First call returns SKILL.md content plus a 'linked_files' dict showing available references/templates/scripts. To access those, call again with file_path parameter.",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "name": {
+              "type": "string",
+              "description": "The skill name (use skills_list to see available skills). For plugin-provided skills, use the qualified form 'plugin:skill' (e.g. 'superpowers:writing-plans')."
+            },
+            "file_path": {
+              "type": "string",
+              "description": "OPTIONAL: Path to a linked file within the skill (e.g., 'references/api.md', 'templates/config.yaml', 'scripts/validate.py'). Omit to get the main SKILL.md content."
+            }
+          },
+          "required": [
+            "name"
+          ]
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "skills_list",
+        "description": "List available skills (name + description). Use skill_view(name) to load full content.",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "category": {
+              "type": "string",
+              "description": "Optional category filter to narrow results"
+            }
+          }
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "terminal",
+        "description": "Execute shell commands on a Linux environment. Filesystem usually persists between calls.\n\nDo NOT use cat/head/tail to read files — use read_file instead.\nDo NOT use grep/rg/find to search — use search_files instead.\nDo NOT use ls to list directories — use search_files(target='files') instead.\nDo NOT use sed/awk to edit files — use patch instead.\nDo NOT use echo/cat heredoc to create files — use write_file instead.\nReserve terminal for: builds, installs, git, processes, scripts, network, package managers, and anything that needs a shell.\n\nForeground (default): Commands return INSTANTLY when done, even if the timeout is high. Set timeout=300 for long builds/scripts — you'll still get the result in seconds if it's fast. Prefer foreground for short commands.\nBackground: Set background=true to get a session_id. Two patterns:\n  (1) Long-lived processes that never exit (servers, watchers).\n  (2) Long-running tasks with notify_on_complete=true — you can keep working on other things and the system auto-notifies you when the task finishes. Great for test suites, builds, deployments, or anything that takes more than a minute.\nFor servers/watchers, do NOT use shell-level background wrappers (nohup/disown/setsid/trailing '&') in foreground mode. Use background=true so Hermes can track lifecycle and output.\nAfter starting a server, verify readiness with a health check or log signal, then run tests in a separate terminal() call. Avoid blind sleep loops.\nUse process(action=\"poll\") for progress checks, process(action=\"wait\") to block until done.\nWorking directory: Use 'workdir' for per-command cwd.\nPTY mode: Set pty=true for interactive CLI tools (Codex, Claude Code, Python REPL).\n\nDo NOT use vim/nano/interactive tools without pty=true — they hang without a pseudo-terminal. Pipe git output to cat if it might page.\n",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "command": {
+              "type": "string",
+              "description": "The command to execute on the VM"
+            },
+            "background": {
+              "type": "boolean",
+              "description": "Run the command in the background. Two patterns: (1) Long-lived processes that never exit (servers, watchers). (2) Long-running tasks paired with notify_on_complete=true — you can keep working and get notified when the task finishes. For short commands, prefer foreground with a generous timeout instead.",
+              "default": false
+            },
+            "timeout": {
+              "type": "integer",
+              "description": "Max seconds to wait (default: 180, foreground max: 600). Returns INSTANTLY when command finishes — set high for long tasks, you won't wait unnecessarily. Foreground timeout above 600s is rejected; use background=true for longer commands.",
+              "minimum": 1
+            },
+            "workdir": {
+              "type": "string",
+              "description": "Working directory for this command (absolute path). Defaults to the session working directory."
+            },
+            "pty": {
+              "type": "boolean",
+              "description": "Run in pseudo-terminal (PTY) mode for interactive CLI tools like Codex, Claude Code, or Python REPL. Only works with local and SSH backends. Default: false.",
+              "default": false
+            },
+            "notify_on_complete": {
+              "type": "boolean",
+              "description": "When true (and background=true), you'll be automatically notified exactly once when the process finishes. **This is the right choice for almost every long-running task** — tests, builds, deployments, multi-item batch jobs, anything that takes over a minute and has a defined end. Use this and keep working on other things; the system notifies you on exit. MUTUALLY EXCLUSIVE with watch_patterns — when both are set, watch_patterns is dropped.",
+              "default": false
+            },
+            "watch_patterns": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              },
+              "description": "Strings to watch for in background process output. HARD RATE LIMIT: at most 1 notification per 15 seconds per process — matches arriving inside the cooldown are dropped. After 3 consecutive 15-second windows with dropped matches, watch_patterns is automatically disabled for that process and promoted to notify_on_complete behavior (one notification on exit, no more mid-process spam). USE ONLY for truly rare, one-shot mid-process signals on LONG-LIVED processes that will never exit on their own — e.g. ['Application startup complete'] on a server so you know when to hit its endpoint, or ['migration done'] on a daemon. DO NOT use for: (1) end-of-run markers like 'DONE'/'PASS' — use notify_on_complete instead; (2) error patterns like 'ERROR'/'Traceback' in loops or multi-item batch jobs — they fire on every iteration and you'll hit the strike limit fast; (3) anything you'd ever combine with notify_on_complete. When in doubt, choose notify_on_complete. MUTUALLY EXCLUSIVE with notify_on_complete — set one, not both."
+            }
+          },
+          "required": [
+            "command"
+          ]
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "text_to_speech",
+        "description": "Convert text to speech audio. Returns a MEDIA: path that the platform delivers as native audio. Compatible providers render as a voice bubble on Telegram; otherwise audio is sent as a regular attachment. In CLI mode, saves to ~/voice-memos/. Voice and provider are user-configured (built-in providers like edge/openai or custom command providers under tts.providers.<name>), not model-selected.",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "text": {
+              "type": "string",
+              "description": "The text to convert to speech. Provider-specific character caps apply and are enforced automatically (OpenAI 4096, xAI 15000, MiniMax 10000, ElevenLabs 5k-40k depending on model); over-long input is truncated."
+            },
+            "output_path": {
+              "type": "string",
+              "description": "Optional custom file path to save the audio. Defaults to ~/.hermes/audio_cache/<timestamp>.mp3"
+            }
+          },
+          "required": [
+            "text"
+          ]
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "todo",
+        "description": "Manage your task list for the current session. Use for complex tasks with 3+ steps or when the user provides multiple tasks. Call with no parameters to read the current list.\n\nWriting:\n- Provide 'todos' array to create/update items\n- merge=false (default): replace the entire list with a fresh plan\n- merge=true: update existing items by id, add any new ones\n\nEach item: {id: string, content: string, status: pending|in_progress|completed|cancelled}\nList order is priority. Only ONE item in_progress at a time.\nMark items completed immediately when done. If something fails, cancel it and add a revised item.\n\nAlways returns the full current list.",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "todos": {
+              "type": "array",
+              "description": "Task items to write. Omit to read current list.",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "id": {
+                    "type": "string",
+                    "description": "Unique item identifier"
+                  },
+                  "content": {
+                    "type": "string",
+                    "description": "Task description"
+                  },
+                  "status": {
+                    "type": "string",
+                    "enum": [
+                      "pending",
+                      "in_progress",
+                      "completed",
+                      "cancelled"
+                    ],
+                    "description": "Current status"
+                  }
+                },
+                "required": [
+                  "id",
+                  "content",
+                  "status"
+                ]
+              }
+            },
+            "merge": {
+              "type": "boolean",
+              "description": "true: update existing items by id, add new ones. false (default): replace the entire list.",
+              "default": false
+            }
+          }
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "vision_analyze",
+        "description": "Load an image into the conversation so you can see it. Accepts a URL, local file path, or data URL. When your active model has native vision, the image is attached to your context directly and you read the pixels yourself on the next turn — call this any time the user references an image (filepath in their message, URL in tool output, screenshot from the browser, etc.). For non-vision models, falls back to an auxiliary vision model that returns a text description.",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "image_url": {
+              "type": "string",
+              "description": "Image URL (http/https), local file path, or data: URL to load."
+            },
+            "question": {
+              "type": "string",
+              "description": "Your specific question or request about the image. Optional context the model uses on the next turn after seeing the image."
+            }
+          },
+          "required": [
+            "image_url",
+            "question"
+          ]
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "write_file",
+        "description": "Write content to a file, completely replacing existing content. Use this instead of echo/cat heredoc in terminal. Creates parent directories automatically. OVERWRITES the entire file — use 'patch' for targeted edits. Auto-runs syntax checks on .py/.json/.yaml/.toml and other linted languages; only NEW errors introduced by this write are surfaced (pre-existing errors are filtered out).",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "path": {
+              "type": "string",
+              "description": "Path to the file to write (will be created if it doesn't exist, overwritten if it does)"
+            },
+            "content": {
+              "type": "string",
+              "description": "Complete content to write to the file"
+            }
+          },
+          "required": [
+            "path",
+            "content"
+          ]
+        }
+      }
+    }
+  ],
+  "message_count": 1,
+  "messages": [
+    {
+      "role": "user",
+      "content": "[IMPORTANT: The following skill(s) were listed for this job but could not be found and were skipped: session_search. Start your response with a brief notice so the user is aware, e.g.: '⚠️ Skill(s) not found and skipped: session_search']\n[IMPORTANT: The user has invoked the \"devops/kanban-orchestrator\" skill, indicating they want you to follow its instructions. The full skill content is loaded below.]\n\n---\nname: kanban-orchestrator\ndescription: Decomposition playbook + specialist-roster conventions + anti-temptation rules for an orchestrator profile routing work through Kanban. The \"don't do the work yourself\" rule and the basic lifecycle are auto-injected into every kanban worker's system prompt; this skill is the deeper playbook when you're specifically playing the orchestrator role.\nversion: 2.0.0\nmetadata:\n  hermes:\n    tags: [kanban, multi-agent, orchestration, routing]\n    related_skills: [kanban-worker]\n---\n\n# Kanban Orchestrator — Decomposition Playbook\n\n> The **core worker lifecycle** (including the `kanban_create` fan-out pattern and the \"decompose, don't execute\" rule) is auto-injected into every kanban process via the `KANBAN_GUIDANCE` system-prompt block. This skill is the deeper playbook when you're an orchestrator profile whose whole job is routing.\n\n## When to use the board (vs. just doing the work)\n\nCreate Kanban tasks when any of these are true:\n\n1. **Multiple specialists are needed.** Research + analysis + writing is three profiles.\n2. **The work should survive a crash or restart.** Long-running, recurring, or important.\n3. **The user might want to interject.** Human-in-the-loop at any step.\n4. **Multiple subtasks can run in parallel.** Fan-out for speed.\n5. **Review / iteration is expected.** A reviewer profile loops on drafter output.\n6. **The audit trail matters.** Board rows persist in SQLite forever.\n\nIf *none* of those apply — it's a small one-shot reasoning task — use `delegate_task` instead or answer the user directly.\n\n## The anti-temptation rules\n\nYour job description says \"route, don't execute.\" The rules that enforce that:\n\n- **Do not execute the work yourself.** Your restricted toolset usually doesn't even include terminal/file/code/web for implementation. If you find yourself \"just fixing this quickly\" — stop and create a task for the right specialist.\n- **For any concrete task, create a Kanban task and assign it.** Every single time.\n- **If no specialist fits, ask the user which profile to create.** Do not default to doing it yourself under \"close enough.\"\n- **Decompose, route, and summarize — that's the whole job.**\n\n## The standard specialist roster (convention)\n\nUnless the user's setup has customized profiles, assume these exist. Adjust to whatever the user actually has — ask if you're unsure.\n\n| Profile | Does | Typical workspace |\n|---|---|---|\n| `researcher` | Reads sources, gathers facts, writes findings | `scratch` |\n| `analyst` | Synthesizes, ranks, de-dupes. Consumes multiple `researcher` outputs | `scratch` |\n| `writer` | Drafts prose in the user's voice | `scratch` or `dir:` into their Obsidian vault |\n| `reviewer` | Reads output, leaves findings, gates approval | `scratch` |\n| `backend-eng` | Writes server-side code | `worktree` |\n| `frontend-eng` | Writes client-side code | `worktree` |\n| `ops` | Runs scripts, manages services, handles deployments | `dir:` into ops scripts repo |\n| `pm` | Writes specs, acceptance criteria | `scratch` |\n\n## Decomposition playbook\n\n### Step 1 — Understand the goal\n\nAsk clarifying questions if the goal is ambiguous. Cheap to ask; expensive to spawn the wrong fleet.\n\n### Step 2 — Sketch the task graph\n\nBefore creating anything, draft the graph out loud (in your response to the user). Example for \"Analyze whether we should migrate to Postgres\":\n\n```\nT1  researcher        research: Postgres cost vs current\nT2  researcher        research: Postgres performance vs current\nT3  analyst           synthesize migration recommendation       parents: T1, T2\nT4  writer            draft decision memo                       parents: T3\n```\n\nShow this to the user. Let them correct it before you create anything.\n\n### Step 3 — Create tasks and link\n\n```python\nt1 = kanban_create(\n    title=\"research: Postgres cost vs current\",\n    assignee=\"researcher\",\n    body=\"Compare estimated infrastructure costs, migration costs, and ongoing ops costs over a 3-year window. Sources: AWS/GCP pricing, team time estimates, current Postgres bills from peers.\",\n    tenant=os.environ.get(\"HERMES_TENANT\"),\n)[\"task_id\"]\n\nt2 = kanban_create(\n    title=\"research: Postgres performance vs current\",\n    assignee=\"researcher\",\n    body=\"Compare query latency, throughput, and scaling characteristics at our expected data volume (~500GB, 10k QPS peak). Sources: benchmark papers, public case studies, pgbench results if easy.\",\n)[\"task_id\"]\n\nt3 = kanban_create(\n    title=\"synthesize migration recommendation\",\n    assignee=\"analyst\",\n    body=\"Read the findings from T1 (cost) and T2 (performance). Produce a 1-page recommendation with explicit trade-offs and a go/no-go call.\",\n    parents=[t1, t2],\n)[\"task_id\"]\n\nt4 = kanban_create(\n    title=\"draft decision memo\",\n    assignee=\"writer\",\n    body=\"Turn the analyst's recommendation into a 2-page memo for the CTO. Match the tone of previous decision memos in the team's knowledge base.\",\n    parents=[t3],\n)[\"task_id\"]\n```\n\n`parents=[...]` gates promotion — children stay in `todo` until every parent reaches `done`, then auto-promote to `ready`. No manual coordination needed; the dispatcher and dependency engine handle it.\n\n### Step 4 — Complete your own task\n\nIf you were spawned as a task yourself (e.g. `planner` profile was assigned `T0: \"investigate Postgres migration\"`), mark it done with a summary of what you created:\n\n```python\nkanban_complete(\n    summary=\"decomposed into T1-T4: 2 researchers parallel, 1 analyst on their outputs, 1 writer on the recommendation\",\n    metadata={\n        \"task_graph\": {\n            \"T1\": {\"assignee\": \"researcher\", \"parents\": []},\n            \"T2\": {\"assignee\": \"researcher\", \"parents\": []},\n            \"T3\": {\"assignee\": \"analyst\", \"parents\": [\"T1\", \"T2\"]},\n            \"T4\": {\"assignee\": \"writer\", \"parents\": [\"T3\"]},\n        },\n    },\n)\n```\n\n### Step 5 — Report back to the user\n\nTell them what you created in plain prose:\n\n> I've queued 4 tasks:\n> - **T1** (researcher): cost comparison\n> - **T2** (researcher): performance comparison, in parallel with T1\n> - **T3** (analyst): synthesizes T1 + T2 into a recommendation\n> - **T4** (writer): turns T3 into a CTO memo\n>\n> The dispatcher will pick up T1 and T2 now. T3 starts when both finish. You'll get a gateway ping when T4 completes. Use the dashboard or `hermes kanban tail <id>` to follow along.\n\n## Common patterns\n\n**Fan-out + fan-in (research → synthesize):** N `researcher` tasks with no parents, one `analyst` task with all of them as parents.\n\n**Pipeline with gates:** `pm → backend-eng → reviewer`. Each stage's `parents=[previous_task]`. Reviewer blocks or completes; if reviewer blocks, the operator unblocks with feedback and respawns.\n\n**Same-profile queue:** 50 tasks, all assigned to `translator`, no dependencies between them. Dispatcher serializes — translator processes them in priority order, accumulating experience in their own memory.\n\n**Human-in-the-loop:** Any task can `kanban_block()` to wait for input. Dispatcher respawns after `/unblock`. The comment thread carries the full context.\n\n## Pitfalls\n\n**Reassignment vs. new task.** If a reviewer blocks with \"needs changes,\" create a NEW task linked from the reviewer's task — don't re-run the same task with a stern look. The new task is assigned to the original implementer profile.\n\n**Argument order for links.** `kanban_link(parent_id=..., child_id=...)` — parent first. Mixing them up demotes the wrong task to `todo`.\n\n**Don't pre-create the whole graph if the shape depends on intermediate findings.** If T3's structure depends on what T1 and T2 find, let T3 exist as a \"synthesize findings\" task whose own first step is to read parent handoffs and plan the rest. Orchestrators can spawn orchestrators.\n\n**Tenant inheritance.** If `HERMES_TENANT` is set in your env, pass `tenant=os.environ.get(\"HERMES_TENANT\")` on every `kanban_create` call so child tasks stay in the same namespace.\n\n## Triage → Ready — The Critical Promotion Rule\n\n**The gap:** `hermes kanban dispatch` auto-promotes `todo → ready` only. It does **not** promote `triage → ready`.\n\nThe workflow for a triage task is:\n\n1. `hermes kanban list --status triage --json` — find triage tasks\n2. `hermes kanban show <id> --json` — read title + body\n3. **Fill the body** if empty: search `session_search()` + Obsidian for context, write a useful description\n4. **Assign it:** `hermes kanban assign <id> <profile>` (sets assignee, does NOT change status)\n5. **Promote to ready — requires direct SQL** since no CLI command exists for this transition:\n   ```python\n   python3 -c \"\n   import sqlite3\n   conn = sqlite3.connect('/home/marco/.hermes/kanban.db')\n   conn.execute(\\\"UPDATE tasks SET status='ready' WHERE id=? AND status='triage'\\\", (task_id,))\n   conn.commit()\n   \"\n   ```\n   Or via terminal tool with python3 inline.\n6. **Dispatch:** `hermes kanban dispatch` — the dispatcher picks up all `ready` tasks with assignees and spawns workers.\n\n**Why direct SQL:** `kanban assign` only updates the `assignee` column. `hermes kanban dispatch` only auto-promotes `todo→ready` (via `recompute_ready()`). The `triage` status is a parking state for tasks awaiting specification — it bypasses the normal flow intentionally. The orchestrator must do the triage→ready transition explicitly.\n\n**Database path:** `/home/marco/.hermes/kanban.db`\n\n**Silencing a cron without pausing it:** `cronjob update --job-id <id> --deliver local` — output goes to `~/.hermes/cron/output/`, no gateway notification sent. Useful for maintenance jobs that run frequently but don't need user attention.\n\n## Recovering stuck workers\n\nWhen a worker profile keeps crashing, hallucinating, or getting blocked by its own mistakes (usually: wrong model, missing skill, broken credential), the kanban dashboard flags the task with a ⚠ badge and opens a **Recovery** section in the drawer. Three primary actions:\n\n1. **Reclaim** (or `hermes kanban reclaim <task_id>`) — abort the running worker immediately and reset the task to `ready`. The existing claim TTL is ~15 min; this is the fast path out.\n2. **Reassign** (or `hermes kanban reassign <task_id> <new-profile> --reclaim`) — switch the task to a different profile and let the dispatcher pick it up with a fresh worker.\n3. **Change profile model** — the dashboard prints a copy-paste hint for `hermes -p <profile> model` since profile config lives on disk; edit it in a terminal, then Reclaim to retry with the new model.\n\nHallucination warnings appear on tasks where a worker's `kanban_complete(created_cards=[...])` claim included card ids that don't exist or weren't created by the worker's profile (the gate blocks the completion), or where the free-form summary references `t_<hex>` ids that don't resolve (advisory prose scan, non-blocking). Both produce audit events that persist even after recovery actions — the trail stays for debugging.\n\n[IMPORTANT: The user has invoked the \"devops/kanban-worker\" skill, indicating they want you to follow its instructions. The full skill content is loaded below.]\n\n---\nname: kanban-worker\ndescription: Pitfalls, examples, and edge cases for Hermes Kanban workers. The lifecycle itself is auto-injected into every worker's system prompt as KANBAN_GUIDANCE (from agent/prompt_builder.py); this skill is what you load when you want deeper detail on specific scenarios.\nversion: 2.0.0\nplatforms: [linux, macos, windows]\nmetadata:\n  hermes:\n    tags: [kanban, multi-agent, collaboration, workflow, pitfalls]\n    related_skills: [kanban-orchestrator]\n---\n\n# Kanban Worker — Pitfalls and Examples\n\n> You're seeing this skill because the Hermes Kanban dispatcher spawned you as a worker with `--skills kanban-worker` — it's loaded automatically for every dispatched worker. The **lifecycle** (6 steps: orient → work → heartbeat → block/complete) also lives in the `KANBAN_GUIDANCE` block that's auto-injected into your system prompt. This skill is the deeper detail: good handoff shapes, retry diagnostics, edge cases.\n\n## Workspace handling\n\nYour workspace kind determines how you should behave inside `$HERMES_KANBAN_WORKSPACE`:\n\n| Kind | What it is | How to work |\n|---|---|---|\n| `scratch` | Fresh tmp dir, yours alone | Read/write freely; it gets GC'd when the task is archived. |\n| `dir:<path>` | Shared persistent directory | Other runs will read what you write. Treat it like long-lived state. Path is guaranteed absolute (the kernel rejects relative paths). |\n| `worktree` | Git worktree at the resolved path | If `.git` doesn't exist, run `git worktree add <path> <branch>` from the main repo first, then cd and work normally. Commit work here. |\n\n## Tenant isolation\n\nIf `$HERMES_TENANT` is set, the task belongs to a tenant namespace. When reading or writing persistent memory, prefix memory entries with the tenant so context doesn't leak across tenants:\n\n- Good: `business-a: Acme is our biggest customer`\n- Bad (leaks): `Acme is our biggest customer`\n\n## Good summary + metadata shapes\n\nThe `kanban_complete(summary=..., metadata=...)` handoff is how downstream workers read what you did. Patterns that work:\n\n**Coding task:**\n```python\nkanban_complete(\n    summary=\"shipped rate limiter — token bucket, keys on user_id with IP fallback, 14 tests pass\",\n    metadata={\n        \"changed_files\": [\"rate_limiter.py\", \"tests/test_rate_limiter.py\"],\n        \"tests_run\": 14,\n        \"tests_passed\": 14,\n        \"decisions\": [\"user_id primary, IP fallback for unauthenticated requests\"],\n    },\n)\n```\n\n**Coding task that needs human review (review-required):**\n\nFor most code-changing tasks, the work isn't truly *done* until a human reviewer has eyes on it. Block instead of complete, with `reason` prefixed `review-required: ` so the dashboard surfaces the row as needing review. Drop the structured metadata (changed files, test counts, diff/PR url) into a comment first, since `kanban_block` only carries the human-readable reason — comments are the durable annotation channel. Reviewer either approves and runs `hermes kanban unblock <id>` (which re-spawns you with the comment thread for any follow-ups) or asks for changes via another comment.\n\n```python\nimport json\n\nkanban_comment(\n    body=\"review-required handoff:\\n\" + json.dumps({\n        \"changed_files\": [\"rate_limiter.py\", \"tests/test_rate_limiter.py\"],\n        \"tests_run\": 14,\n        \"tests_passed\": 14,\n        \"diff_path\": \"/path/to/worktree\",  # or PR url if pushed\n        \"decisions\": [\"user_id primary, IP fallback for unauthenticated requests\"],\n    }, indent=2),\n)\nkanban_block(\n    reason=\"review-required: rate limiter shipped, 14/14 tests pass — needs eyes on the user_id/IP fallback choice before merging\",\n)\n```\n\nUse `kanban_complete` only when the task is genuinely terminal — e.g. a one-line typo fix, a docs change with no functional consequences, or a research task where the artifact IS the writeup itself.\n\n**Research task:**\n```python\nkanban_complete(\n    summary=\"3 competing libraries reviewed; vLLM wins on throughput, SGLang on latency, Tensorrt-LLM on memory efficiency\",\n    metadata={\n        \"sources_read\": 12,\n        \"recommendation\": \"vLLM\",\n        \"benchmarks\": {\"vllm\": 1.0, \"sglang\": 0.87, \"trtllm\": 0.72},\n    },\n)\n```\n\n**Review task:**\n```python\nkanban_complete(\n    summary=\"reviewed PR #123; 2 blocking issues found (SQL injection in /search, missing CSRF on /settings)\",\n    metadata={\n        \"pr_number\": 123,\n        \"findings\": [\n            {\"severity\": \"critical\", \"file\": \"api/search.py\", \"line\": 42, \"issue\": \"raw SQL concat\"},\n            {\"severity\": \"high\", \"file\": \"api/settings.py\", \"issue\": \"missing CSRF middleware\"},\n        ],\n        \"approved\": False,\n    },\n)\n```\n\nShape `metadata` so downstream parsers (reviewers, aggregators, schedulers) can use it without re-reading your prose.\n\n## Claiming cards you actually created\n\nIf your run produced new kanban tasks (via `kanban_create`), pass the ids in `created_cards` on `kanban_complete`. The kernel verifies each id exists and was created by your profile; any phantom id blocks the completion with an error listing what went wrong, and the rejected attempt is permanently recorded on the task's event log. **Only list ids you captured from a successful `kanban_create` return value — never invent ids from prose, never paste ids from earlier runs, never claim cards another worker created.**\n\n```python\n# GOOD — capture return values, then claim them.\nc1 = kanban_create(title=\"remediate SQL injection\", assignee=\"security-worker\")\nc2 = kanban_create(title=\"fix CSRF middleware\", assignee=\"web-worker\")\n\nkanban_complete(\n    summary=\"Review done; spawned remediations for both findings.\",\n    metadata={\"pr_number\": 123, \"approved\": False},\n    created_cards=[c1[\"task_id\"], c2[\"task_id\"]],\n)\n```\n\n```python\n# BAD — claiming ids you don't have captured return values for.\nkanban_complete(\n    summary=\"Created remediation cards t_a1b2c3d4, t_deadbeef\",  # hallucinated\n    created_cards=[\"t_a1b2c3d4\", \"t_deadbeef\"],                   # → gate rejects\n)\n```\n\nIf a `kanban_create` call fails (exception, tool_error), the card was NOT created — do not include a phantom id for it. Retry the create, or omit the id and mention the failure in your summary. The prose-scan pass also catches `t_<hex>` references in your free-form summary that don't resolve; these don't block the completion but show up as advisory warnings on the task in the dashboard.\n\n## Block reasons that get answered fast\n\nBad: `\"stuck\"` — the human has no context.\n\nGood: one sentence naming the specific decision you need. Leave longer context as a comment instead.\n\n```python\nkanban_comment(\n    task_id=os.environ[\"HERMES_KANBAN_TASK\"],\n    body=\"Full context: I have user IPs from Cloudflare headers but some users are behind NATs with thousands of peers. Keying on IP alone causes false positives.\",\n)\nkanban_block(reason=\"Rate limit key choice: IP (simple, NAT-unsafe) or user_id (requires auth, skips anonymous endpoints)?\")\n```\n\nThe block message is what appears in the dashboard / gateway notifier. The comment is the deeper context a human reads when they open the task.\n\n## Heartbeats worth sending\n\nGood heartbeats name progress: `\"epoch 12/50, loss 0.31\"`, `\"scanned 1.2M/2.4M rows\"`, `\"uploaded 47/120 videos\"`.\n\nBad heartbeats: `\"still working\"`, empty notes, sub-second intervals. Every few minutes max; skip entirely for tasks under ~2 minutes.\n\n## Retry scenarios\n\nIf you open the task and `kanban_show` returns `runs: [...]` with one or more closed runs, you're a retry. The prior runs' `outcome` / `summary` / `error` tell you what didn't work. Don't repeat that path. Typical retry diagnostics:\n\n- `outcome: \"timed_out\"` — the previous attempt hit `max_runtime_seconds`. You may need to chunk the work or shorten it.\n- `outcome: \"crashed\"` — OOM or segfault. Reduce memory footprint.\n- `outcome: \"spawn_failed\"` + `error: \"...\"` — usually a profile config issue (missing credential, bad PATH). Ask the human via `kanban_block` instead of retrying blindly.\n- `outcome: \"reclaimed\"` + `summary: \"task archived...\"` — operator archived the task out from under the previous run; you probably shouldn't be running at all, check status carefully.\n- `outcome: \"blocked\"` — a previous attempt blocked; the unblock comment should be in the thread by now.\n\n## Do NOT\n\n- Call `delegate_task` as a substitute for `kanban_create`. `delegate_task` is for short reasoning subtasks inside YOUR run; `kanban_create` is for cross-agent handoffs that outlive one API loop.\n- Modify files outside `$HERMES_KANBAN_WORKSPACE` unless the task body says to.\n- Create follow-up tasks assigned to yourself — assign to the right specialist.\n- Complete a task you didn't actually finish. Block it instead.\n\n## Pitfalls\n\n**Task state can change between dispatch and your startup.** Between when the dispatcher claimed and when your process actually booted, the task may have been blocked, reassigned, or archived. Always `kanban_show` first. If it reports `blocked` or `archived`, stop — you shouldn't be running.\n\n**Workspace may have stale artifacts.** Especially `dir:` and `worktree` workspaces can have files from previous runs. Read the comment thread — it usually explains why you're running again and what state the workspace is in.\n\n**Don't rely on the CLI when the guidance is available.** The `kanban_*` tools work across all terminal backends (Docker, Modal, SSH). `hermes kanban <verb>` from your terminal tool will fail in containerized backends because the CLI isn't installed there. When in doubt, use the tool.\n\n## CLI fallback (for scripting)\n\nEvery tool has a CLI equivalent for human operators and scripts:\n- `kanban_show` ↔ `hermes kanban show <id> --json`\n- `kanban_complete` ↔ `hermes kanban complete <id> --summary \"...\" --metadata '{...}'`\n- `kanban_block` ↔ `hermes kanban block <id> \"reason\"`\n- `kanban_create` ↔ `hermes kanban create \"title\" --assignee <profile> [--parent <id>]`\n- etc.\n\nUse the tools from inside an agent; the CLI exists for the human at the terminal.\n\n[IMPORTANT: The user has invoked the \"note-taking/obsidian\" skill, indicating they want you to follow its instructions. The full skill content is loaded below.]\n\n---\nname: obsidian\ndescription: Read, search, and create notes in the Obsidian vault.\n---\n\n# Obsidian Vault\n\nTwo modes are supported:\n\n## Mode 1: Remote vault via GitHub + MCP (Hermes on VPS, Obsidian on user's Mac)\n\nWhen the vault lives on the user's local machine and Hermes runs on a remote VPS, sync via GitHub.\n\n### Setup\n1. Create a private GitHub repo for the vault\n2. User installs \"Obsidian Git\" plugin on Mac and pushes vault (or does it via terminal: `git init -b main && git add -A && git commit -m \"Initial\" && git remote add origin <URL> && git push -u origin main`)\n3. Clone the repo on the VPS: `git clone https://<GHP_TOKEN>@github.com/<user>/<repo>.git /home/Obsidian-Vault`\n4. Add MCP filesystem server in `~/.hermes/config.yaml`:\n```yaml\nmcp_servers:\n  obsidian:\n    command: npx\n    args: [-y, \"@modelcontextprotocol/server-filesystem\", \"/home/Obsidian-Vault\"]\n    timeout: 120\n```\n5. Restart Hermes — tools like `mcp_obsidian_read_file`, `mcp_obsidian_write_file`, `mcp_obsidian_search_files`, etc. become available\n6. Set up auto-sync: user configures Obsidian Git plugin for auto-push/pull every 5 min, or runs manual push/pull after edits\n\n### Working with notes\nUse the `mcp_obsidian_*` tools (discovered at startup). Common tools:\n- `mcp_obsidian_read_file` — read a note\n- `mcp_obsidian_write_file` — create/overwrite a note\n- `mcp_obsidian_search_files` — find notes by pattern\n- `mcp_obsidian_list_directory` — browse vault structure\n- `mcp_obsidian_edit_file` — line-level edits\n\n### PITFALLS\n- GitHub credential helper may not work in non-interactive shells — embed token in clone URL: `https://<token>@github.com/user/repo.git`\n- The vault repo may be empty initially — wait for user to push first commit\n- MCP filesystem tools use forward slashes relative to the vault root path\n- Auto-sync delay: changes made by Hermes won't appear in Obsidian until user does a git pull (auto-pull every 5 min recommended)\n\n## Mode 2: Local vault (Hermes and Obsidian on same machine)\n\n**Location:** Set via `OBSIDIAN_VAULT_PATH` environment variable (e.g. in `~/.hermes/.env`).\nIf unset, defaults to `~/Documents/Obsidian Vault`.\nNote: Vault paths may contain spaces - always quote them.\n\n## Read a note\n\n```bash\nVAULT=\"${OBSIDIAN_VAULT_PATH:-$HOME/Documents/Obsidian Vault}\"\ncat \"$VAULT/Note Name.md\"\n```\n\n## List notes\n\n```bash\nVAULT=\"${OBSIDIAN_VAULT_PATH:-$HOME/Documents/Obsidian Vault}\"\n\n# All notes\nfind \"$VAULT\" -name \"*.md\" -type f\n\n# In a specific folder\nls \"$VAULT/Subfolder/\"\n```\n\n## Search\n\n```bash\nVAULT=\"${OBSIDIAN_VAULT_PATH:-$HOME/Documents/Obsidian Vault}\"\n\n# By filename\nfind \"$VAULT\" -name \"*.md\" -iname \"*keyword*\"\n\n# By content\ngrep -rli \"keyword\" \"$VAULT\" --include=\"*.md\"\n```\n\n## Create a note\n\n```bash\nVAULT=\"${OBSIDIAN_VAULT_PATH:-$HOME/Documents/Obsidian Vault}\"\ncat > \"$VAULT/New Note.md\" << 'ENDNOTE'\n# Title\n\nContent here.\nENDNOTE\n```\n\n## Append to a note\n\n```bash\nVAULT=\"${OBSIDIAN_VAULT_PATH:-$HOME/Documents/Obsidian Vault}\"\necho \"\nNew content here.\" >> \"$VAULT/Existing Note.md\"\n```\n\n## Building a Memory Graph Knowledge Base\n\nThe [obsidian-openclaw-memory](https://github.com/Samin12/obsidian-openclaw-memory) pattern provides a proven structure for AI-persistent memory via Obsidian. Adapt it by pre-populating with real user data from Hermes memory.\n\n### Core File Structure\n```\nvault/\n├── USER.md              # Who the human is (name, goals, constraints, tech stack)\n├── AGENTS.md            # How the AI operates (memory protocol, tool rules, safety)\n├── SOUL.md              # AI persona & tone guidelines\n├── MEMORY.md            # ★ Distilled long-term memory (short, high-signal entries)\n├── HEARTBEAT.md         # Proactive maintenance checklist\n├── memory/\n│   └── YYYY-MM-DD.md    # Raw daily session logs\n├── second-brain/\n│   ├── README.md        # Index & navigation\n│   ├── concepts/        # Deep dives on important ideas/frameworks\n│   ├── documents/       # Working docs & strategies\n│   └── journal/         # Daily structured summaries\n├── directives/          # SOPs & repeatable workflows\n├── execution/           # Reusable Python scripts\n├── projects/            # One folder per active project\n└── skills/              # Custom skill definitions\n```\n\n### Population Strategy (from Hermes memory)\n1. **USER.md** — Pull from memory \"user\" store (identity, goals, constraints, tech stack)\n2. **AGENTS.md** — Pull from memory \"memory\" store (infrastructure, tool configs, known fixes)\n3. **MEMORY.md** — Distill all current memory entries into curated long-term format\n4. **SOUL.md** — Derive from communication patterns in past sessions\n5. **second-brain/concepts/** — Create starter notes for user's focus areas (from memory goals/focus)\n6. **Add `[[wiki-links]]`** in every file footer to build the knowledge graph edges\n\n### Key Principles\n- **Pre-populate with real data** — users value seeing their actual context, not empty templates\n- **Use wiki-links everywhere** — `[[USER]]`, `[[MEMORY]]`, etc. so Graph View shows connections\n- **Tags in frontmatter** — `tags: [memory, identity, business]` for Dataview queries\n- **Create a daily log entry** for the setup session itself (`memory/YYYY-MM-DD.md`)\n\n### Git Push Pitfall: `gh repo create --push` fails on VPS\nThe `gh repo create --push` command fails because:\n1. Git user identity is not configured (`user.name` / `user.email`)\n2. The remote URL requires authentication but git can't prompt interactively\n\n**Proven fix:**\n```bash\n# Set local git identity (don't use --global, keep it vault-specific)\ngit config user.name \"Hermes Agent\"\ngit config user.email \"hermes@example.com\"\n\n# Commit first\ngit add -A && git commit -m \"Initial vault setup\"\n\n# Create repo\ngh repo create <org>/<repo-name> --public --source=. --remote=origin\n\n# Set authenticated remote URL and push\nGH_TOKEN=$(gh auth token)\ngit remote set-url origin \"https://x-access-token:${GH_TOKEN}@github.com/<org>/<repo-name>.git\"\ngit push -u origin main\n```\n\n## Wikilinks\n\nObsidian links notes with `[[Note Name]]` syntax. When creating notes, use these to link related content.\n\nThe user has provided the following instruction alongside the skill invocation: [IMPORTANT: You are running as a scheduled cron job. DELIVERY: Your final response will be automatically delivered to the user — do NOT use send_message or try to deliver the output yourself. Just produce your report/output as your final response and the system handles the rest. SILENT: If there is genuinely nothing new to report, respond with exactly \"[SILENT]\" (nothing else) to suppress delivery. Never combine [SILENT] with content — either report your findings normally, or say [SILENT] and nothing more.]\n\nYou are Hermes Kanban Agent — your job is to maintain Marco's Kanban board every 10 minutes.\n\n## Your workflow (in order):\n\n### STEP 1 — Triage → Ready pipeline\nList all tasks in triage status:\n  hermes kanban list --status triage --json\n\nFor each triage task:\n1. Read the task: `hermes kanban show <task_id> --json`\n2. If the task body is empty or minimal (null/blank):\n   a. Search memory for context relevant to the task title — use session_search() with keywords from the title\n   b. Also search the Obsidian vault if relevant paths exist (~/.obsidian/Vault/ or ~/Obsidian-Vault/)\n   c. Synthesize what you found into a useful body description\n   d. Edit the task body in the DB directly:\n      python3 -c \"\nimport sqlite3, json\nconn = sqlite3.connect('/home/marco/.hermes/kanban.db')\nconn.execute('UPDATE tasks SET body=? WHERE id=?', (new_body, task_id))\nconn.commit()\n\"\n3. Once body is filled, assign a sensible assignee based on task type (researcher for research, writer for writing, backend-eng for code tasks) — use `hermes kanban assign <task_id> <profile>`\n4. The task is now in triage with an assignee and body — promote it to ready by running `hermes kanban dispatch` (the dispatcher will promote todo→ready but NOT triage→ready, so...) \n   Actually: triage→ready requires direct DB update since the dispatcher only handles todo→ready:\n   python3 -c \"\nimport sqlite3\nconn = sqlite3.connect('/home/marco/.hermes/kanban.db')\nconn.execute(\\\"UPDATE tasks SET status='ready' WHERE id=? AND status='triage'\\\", (task_id,))\nconn.commit()\n\"\n\n### STEP 2 — Handle Ready tasks assigned to agents\nList all tasks in ready status:\n  hermes kanban list --status ready --json\n\nFor each ready task with an assignee:\n1. Check if the assignee is a valid Hermes profile: look in ~/.hermes/profiles/ for a matching config dir\n2. If valid profile exists:\n   a. Dispatch the task: `hermes kanban dispatch --dry-run` first to see what would happen, then `hermes kanban dispatch`\n   b. Alternatively: spawn the worker directly if you know how\n3. If no valid profile: leave the task in ready and add a comment noting no agent available\n\n### STEP 3 — Report\nSummarize what you did:\n- Tasks promoted from triage to ready: (list titles)\n- Tasks that still need triage work: (list titles with brief note on why)\n- Ready tasks handled or pending\n\n## Important rules:\n- Always use --json flag for parseable output\n- Use terminal tool for all hermes kanban and python3 commands\n- Be concise — this runs every 10 minutes\n- If triage list is empty, just say \"No triage tasks\" and exit quickly\n- Database path: /home/marco/.hermes/kanban.db\n\n## Skills loaded:\n- kanban-orchestrator\n- kanban-worker\n- session_search (use this for memory search)\n- obsidian (for vault access)"
+    }
+  ]
+}

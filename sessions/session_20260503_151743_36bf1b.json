@@ -1,0 +1,481 @@
+{
+  "session_id": "20260503_151743_36bf1b",
+  "model": "MiniMax M2.7 Highspeed",
+  "base_url": "https://api.minimax.io/anthropic",
+  "platform": "telegram",
+  "session_start": "2026-05-03T15:17:43.463209",
+  "last_updated": "2026-05-03T15:21:13.519203",
+  "system_prompt": "You are Hermes Agent, an intelligent AI assistant created by Nous Research. You are helpful, knowledgeable, and direct. You assist users with a wide range of tasks including answering questions, writing and editing code, analyzing information, creative work, and executing actions via your tools. You communicate clearly, admit uncertainty when appropriate, and prioritize being genuinely useful over being verbose unless otherwise directed below. Be targeted and efficient in your exploration and investigations.\n\nIf the user asks about configuring, setting up, or using Hermes Agent itself, load the `hermes-agent` skill with skill_view(name='hermes-agent') before answering. Docs: https://hermes-agent.nousresearch.com/docs\n\nConversation started: Sunday, May 03, 2026 03:17 PM\nModel: MiniMax M2.7 Highspeed\nProvider: minimax\n\nYou are on a text messaging communication platform, Telegram. Standard markdown is automatically converted to Telegram format. Supported: **bold**, *italic*, ~~strikethrough~~, ||spoiler||, `inline code`, ```code blocks```, [links](url), and ## headers. Telegram has NO table syntax — prefer bullet lists or labeled key: value pairs over pipe tables (any tables you do emit are auto-rewritten into row-group bullets, which you can produce directly for cleaner output). You can send media files natively: to deliver a file to the user, include MEDIA:/absolute/path/to/file in your response. Images (.png, .jpg, .webp) appear as photos, audio (.ogg) sends as voice bubbles, and videos (.mp4) play inline. You can also include image URLs in markdown format ![alt](url) and they will be sent as native photos.",
+  "tools": [
+    {
+      "type": "function",
+      "function": {
+        "name": "patch",
+        "description": "Targeted find-and-replace edits in files. Use this instead of sed/awk in terminal. Uses fuzzy matching (9 strategies) so minor whitespace/indentation differences won't break it. Returns a unified diff. Auto-runs syntax checks after editing.\n\nReplace mode (default): find a unique string and replace it.\nPatch mode: apply V4A multi-file patches for bulk changes.",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "mode": {
+              "type": "string",
+              "enum": [
+                "replace",
+                "patch"
+              ],
+              "description": "Edit mode: 'replace' for targeted find-and-replace, 'patch' for V4A multi-file patches",
+              "default": "replace"
+            },
+            "path": {
+              "type": "string",
+              "description": "File path to edit (required for 'replace' mode)"
+            },
+            "old_string": {
+              "type": "string",
+              "description": "Text to find in the file (required for 'replace' mode). Must be unique in the file unless replace_all=true. Include enough surrounding context to ensure uniqueness."
+            },
+            "new_string": {
+              "type": "string",
+              "description": "Replacement text (required for 'replace' mode). Can be empty string to delete the matched text."
+            },
+            "replace_all": {
+              "type": "boolean",
+              "description": "Replace all occurrences instead of requiring a unique match (default: false)",
+              "default": false
+            },
+            "patch": {
+              "type": "string",
+              "description": "V4A format patch content (required for 'patch' mode). Format:\n*** Begin Patch\n*** Update File: path/to/file\n@@ context hint @@\n context line\n-removed line\n+added line\n*** End Patch"
+            }
+          },
+          "required": [
+            "mode"
+          ]
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "process",
+        "description": "Manage background processes started with terminal(background=true). Actions: 'list' (show all), 'poll' (check status + new output), 'log' (full output with pagination), 'wait' (block until done or timeout), 'kill' (terminate), 'write' (send raw stdin data without newline), 'submit' (send data + Enter, for answering prompts), 'close' (close stdin/send EOF).",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "action": {
+              "type": "string",
+              "enum": [
+                "list",
+                "poll",
+                "log",
+                "wait",
+                "kill",
+                "write",
+                "submit",
+                "close"
+              ],
+              "description": "Action to perform on background processes"
+            },
+            "session_id": {
+              "type": "string",
+              "description": "Process session ID (from terminal background output). Required for all actions except 'list'."
+            },
+            "data": {
+              "type": "string",
+              "description": "Text to send to process stdin (for 'write' and 'submit' actions)"
+            },
+            "timeout": {
+              "type": "integer",
+              "description": "Max seconds to block for 'wait' action. Returns partial output on timeout.",
+              "minimum": 1
+            },
+            "offset": {
+              "type": "integer",
+              "description": "Line offset for 'log' action (default: last 200 lines)"
+            },
+            "limit": {
+              "type": "integer",
+              "description": "Max lines to return for 'log' action",
+              "minimum": 1
+            }
+          },
+          "required": [
+            "action"
+          ]
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "read_file",
+        "description": "Read a text file with line numbers and pagination. Use this instead of cat/head/tail in terminal. Output format: 'LINE_NUM|CONTENT'. Suggests similar filenames if not found. Use offset and limit for large files. Reads exceeding ~100K characters are rejected; use offset and limit to read specific sections of large files. NOTE: Cannot read images or binary files — use vision_analyze for images.",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "path": {
+              "type": "string",
+              "description": "Path to the file to read (absolute, relative, or ~/path)"
+            },
+            "offset": {
+              "type": "integer",
+              "description": "Line number to start reading from (1-indexed, default: 1)",
+              "default": 1,
+              "minimum": 1
+            },
+            "limit": {
+              "type": "integer",
+              "description": "Maximum number of lines to read (default: 500, max: 2000)",
+              "default": 500,
+              "maximum": 2000
+            }
+          },
+          "required": [
+            "path"
+          ]
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "search_files",
+        "description": "Search file contents or find files by name. Use this instead of grep/rg/find/ls in terminal. Ripgrep-backed, faster than shell equivalents.\n\nContent search (target='content'): Regex search inside files. Output modes: full matches with line numbers, file paths only, or match counts.\n\nFile search (target='files'): Find files by glob pattern (e.g., '*.py', '*config*'). Also use this instead of ls — results sorted by modification time.",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "pattern": {
+              "type": "string",
+              "description": "Regex pattern for content search, or glob pattern (e.g., '*.py') for file search"
+            },
+            "target": {
+              "type": "string",
+              "enum": [
+                "content",
+                "files"
+              ],
+              "description": "'content' searches inside file contents, 'files' searches for files by name",
+              "default": "content"
+            },
+            "path": {
+              "type": "string",
+              "description": "Directory or file to search in (default: current working directory)",
+              "default": "."
+            },
+            "file_glob": {
+              "type": "string",
+              "description": "Filter files by pattern in grep mode (e.g., '*.py' to only search Python files)"
+            },
+            "limit": {
+              "type": "integer",
+              "description": "Maximum number of results to return (default: 50)",
+              "default": 50
+            },
+            "offset": {
+              "type": "integer",
+              "description": "Skip first N results for pagination (default: 0)",
+              "default": 0
+            },
+            "output_mode": {
+              "type": "string",
+              "enum": [
+                "content",
+                "files_only",
+                "count"
+              ],
+              "description": "Output format for grep mode: 'content' shows matching lines with line numbers, 'files_only' lists file paths, 'count' shows match counts per file",
+              "default": "content"
+            },
+            "context": {
+              "type": "integer",
+              "description": "Number of context lines before and after each match (grep mode only)",
+              "default": 0
+            }
+          },
+          "required": [
+            "pattern"
+          ]
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "terminal",
+        "description": "Execute shell commands on a Linux environment. Filesystem usually persists between calls.\n\nDo NOT use cat/head/tail to read files — use read_file instead.\nDo NOT use grep/rg/find to search — use search_files instead.\nDo NOT use ls to list directories — use search_files(target='files') instead.\nDo NOT use sed/awk to edit files — use patch instead.\nDo NOT use echo/cat heredoc to create files — use write_file instead.\nReserve terminal for: builds, installs, git, processes, scripts, network, package managers, and anything that needs a shell.\n\nForeground (default): Commands return INSTANTLY when done, even if the timeout is high. Set timeout=300 for long builds/scripts — you'll still get the result in seconds if it's fast. Prefer foreground for short commands.\nBackground: Set background=true to get a session_id. Two patterns:\n  (1) Long-lived processes that never exit (servers, watchers).\n  (2) Long-running tasks with notify_on_complete=true — you can keep working on other things and the system auto-notifies you when the task finishes. Great for test suites, builds, deployments, or anything that takes more than a minute.\nFor servers/watchers, do NOT use shell-level background wrappers (nohup/disown/setsid/trailing '&') in foreground mode. Use background=true so Hermes can track lifecycle and output.\nAfter starting a server, verify readiness with a health check or log signal, then run tests in a separate terminal() call. Avoid blind sleep loops.\nUse process(action=\"poll\") for progress checks, process(action=\"wait\") to block until done.\nWorking directory: Use 'workdir' for per-command cwd.\nPTY mode: Set pty=true for interactive CLI tools (Codex, Claude Code, Python REPL).\n\nDo NOT use vim/nano/interactive tools without pty=true — they hang without a pseudo-terminal. Pipe git output to cat if it might page.\n",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "command": {
+              "type": "string",
+              "description": "The command to execute on the VM"
+            },
+            "background": {
+              "type": "boolean",
+              "description": "Run the command in the background. Two patterns: (1) Long-lived processes that never exit (servers, watchers). (2) Long-running tasks paired with notify_on_complete=true — you can keep working and get notified when the task finishes. For short commands, prefer foreground with a generous timeout instead.",
+              "default": false
+            },
+            "timeout": {
+              "type": "integer",
+              "description": "Max seconds to wait (default: 180, foreground max: 600). Returns INSTANTLY when command finishes — set high for long tasks, you won't wait unnecessarily. Foreground timeout above 600s is rejected; use background=true for longer commands.",
+              "minimum": 1
+            },
+            "workdir": {
+              "type": "string",
+              "description": "Working directory for this command (absolute path). Defaults to the session working directory."
+            },
+            "pty": {
+              "type": "boolean",
+              "description": "Run in pseudo-terminal (PTY) mode for interactive CLI tools like Codex, Claude Code, or Python REPL. Only works with local and SSH backends. Default: false.",
+              "default": false
+            },
+            "notify_on_complete": {
+              "type": "boolean",
+              "description": "When true (and background=true), you'll be automatically notified exactly once when the process finishes. **This is the right choice for almost every long-running task** — tests, builds, deployments, multi-item batch jobs, anything that takes over a minute and has a defined end. Use this and keep working on other things; the system notifies you on exit. MUTUALLY EXCLUSIVE with watch_patterns — when both are set, watch_patterns is dropped.",
+              "default": false
+            },
+            "watch_patterns": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              },
+              "description": "Strings to watch for in background process output. HARD RATE LIMIT: at most 1 notification per 15 seconds per process — matches arriving inside the cooldown are dropped. After 3 consecutive 15-second windows with dropped matches, watch_patterns is automatically disabled for that process and promoted to notify_on_complete behavior (one notification on exit, no more mid-process spam). USE ONLY for truly rare, one-shot mid-process signals on LONG-LIVED processes that will never exit on their own — e.g. ['Application startup complete'] on a server so you know when to hit its endpoint, or ['migration done'] on a daemon. DO NOT use for: (1) end-of-run markers like 'DONE'/'PASS' — use notify_on_complete instead; (2) error patterns like 'ERROR'/'Traceback' in loops or multi-item batch jobs — they fire on every iteration and you'll hit the strike limit fast; (3) anything you'd ever combine with notify_on_complete. When in doubt, choose notify_on_complete. MUTUALLY EXCLUSIVE with notify_on_complete — set one, not both."
+            }
+          },
+          "required": [
+            "command"
+          ]
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "write_file",
+        "description": "Write content to a file, completely replacing existing content. Use this instead of echo/cat heredoc in terminal. Creates parent directories automatically. OVERWRITES the entire file — use 'patch' for targeted edits.",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "path": {
+              "type": "string",
+              "description": "Path to the file to write (will be created if it doesn't exist, overwritten if it does)"
+            },
+            "content": {
+              "type": "string",
+              "description": "Complete content to write to the file"
+            }
+          },
+          "required": [
+            "path",
+            "content"
+          ]
+        }
+      }
+    }
+  ],
+  "message_count": 14,
+  "messages": [
+    {
+      "role": "user",
+      "content": "Create automated-trading-bot and multi-timeframe-analysis skills in ~/.hermes/skills/trading/. Return what you built."
+    },
+    {
+      "role": "assistant",
+      "content": "",
+      "reasoning": "The user wants me to create two skills in the trading domain:\n1. automated-trading-bot\n2. multi-timeframe-analysis\n\nThese should be created in `~/.hermes/skills/trading/` directory.\n\nLet me first check if the skills directory exists and look at the structure of existing skills to understand the format.",
+      "finish_reason": "tool_calls",
+      "reasoning_content": "The user wants me to create two skills in the trading domain:\n1. automated-trading-bot\n2. multi-timeframe-analysis\n\nThese should be created in `~/.hermes/skills/trading/` directory.\n\nLet me first check if the skills directory exists and look at the structure of existing skills to understand the format.",
+      "reasoning_details": [
+        {
+          "signature": "4d099db1cf173ed1e8adcd431b623fba18a18cde2a8c933134eb3721d5d85dfc",
+          "thinking": "The user wants me to create two skills in the trading domain:\n1. automated-trading-bot\n2. multi-timeframe-analysis\n\nThese should be created in `~/.hermes/skills/trading/` directory.\n\nLet me first check if the skills directory exists and look at the structure of existing skills to understand the format.",
+          "type": "thinking"
+        }
+      ],
+      "tool_calls": [
+        {
+          "id": "call_function_sc46v81ep4hl_1",
+          "call_id": "call_function_sc46v81ep4hl_1",
+          "response_item_id": "fc_function_sc46v81ep4hl_1",
+          "type": "function",
+          "function": {
+            "name": "terminal",
+            "arguments": "{\"command\": \"ls ~/.hermes/skills/ 2>/dev/null && find ~/.hermes/skills/ -name \\\"*.md\\\" | head -20\"}"
+          }
+        }
+      ]
+    },
+    {
+      "role": "tool",
+      "content": "{\"output\": \"apple\\nautomation\\nautonomous-ai-agents\\nblack-forest-labs\\ncreative\\ndata-science\\ndevops\\ndiagramming\\ndiscord-message-content-intent\\ndogfood\\ndomain\\nemail\\nfeeds\\ngaming\\ngifs\\ngithub\\nhermes-gateway-restart-notification\\nhermes-security-hardening\\nhermes-weather-plugin\\nhermes-web-search-plus\\ninference-sh\\nintegration\\nleisure\\nmcp\\nmedia\\nmessaging\\nmlops\\nmodel-selection\\nnetworking\\nnote-taking\\nobsidian-hermes-memory\\nopenrouter-cost-optimization\\nproductivity\\nred-teaming\\nresearch\\nsecurity\\nsecurity-health-check\\nsmart-home\\nsocial-media\\nsoftware-development\\nsystem-maintenance\\ntrading\\nvectorized-crypto-backtester\\nweather-plugin\\nweb-checks\\nweb-development\\nwondelai\\nyuanbao\\n/home/marco/.hermes/skills/mcp/mcporter/SKILL.md\\n/home/marco/.hermes/skills/mcp/DESCRIPTION.md\\n/home/marco/.hermes/skills/mcp/native-mcp/SKILL.md\\n/home/marco/.hermes/skills/trading/smart-money-crypto-strategy/references/verification-notes.md\\n/home/marco/.hermes/skills/trading/smart-money-crypto-strategy/SKILL.md\\n/home/marco/.hermes/skills/trading/hyperperfect-trading-strategies/references/paper-trader-health-check.md\\n/home/marco/.hermes/skills/trading/hyperperfect-trading-strategies/SKILL.md\\n/home/marco/.hermes/skills/trading/crypto-strategy-backtester/references/backtest-v3-sr-results-may2026.md\\n/home/marco/.hermes/skills/trading/crypto-strategy-backtester/SKILL.md\\n/home/marco/.hermes/skills/trading/crypto-trading-strategy/SKILL.md\\n/home/marco/.hermes/skills/trading/smart-money-fusion/references/verification-notes.md\\n/home/marco/.hermes/skills/trading/smart-money-fusion/SKILL.md\\n/home/marco/.hermes/skills/trading/dyor-onchain-analytics/skill.md\\n/home/marco/.hermes/skills/trading/hyperliquid-paper-trading/SKILL.md\\n/home/marco/.hermes/skills/trading/crypto-paper-trader/SKILL.md\\n/home/marco/.hermes/skills/trading/the-better-traders-course/SKILL.md\\n/home/marco/.hermes/skills/trading/smart-money-paper-trader/references/paper-trader-log-format.md\\n/home/marco/.hermes/skills/trading/smart-money-paper-trader/SKILL.md\\n/home/marco/.hermes/skills/trading/sr-zone-paper-trader/SKILL.md\\n/home/marco/.hermes/skills/trading/trading-backtest-validation/SKILL.md\", \"exit_code\": 0, \"error\": null}",
+      "tool_call_id": "call_function_sc46v81ep4hl_1"
+    },
+    {
+      "role": "assistant",
+      "content": "",
+      "reasoning": "The trading directory already exists with several skills. I need to create two new skills:\n1. automated-trading-bot\n2. multi-timeframe-analysis\n\nLet me look at an existing skill structure to understand the format.",
+      "finish_reason": "tool_calls",
+      "reasoning_content": "The trading directory already exists with several skills. I need to create two new skills:\n1. automated-trading-bot\n2. multi-timeframe-analysis\n\nLet me look at an existing skill structure to understand the format.",
+      "reasoning_details": [
+        {
+          "signature": "19dbd667f7a2a8bc89dce077c0f8a04161787fe9c93bd6903d631610782ecb62",
+          "thinking": "The trading directory already exists with several skills. I need to create two new skills:\n1. automated-trading-bot\n2. multi-timeframe-analysis\n\nLet me look at an existing skill structure to understand the format.",
+          "type": "thinking"
+        }
+      ],
+      "tool_calls": [
+        {
+          "id": "call_function_1tr15a2674ps_1",
+          "call_id": "call_function_1tr15a2674ps_1",
+          "response_item_id": "fc_function_1tr15a2674ps_1",
+          "type": "function",
+          "function": {
+            "name": "read_file",
+            "arguments": "{\"path\": \"/home/marco/.hermes/skills/trading/crypto-paper-trader/SKILL.md\"}"
+          }
+        }
+      ]
+    },
+    {
+      "role": "tool",
+      "content": "{\"content\": \"     1|---\\n     2|name: crypto-paper-trader\\n     3|description: Build a local crypto paper trader using Binance public API for live strategy validation — no exchange API keys needed. Useful when Alpaca/WunderTrading demo accounts don't support spot crypto.\\n     4|---\\n     5|\\n     6|# Crypto Paper Trader — Live Strategy Validator\\n     7|\\n     8|## Trigger\\n     9|Use when the user wants to paper trade or live-test a crypto trading strategy but doesn't have API keys for an exchange, or the available paper trading accounts (Alpaca, WunderTrading demo) don't support the desired asset or spot trading.\\n    10|\\n    11|## Approach: Binance Public API + Local Simulation\\n    12|\\n    13|Binance provides OHLCV data via public REST endpoint — no API key needed for reading prices. This enables a fully functional paper trader with zero credentials.\\n    14|\\n    15|### Step 1 — Verify Binance Public Data Access\\n    16|```bash\\n    17|curl -s \\\"https://api.binance.com/api/v3/klines?symbol=BTCUSDT&interval=4h&limit=10\\\"\\n    18|```\\n    19|If this returns candlestick data, you're good to go.\\n    20|\\n    21|### Step 2 — Build the Paper Trader\\n    22|Core components:\\n    23|1. **Data fetch** — `requests.get()` to `https://api.binance.com/api/v3/klines` with symbol, interval, limit\\n    24|2. **Indicators** — pandas/TA library (RSI, EMA, ATR, Bollinger, etc.)\\n    25|3. **Signal detection** — boolean masks for entry conditions\\n    26|4. **Position simulation** — walk-forward loop through subsequent candles simulating TP/SL/trailing\\n    27|5. **State persistence** — JSON file for capital, open trades, trade history\\n    28|6. **Discord webhook** — notify on entry/exit (optional, via `requests.post`)\\n    29|\\n    30|### Step 3 — Key Binance Endpoints (No Auth)\\n    31|| Purpose | URL |\\n    32||---------|-----|\\n    33|| Klines/candles | `https://api.binance.com/api/v3/klines?symbol=BTCUSDT&interval=4h&limit=200` |\\n    34|| 24hr ticker | `https://api.binance.com/api/v3/ticker/24hr?symbol=BTCUSDT` |\\n    35|| Order book | `https://api.binance.com/api/v3/depth?symbol=BTCUSDT&limit=10` |\\n    36|\\n    37|**Timeframe mapping:** `1m, 5m, 15m, 1h, 4h, 1d, 1w`\\n    38|\\n    39|### Step 4 — Limitations of This Approach\\n    40|- **No real orders executed** — prices are real but orders are simulated\\n    41|- Cannot verify fill quality or slippage reality\\n    42|- Good for: strategy validation, signal timing, expectancy confirmation\\n    43|- Not a substitute for real exchange paper trading when available\\n    44|\\n    45|## Common Blockers Encountered\\n    46|| Platform | Blocker |\\n    47||----------|---------|\\n    48|| Alpaca | Paper trading does NOT support crypto — only US equities/ETFs |\\n    49|| WunderTrading | Demo accounts are futures-only, not spot |\\n    50|| Binance Testnet | Requires separate testnet API keys from testnet.binance.vision |\\n    51|| TradingView | Paper trading only for stocks/forex, not crypto |\\n    52|\\n    53|## ⚠️ CRITICAL — Marco's Paper Trading System (UNIFIED as of May 3)\\n    54|\\n    55|**UPDATE May 3:** `paper_trader.py` was modified to call WunderTrading API directly. The local simulation and real order execution are now UNIFIED into a single system.\\n    56|\\n    57|### Unified System\\n    58|- Script: `/home/Obsidian-Vault/Trading/paper_trader.py`\\n    59|  - Contains: `WunderTradingAPI` class, `wt_place_order()`, `wt_close_strategy()`, `sync_wt_positions()`\\n    60|  - Local strategies execute real orders on WunderTrading DemoAccount\\n    61|- Log: `/home/Obsidian-Vault/Trading/paper_trader.log`\\n    62|- Cron: \\\"Paper Trading Updates\\\" every 30 min → `~/.hermes/scripts/paper_trader_status.sh`\\n    63|- Run: `cd /home/Obsidian-Vault/Trading && python3 paper_trader.py`\\n    64|- State: `wun_states_v3/*.json` (includes `wt_strategy_id` after sync)\\n    65|\\n    66|### Current Real Positions (WunderTrading DemoAccount)\\n    67|| Pair | Strategy | Side | Entry | Leverage |\\n    68||------|----------|------|-------|----------|\\n    69|| CRVUSDT | OBV_LONG_BTC_2h | 🟢 LONG | $0.2251 | 1x |\\n    70|| BNBUSDT | BB_REV_LONG_BNB_1h | 🔴 SHORT | $622.19 | 1x |\\n    71|| XRPUSDT | STOCH_BOTH_XRP_12h | 🟢 LONG | $1.3791 | 5x |\\n    72|\\n    73|### Check Status\\n    74|```bash\\n    75|# Direct API check\\n    76|python3 /home/marco/.hermes/skills/productivity/wundertrading-api-direct/scripts/check_positions.py\\n    77|\\n    78|# Via paper_trader log\\n    79|tail -50 /home/Obsidian-Vault/Trading/paper_trader.log\\n    80|\\n    81|# Verify single process\\n    82|ps aux | grep paper_trader | grep -v grep\\n    83|```\\n    84|\\n    85|## Files Created\\n    86|- `/home/Obsidian-Vault/Trading/paper_trader.py` — RSI Trend 40-60 live trader\\n    87|- Strategy: BTC/USDT 4H, RSI 40-60, EMA21>EMA50, SL 3× ATR, 3-tranche TP + trailing\\n    88|\\n    89|## Example Discord Notify Pattern\\n    90|```python\\n    91|def notify(msg: str, color: int = 0x00FF00):\\n    92|    url = os.environ.get(\\\"DISCORD_WEBHOOK_URL\\\")\\n    93|    if not url: return\\n    94|    requests.post(url, json={\\n    95|        \\\"embeds\\\": [{\\n    96|            \\\"title\\\": \\\"Paper Trader Alert\\\",\\n    97|            \\\"description\\\": msg,\\n    98|            \\\"color\\\": color,\\n    99|            \\\"footer\\\": {\\\"text\\\": f\\\"BTC/USDT 4H | {datetime.now().strftime('%Y-%m-%d %H:%M')}\\\"},\\n   100|        }]\\n   101|    }, timeout=10)\\n   102|```\\n   103|\", \"total_lines\": 102, \"file_size\": 4622, \"truncated\": false, \"is_binary\": false, \"is_image\": false}",
+      "tool_call_id": "call_function_1tr15a2674ps_1"
+    },
+    {
+      "role": "assistant",
+      "content": "",
+      "reasoning": "Now I have a good understanding of the skill format. Let me create two new skills:\n\n1. **automated-trading-bot** - A comprehensive skill for building automated trading bots\n2. **multi-timeframe-analysis** - A skill for multi-timeframe analysis\n\nLet me create both skills with the same format (YAML frontmatter + detailed markdown content).",
+      "finish_reason": "tool_calls",
+      "reasoning_content": "Now I have a good understanding of the skill format. Let me create two new skills:\n\n1. **automated-trading-bot** - A comprehensive skill for building automated trading bots\n2. **multi-timeframe-analysis** - A skill for multi-timeframe analysis\n\nLet me create both skills with the same format (YAML frontmatter + detailed markdown content).",
+      "reasoning_details": [
+        {
+          "signature": "e0ee483e7dc4ec2189bed7bd1316acda4782e862097521cb9e0a1041f2b960b3",
+          "thinking": "Now I have a good understanding of the skill format. Let me create two new skills:\n\n1. **automated-trading-bot** - A comprehensive skill for building automated trading bots\n2. **multi-timeframe-analysis** - A skill for multi-timeframe analysis\n\nLet me create both skills with the same format (YAML frontmatter + detailed markdown content).",
+          "type": "thinking"
+        }
+      ],
+      "tool_calls": [
+        {
+          "id": "call_function_owkg8tk2t24y_1",
+          "call_id": "call_function_owkg8tk2t24y_1",
+          "response_item_id": "fc_function_owkg8tk2t24y_1",
+          "type": "function",
+          "function": {
+            "name": "terminal",
+            "arguments": "{\"command\": \"mkdir -p ~/.hermes/skills/trading/automated-trading-bot ~/.hermes/skills/trading/multi-timeframe-analysis\"}"
+          }
+        }
+      ]
+    },
+    {
+      "role": "tool",
+      "content": "{\"output\": \"\", \"exit_code\": 0, \"error\": null}",
+      "tool_call_id": "call_function_owkg8tk2t24y_1"
+    },
+    {
+      "role": "assistant",
+      "content": "",
+      "reasoning": "Now I'll create both skills. Let me write comprehensive SKILL.md files for each.",
+      "finish_reason": "tool_calls",
+      "reasoning_content": "Now I'll create both skills. Let me write comprehensive SKILL.md files for each.",
+      "reasoning_details": [
+        {
+          "signature": "410e2b95d5f8af64e60a5411697cb06fdcb936e1ad5593cbb4dbc85b38db28f4",
+          "thinking": "Now I'll create both skills. Let me write comprehensive SKILL.md files for each.",
+          "type": "thinking"
+        }
+      ],
+      "tool_calls": [
+        {
+          "id": "call_function_d9dbgfnaw9av_1",
+          "call_id": "call_function_d9dbgfnaw9av_1",
+          "response_item_id": "fc_function_d9dbgfnaw9av_1",
+          "type": "function",
+          "function": {
+            "name": "write_file",
+            "arguments": "{\"path\": \"/home/marco/.hermes/skills/trading/automated-trading-bot/SKILL.md\", \"content\": \"---\\nname: automated-trading-bot\\ndescription: Build and run a fully automated crypto trading bot with real exchange execution, risk management, order orchestration, and operational monitoring. Covers bot architecture, exchange connectivity, order types, position management, and production pitfalls.\\n---\\n\\n# Automated Trading Bot\\n\\n## Trigger\\nUse when the user wants to build or operate a **fully automated trading bot** that:\\n- Connects to a live or demo exchange account (Binance, Hyperliquid, WunderTrading, Alpaca)\\n- Executes real or simulated orders based on a defined strategy\\n- Manages positions with stop-loss, take-profit, and trailing stops\\n- Handles order state, partial fills, and error recovery\\n- Runs on a schedule (cron/systemd) with alerting\\n\\n## Bot Architecture\\n\\n```\\n\\u250c\\u2500\\u2500\\u2500\\u2500\\u2500\\u2500\\u2500\\u2500\\u2500\\u2500\\u2500\\u2500\\u2500\\u2500\\u2500\\u2500\\u2500\\u2500\\u2500\\u2500\\u2500\\u2500\\u2500\\u2500\\u2500\\u2500\\u2500\\u2500\\u2500\\u2500\\u2500\\u2500\\u2500\\u2500\\u2500\\u2500\\u2500\\u2500\\u2500\\u2500\\u2500\\u2500\\u2500\\u2500\\u2500\\u2500\\u2500\\u2500\\u2500\\u2500\\u2500\\u2500\\u2500\\u2500\\u2500\\u2500\\u2500\\u2500\\u2500\\u2500\\u2500\\u2500\\u2500\\u2500\\u2500\\u2510\\n\\u2502                      TRADER BOT                                  \\u2502\\n\\u2502                                                                  \\u2502\\n\\u2502  \\u250c\\u2500\\u2500\\u2500\\u2500\\u2500\\u2500\\u2500\\u2500\\u2500\\u2500\\u2500\\u2500\\u2500\\u2500\\u2510    \\u250c\\u2500\\u2500\\u2500\\u2500\\u2500\\u2500\\u2500\\u2500\\u2500\\u2500\\u2500\\u2500\\u2500\\u2500\\u2510    \\u250c\\u2500\\u2500\\u2500\\u2500\\u2500\\u2500\\u2500\\u2500\\u2500\\u2500\\u2500\\u2500\\u2500\\u2500\\u2500\\u2500\\u2500\\u2500\\u2510  \\u2502\\n\\u2502  \\u2502 Market Data  \\u2502\\u2500\\u2500\\u2500\\u25b6\\u2502  Strategy    \\u2502\\u2500\\u2500\\u2500\\u25b6\\u2502  Signal Engine   \\u2502  \\u2502\\n\\u2502  \\u2502   Fetcher    \\u2502    \\u2502  Indicator   \\u2502    \\u2502  (entry/exit)    \\u2502  \\u2502\\n\\u2502  \\u2514\\u2500\\u2500\\u2500\\u2500\\u2500\\u2500\\u2500\\u2500\\u2500\\u2500\\u2500\\u2500\\u2500\\u2500\\u2518    \\u2514\\u2500\\u2500\\u2500\\u2500\\u2500\\u2500\\u2500\\u2500\\u2500\\u2500\\u2500\\u2500\\u2500\\u2500\\u2518    \\u2514\\u2500\\u2500\\u2500\\u2500\\u2500\\u2500\\u2500\\u2500\\u252c\\u2500\\u2500\\u2500\\u2500\\u2500\\u2500\\u2500\\u2500\\u2500\\u2518  \\u2502\\n\\u2502                                                     \\u2502            \\u2502\\n\\u2502  \\u250c\\u2500\\u2500\\u2500\\u2500\\u2500\\u2500\\u2500\\u2500\\u2500\\u2500\\u2500\\u2500\\u2500\\u2500\\u2510    \\u250c\\u2500\\u2500\\u2500\\u2500\\u2500\\u2500\\u2500\\u2500\\u2500\\u2500\\u2500\\u2500\\u2500\\u2500\\u2510    \\u250c\\u2500\\u2500\\u2500\\u2500\\u2500\\u2500\\u2500\\u2500\\u25bc\\u2500\\u2500\\u2500\\u2500\\u2500\\u2500\\u2500\\u2500\\u2500\\u2510  \\u2502\\n\\u2502  \\u2502  Position    \\u2502\\u25c0\\u2500\\u2500\\u2500\\u2502   Risk       \\u2502\\u25c0\\u2500\\u2500\\u2500\\u2502  Order Executor  \\u2502  \\u2502\\n\\u2502  \\u2502  Manager     \\u2502    \\u2502  Manager     \\u2502    \\u2502  (exchange API)  \\u2502  \\u2502\\n\\u2502  \\u2514\\u2500\\u2500\\u2500\\u2500\\u2500\\u2500\\u2500\\u2500\\u2500\\u2500\\u2500\\u2500\\u2500\\u2500\\u2518    \\u2514\\u2500\\u2500\\u2500\\u2500\\u2500\\u2500\\u2500\\u2500\\u2500\\u2500\\u2500\\u2500\\u2500\\u2500\\u2518    \\u2514\\u2500\\u2500\\u2500\\u2500\\u2500\\u2500\\u2500\\u2500\\u2500\\u2500\\u2500\\u2500\\u2500\\u2500\\u2500\\u2500\\u2500\\u2500\\u2518  \\u2502\\n\\u2502                                                                  \\u2502\\n\\u2502  \\u250c\\u2500\\u2500\\u2500\\u2500\\u2500\\u2500\\u2500\\u2500\\u2500\\u2500\\u2500\\u2500\\u2500\\u2500\\u2510    \\u250c\\u2500\\u2500\\u2500\\u2500\\u2500\\u2500\\u2500\\u2500\\u2500\\u2500\\u2500\\u2500\\u2500\\u2500\\u2510    \\u250c\\u2500\\u2500\\u2500\\u2500\\u2500\\u2500\\u2500\\u2500\\u2500\\u2500\\u2500\\u2500\\u2500\\u2500\\u2500\\u2500\\u2500\\u2500\\u2510  \\u2502\\n\\u2502  \\u2502   State      \\u2502    \\u2502  Notifier    \\u2502    \\u2502  Scheduler       \\u2502  \\u2502\\n\\u2502  \\u2502  Persister   \\u2502    \\u2502 (Discord/    \\u2502    \\u2502  (cron loop)     \\u2502  \\u2502\\n\\u2502  \\u2502  (JSON)      \\u2502    \\u2502  Telegram)   \\u2502    \\u2502                  \\u2502  \\u2502\\n\\u2502  \\u2514\\u2500\\u2500\\u2500\\u2500\\u2500\\u2500\\u2500\\u2500\\u2500\\u2500\\u2500\\u2500\\u2500\\u2500\\u2518    \\u2514\\u2500\\u2500\\u2500\\u2500\\u2500\\u2500\\u2500\\u2500\\u2500\\u2500\\u2500\\u2500\\u2500\\u2500\\u2518    \\u2514\\u2500\\u2500\\u2500\\u2500\\u2500\\u2500\\u2500\\u2500\\u2500\\u2500\\u2500\\u2500\\u2500\\u2500\\u2500\\u2500\\u2500\\u2500\\u2518  \\u2502\\n\\u2514\\u2500\\u2500\\u2500\\u2500\\u2500\\u2500\\u2500\\u2500\\u2500\\u2500\\u2500\\u2500\\u2500\\u2500\\u2500\\u2500\\u2500\\u2500\\u2500\\u2500\\u2500\\u2500\\u2500\\u2500\\u2500\\u2500\\u2500\\u2500\\u2500\\u2500\\u2500\\u2500\\u2500\\u2500\\u2500\\u2500\\u2500\\u2500\\u2500\\u2500\\u2500\\u2500\\u2500\\u2500\\u2500\\u2500\\u2500\\u2500\\u2500\\u2500\\u2500\\u2500\\u2500\\u2500\\u2500\\u2500\\u2500\\u2500\\u2500\\u2500\\u2500\\u2500\\u2500\\u2500\\u2500\\u2518\\n```\\n\\n## Exchange API Integration\\n\\n### Binance Spot/Testnet\\n```python\\nimport requests\\n\\nBINANCE_BASE = \\\"https://api.binance.com\\\"\\n# No API key needed for public endpoints (klines, ticker, depth)\\n# For account access, use HMAC-SHA256 signed requests\\n\\ndef get_klines(symbol: str, interval: str = \\\"4h\\\", limit: int = 200):\\n    url = f\\\"{BINANCE_BASE}/api/v3/klines\\\"\\n    params = {\\\"symbol\\\": symbol, \\\"interval\\\": interval, \\\"limit\\\": limit}\\n    resp = requests.get(url, params=params, timeout=10)\\n    resp.raise_for_status()\\n    return resp.json()\\n```\\n\\n### Binance \\u2014 Signed Request (Account/Orders)\\n```python\\nimport hmac, hashlib, time, requests\\n\\ndef binance_signed_request(method: str, endpoint: str, params: dict, api_key: str, secret_key: str):\\n    params[\\\"timestamp\\\"] = int(time.time() * 1000)\\n    query = \\\"&\\\".join(f\\\"{k}={v}\\\" for k, v in sorted(params.items()))\\n    signature = hmac.new(secret_key.encode(), query.encode(), hashlib.sha256).hexdigest()\\n    headers = {\\\"X-MBX-APIKEY\\\": api_key}\\n    url = f\\\"{BINANCE_BASE}{endpoint}?{query}&signature={signature}\\\"\\n    if method == \\\"GET\\\":\\n        return requests.get(url, headers=headers, timeout=10).json()\\n    elif method == \\\"POST\\\":\\n        return requests.post(url, headers=headers, timeout=10).json()\\n    elif method == \\\"DELETE\\\":\\n        return requests.delete(url, headers=headers, timeout=10).json()\\n\\n# Place an order\\norder = binance_signed_request(\\\"POST\\\", \\\"/api/v3/order\\\", {\\n    \\\"symbol\\\": \\\"BTCUSDT\\\",\\n    \\\"side\\\": \\\"BUY\\\",\\n    \\\"type\\\": \\\"LIMIT\\\",\\n    \\\"quantity\\\": \\\"0.01\\\",\\n    \\\"price\\\": \\\"50000\\\",\\n    \\\"timeInForce\\\": \\\"GTC\\\"\\n}, API_KEY, SECRET_KEY)\\n```\\n\\n### WunderTrading API\\n```python\\nWT_BASE = \\\"https://api.wundertrading.io\\\"\\n\\ndef wt_headers(api_token: str):\\n    return {\\\"X-Auth-Token\\\": api_token, \\\"Content-Type\\\": \\\"application/json\\\"}\\n\\ndef wt_place_order(api_token: str, symbol: str, side: str, quantity: float,\\n                   order_type: str = \\\"MARKET\\\", price: float = None,\\n                   strategy_id: str = None, demo_account: bool = True):\\n    url = f\\\"{WT_BASE}/v2/order/open\\\"\\n    payload = {\\n        \\\"market\\\": symbol,\\n        \\\"side\\\": side.upper(),\\n        \\\"quantity\\\": quantity,\\n        \\\"order_type\\\": order_type.upper(),\\n        \\\"demo_account\\\": demo_account,\\n    }\\n    if price:\\n        payload[\\\"price\\\"] = price\\n    if strategy_id:\\n        payload[\\\"strategy_id\\\"] = strategy_id\\n    resp = requests.post(url, json=payload, headers=wt_headers(api_token), timeout=10)\\n    resp.raise_for_status()\\n    return resp.json()\\n```\\n\\n### Alpaca (US Equities/Crypto)\\n```python\\n# Note: Alpaca paper trading supports crypto ONLY on their paid plan.\\n# Free tier = equities/ETFs only.\\nALPACA_BASE = \\\"https://paper-api.alpaca.markets\\\"\\nheaders = {\\\"APCA-API-KEY-ID\\\": KEY_ID, \\\"APCA-API-SECRET-KEY\\\": SECRET_KEY}\\n\\ndef alpaca_get_positions():\\n    resp = requests.get(f\\\"{ALPACA_BASE}/v2/positions\\\", headers=headers, timeout=10)\\n    return resp.json()\\n\\ndef alpaca_place_order(symbol: str, qty: float, side: str, order_type: str = \\\"market\\\"):\\n    resp = requests.post(f\\\"{ALPACA_BASE}/v2/orders\\\", json={\\n        \\\"symbol\\\": symbol,\\n        \\\"qty\\\": qty,\\n        \\\"side\\\": side,\\n        \\\"type\\\": order_type,\\n        \\\"time_in_force\\\": \\\"gtc\\\"\\n    }, headers=headers, timeout=10)\\n    return resp.json()\\n```\\n\\n## Order Types Reference\\n\\n| Order Type | Use Case | Exchange Support |\\n|------------|----------|-----------------|\\n| `MARKET` | Immediate execution at best available price | All |\\n| `LIMIT` | Execute only at specified price or better | All |\\n| `STOP_LOSS` | Triggers market sell when price drops to stop | All |\\n| `TAKE_PROFIT` | Triggers market sell when price rises to level | All |\\n| `STOP_LOSS_LIMIT` | Conditional limit sell | Binance, Kraken |\\n| `TRAILING_STOP` | Dynamic stop that follows price by % or ATR | Binance (spot: no native trailing; use BTCTP), Hyperliquid |\\n\\n## Risk Management Rules\\n\\n**Never skip these \\u2014 they are the difference between a bot and a gambling script.**\\n\\n1. **Position sizing** \\u2014 Never risk more than 1-2% of capital per trade\\n   ```python\\n   def position_size(capital: float, entry: float, stop: float, risk_pct: float = 0.01) -> float:\\n       risk_amount = capital * risk_pct\\n       risk_per_unit = abs(entry - stop)\\n       return risk_amount / risk_per_unit\\n   ```\\n\\n2. **Stop-loss (SL)** \\u2014 Mandatory for every position\\n   ```python\\n   def calc_sl(entry: float, atr: float, multiplier: float = 3.0, direction: str = \\\"LONG\\\"):\\n       if direction == \\\"LONG\\\":\\n           return entry - (atr * multiplier)\\n       else:\\n           return entry + (atr * multiplier)\\n   ```\\n\\n3. **Take-profit (TP)** \\u2014 3-tranche TP is a common pattern\\n   ```python\\n   # Example: Exit 33% at 1R, 33% at 2R, 34% at 3R\\n   TP_Ratios = [1.0, 2.0, 3.0]  # multiples of risk (R = entry - SL)\\n   TP_Exit_Pcts = [0.33, 0.33, 0.34]\\n   ```\\n\\n4. **Daily loss limit** \\u2014 Stop trading if daily drawdown exceeds threshold\\n   ```python\\n   def check_daily_loss_limit(starting_capital: float, current_capital: float, limit: float = 0.03):\\n       daily_loss = (starting_capital - current_capital) / starting_capital\\n       if daily_loss >= limit:\\n           logger.critical(f\\\"Daily loss limit hit: {daily_loss:.2%}\\\")\\n           # Cancel all open orders and halt bot\\n           sys.exit(1)\\n   ```\\n\\n5. **Max concurrent positions** \\u2014 Cap at 3-5 to avoid overtrading\\n   ```python\\n   MAX_POSITIONS = 4\\n   ```\\n\\n## Position Manager (State Machine)\\n\\n```python\\nfrom dataclasses import dataclass, field\\nfrom enum import Enum\\nfrom datetime import datetime\\nimport json\\n\\nclass PositionStatus(Enum):\\n    FLAT = \\\"flat\\\"\\n    PENDING_ENTRY = \\\"pending_entry\\\"   # order placed, not yet filled\\n    OPEN = \\\"open\\\"\\n    PENDING_EXIT = \\\"pending_exit\\\"     # SL/TP triggered, closing\\n    CLOSED = \\\"closed\\\"\\n\\n@dataclass\\nclass Position:\\n    symbol: str\\n    side: str          # LONG or SHORT\\n    entry_price: float\\n    quantity: float\\n    stop_loss: float\\n    take_profits: list[float]   # TP levels (price)\\n    tp_exit_pcts: list[float]   # fraction to exit at each TP\\n    strategy: str\\n    opened_at: str = field(default_factory=lambda: datetime.utcnow().isoformat())\\n    status: PositionStatus = PositionStatus.PENDING_ENTRY\\n    order_ids: list[str] = field(default_factory=list)\\n    realized_pnl: float = 0.0\\n\\n    def to_dict(self) -> dict:\\n        return {**asdict(self), \\\"status\\\": self.status.value}\\n\\n    @classmethod\\n    def from_dict(cls, d: dict) -> \\\"Position\\\":\\n        d[\\\"status\\\"] = PositionStatus(d.pop(\\\"status\\\"))\\n        return cls(**d)\\n\\ndef load_positions(path: str) -> dict[str, Position]:\\n    if not os.path.exists(path):\\n        return {}\\n    with open(path) as f:\\n        raw = json.load(f)\\n    return {sym: Position.from_dict(v) for sym, v in raw.items()}\\n\\ndef save_positions(positions: dict[str, Position], path: str):\\n    with open(path, \\\"w\\\") as f:\\n        json.dump({sym: pos.to_dict() for sym, pos in positions.items()}, f, indent=2)\\n```\\n\\n## Main Trading Loop\\n\\n```python\\nimport logging\\nimport schedule\\nimport time\\nimport signal\\nimport sys\\n\\nlogging.basicConfig(\\n    level=logging.INFO,\\n    format=\\\"%(asctime)s [%(levelname)s] %(message)s\\\",\\n    handlers=[\\n        logging.FileHandler(\\\"trading_bot.log\\\"),\\n        logging.StreamHandler()\\n    ]\\n)\\nlogger = logging.getLogger(__name__)\\n\\nclass TradingBot:\\n    def __init__(self, capital: float, max_positions: int = 4):\\n        self.capital = capital\\n        self.max_positions = max_positions\\n        self.positions: dict[str, Position] = load_positions(\\\"positions.json\\\")\\n        self.running = True\\n\\n    def signal_handler(self, signum, frame):\\n        logger.info(\\\"Shutdown signal received, closing positions...\\\")\\n        self.running = False\\n\\n    def job(self):\\n        \\\"\\\"\\\"Main strategy job \\u2014 called every N minutes by scheduler.\\\"\\\"\\\"\\n        try:\\n            active = [p for p in self.positions.values() if p.status == PositionStatus.OPEN]\\n            pending = [p for p in self.positions.values() if p.status == PositionStatus.PENDING_ENTRY]\\n\\n            logger.info(f\\\"Checking {len(active)} active, {len(pending)} pending positions\\\")\\n\\n            # 1) Check pending orders for fills\\n            for pos in pending:\\n                self._check_fill(pos)\\n\\n            # 2) Check SL / TP on open positions\\n            for pos in active:\\n                self._check_exit_conditions(pos)\\n\\n            # 3) Generate new signals if room for more positions\\n            if len(active) < self.max_positions:\\n                self._generate_signals()\\n\\n            save_positions(self.positions, \\\"positions.json\\\")\\n\\n        except Exception as e:\\n            logger.exception(f\\\"Bot job error: {e}\\\")\\n            notify(f\\\"\\ud83d\\udea8 Bot Error: {e}\\\", color=0xFF0000)\\n\\n    def _generate_signals(self):\\n        \\\"\\\"\\\"Your strategy logic here.\\\"\\\"\\\"\\n        # Example: RSI reversal on BTC/USDT 4H\\n        df = get_klines(\\\"BTCUSDT\\\", \\\"4h\\\", limit=200)\\n        rsi = calculate_rsi(df, 14)\\n        ema_fast = calculate_ema(df, 21)\\n        ema_slow = calculate_ema(df, 50)\\n        atr = calculate_atr(df, 14)\\n\\n        # Entry: RSI < 40, EMA fast > EMA slow\\n        latest = df.iloc[-1]\\n        if rsi.iloc[-1] < 40 and ema_fast.iloc[-1] > ema_slow.iloc[-1]:\\n            entry = float(latest[\\\"close\\\"])\\n            sl = entry - (atr.iloc[-1] * 3)\\n            tp = entry + (atr.iloc[-1] * 3)\\n\\n            if self._can_open_new(\\\"BTCUSDT\\\"):\\n                self._open_position(\\\"BTCUSDT\\\", \\\"LONG\\\", entry, sl, [tp], [1.0])\\n\\n    def _can_open_new(self, symbol: str) -> bool:\\n        if symbol in self.positions:\\n            return False\\n        open_count = sum(1 for p in self.positions.values()\\n                        if p.status in (PositionStatus.OPEN, PositionStatus.PENDING_ENTRY))\\n        return open_count < self.max_positions\\n\\n    def _open_position(self, symbol, side, entry, sl, tps, tp_pcts):\\n        qty = position_size(self.capital, entry, sl)\\n        # Place order via exchange API\\n        result = wt_place_order(WT_TOKEN, symbol, side, qty)\\n        pos = Position(\\n            symbol=symbol, side=side, entry_price=entry,\\n            quantity=qty, stop_loss=sl,\\n            take_profits=tps, tp_exit_pcts=tp_pcts,\\n            strategy=\\\"RSI_TREND_40_60\\\",\\n            status=PositionStatus.PENDING_ENTRY,\\n            order_ids=[result.get(\\\"id\\\", \\\"unknown\\\")]\\n        )\\n        self.positions[symbol] = pos\\n        logger.info(f\\\"Opened {side} {symbol} @ {entry}, SL={sl}, TP={tps}\\\")\\n        notify(f\\\"\\ud83d\\udfe2 Opened {side} {symbol} @ ${entry:.4f}\\\\nSL: ${sl:.4f} | TP: ${tps[0]:.4f}\\\")\\n\\n    def _check_fill(self, pos: Position):\\n        # Poll exchange for order status\\n        status = get_order_status(pos.order_ids[0])\\n        if status[\\\"status\\\"] == \\\"FILLED\\\":\\n            pos.status = PositionStatus.OPEN\\n            logger.info(f\\\"Order filled: {pos.symbol} @ {pos.entry_price}\\\")\\n\\n    def _check_exit_conditions(self, pos: Position):\\n        current = get_current_price(pos.symbol)\\n        if pos.side == \\\"LONG\\\":\\n            # Check SL\\n            if current <= pos.stop_loss:\\n                self._close_position(pos, \\\"SL triggered\\\")\\n            # Check each TP\\n            for i, tp in enumerate(pos.take_profits):\\n                if current >= tp:\\n                    pct = pos.tp_exit_pcts[i] if i < len(pos.tp_exit_pcts) else 1.0\\n                    self._partial_close(pos, pct, f\\\"TP{i+1} @ {tp}\\\")\\n        else:  # SHORT\\n            if current >= pos.stop_loss:\\n                self._close_position(pos, \\\"SL triggered\\\")\\n\\n    def _partial_close(self, pos: Position, pct: float, reason: str):\\n        qty_to_close = pos.quantity * pct\\n        # Place market sell via exchange\\n        wt_place_order(WT_TOKEN, pos.symbol, \\\"SELL\\\", qty_to_close)\\n        pos.quantity -= qty_to_close\\n        logger.info(f\\\"Partial close {pct*100:.0f}% {pos.symbol}: {reason}\\\")\\n\\n    def _close_position(self, pos: Position, reason: str):\\n        wt_place_order(WT_TOKEN, pos.symbol, \\\"SELL\\\" if pos.side == \\\"LONG\\\" else \\\"BUY\\\", pos.quantity)\\n        pos.status = PositionStatus.CLOSED\\n        logger.info(f\\\"Closed {pos.symbol}: {reason}\\\")\\n        notify(f\\\"\\ud83d\\udd34 Closed {pos.symbol}: {reason}\\\")\\n\\n\\nif __name__ == \\\"__main__\\\":\\n    bot = TradingBot(capital=1000.0)\\n    signal.signal(signal.SIGINT, bot.signal_handler)\\n    signal.signal(signal.SIGTERM, bot.signal_handler)\\n\\n    schedule.every(15).minutes.do(bot.job)\\n    logger.info(\\\"Bot started\\\")\\n    notify(\\\"\\ud83e\\udd16 Trading Bot Started\\\")\\n\\n    while bot.running:\\n        schedule.run_pending()\\n        time.sleep(30)\\n```\\n\\n## Scheduler Options\\n\\n### Option 1 \\u2014 Python schedule (shown above)\\nSimple, runs in-process. Good for single-instance bots.\\n\\n### Option 2 \\u2014 Cron (preferred for production reliability)\\n```bash\\n# /etc/cron.d/trading-bot\\n*/15 * * * * marco /usr/bin/python3 /home/marco/trading_bot.py >> /home/marco/bot_cron.log 2>&1\\n\\n# Guard: ensure only one instance runs\\n*/15 * * * * marco /usr/bin/flock -n /tmp/trading_bot.lock -c '/usr/bin/python3 /home/marco/trading_bot.py'\\n```\\n\\n### Option 3 \\u2014 Systemd service\\n```ini\\n# /etc/systemd/system/trading-bot.service\\n[Unit]\\nDescription=Automated Trading Bot\\nAfter=network.target\\n\\n[Service]\\nType=simple\\nUser=marco\\nWorkingDirectory=/home/marco\\nExecStart=/usr/bin/python3 /home/marco/trading_bot.py\\nRestart=on-failure\\nRestartSec=30\\nStandardOutput=append:/home/marco/bot_stdout.log\\nStandardError=append:/home/marco/bot_stderr.log\\n\\n[Install]\\nWantedBy=multi-user.target\\n```\\n\\n## Production Pitfalls\\n\\n| Pitfall | Symptom | Fix |\\n|---------|---------|-----|\\n| **No rate limiting** | `429 Too Many Requests` | Add `time.sleep(1.2)` between requests; respect exchange `X-MBX-USE_WEIGHT` headers |\\n| **Order not idempotent** | Duplicate orders on bot restart | Check `order_ids` in state before placing; use client order IDs |\\n| **Stale SL/TP** | SL doesn't update with trailing price | Implement manual trailing SL: update SL when price moves X% in your favor |\\n| **Timezone mismatch** | `timestamp` errors on Binance | Use `int(time.time() * 1000)` \\u2014 milliseconds Unix timestamp, not UTC datetime |\\n| **Precision error** | \\\"Qty must be tickSize\\\" | Round quantity to exchange's `tickSize` and `stepSize` from `/exchangeInfo` |\\n| **No lock file** | Multiple bot instances fight over same positions | Use `fcntl.flock` or `/tmp/trading_bot.lock` |\\n| **Market closed / delisted** | Order rejected at market open | Check `symbol` eligibility via `/exchangeInfo` before trading |\\n| **Network timeout not handled** | Bot hangs silently | Wrap all HTTP calls in try/except with `requests.exceptions.Timeout` |\\n| **Ignored SL during flash crash** | SL bypassed, massive loss | Use exchange-native SL orders (`STOP_LOSS`) not simulated SL checks |\\n| **Capital drift** | Position sizing uses stale capital | Re-sync capital from exchange after every fill |\\n\\n## Indicator Helpers\\n\\n```python\\nimport pandas as pd\\nimport numpy as np\\n\\ndef calculate_rsi(df: pd.DataFrame, period: int = 14) -> pd.Series:\\n    delta = df[\\\"close\\\"].diff()\\n    gain = delta.where(delta > 0, 0).rolling(period).mean()\\n    loss = (-delta.where(delta < 0, 0)).rolling(period).mean()\\n    rs = gain / loss\\n    return 100 - (100 / (1 + rs))\\n\\ndef calculate_ema(df: pd.DataFrame, period: int) -> pd.Series:\\n    return df[\\\"close\\\"].ewm(span=period, adjust=False).mean()\\n\\ndef calculate_atr(df: pd.DataFrame, period: int = 14) -> pd.Series:\\n    high = df[\\\"high\\\"]\\n    low = df[\\\"low\\\"]\\n    close = df[\\\"close\\\"]\\n    tr = pd.concat([high - low, abs(high - close.shift(1)), abs(low - close.shift(1))], axis=1).max(axis=1)\\n    return tr.rolling(period).mean()\\n\\ndef calculate_bollinger(df: pd.DataFrame, period: int = 20, std_dev: float = 2.0):\\n    mid = df[\\\"close\\\"].rolling(period).mean()\\n    std = df[\\\"close\\\"].rolling(period).std()\\n    return mid + (std * std_dev), mid - (std * std_dev)\\n```\\n\\n## API Endpoints Summary\\n\\n### Binance Public\\n| Endpoint | URL |\\n|----------|-----|\\n| Klines | `GET https://api.binance.com/api/v3/klines?symbol={S}&interval={I}&limit={L}` |\\n| 24hr Ticker | `GET https://api.binance.com/api/v3/ticker/24hr?symbol={S}` |\\n| Order Book | `GET https://api.binance.com/api/v3/depth?symbol={S}&limit=10` |\\n| Exchange Info | `GET https://api.binance.com/api/v3/exchangeInfo` |\\n\\n### WunderTrading\\n| Endpoint | Method | Purpose |\\n|----------|--------|---------|\\n| `/v2/order/open` | POST | Place new order |\\n| `/v2/order/close` | POST | Close by symbol |\\n| `/v2/order/close/all` | POST | Close all demo orders |\\n| `/v2/positions` | GET | List open positions |\\n| `/v2/demotrading/get-balance` | GET | Get demo account balance |\\n\\n### Alpaca\\n| Endpoint | Method | Purpose |\\n|----------|--------|---------|\\n| `/v2/positions` | GET | List open positions |\\n| `/v2/orders` | POST | Place order |\\n| `/v2/orders` | DELETE | Cancel all orders |\\n| `/v2/account` | GET | Account info / buying power |\\n\\n## Files Referenced\\n- Bot script: `/home/Obsidian-Vault/Trading/paper_trader.py`\\n- State: `wun_states_v3/*.json` (includes `wt_strategy_id` after sync)\\n- Cron: `~/.hermes/scripts/paper_trader_status.sh`\\n- Log: `/home/Obsidian-Vault/Trading/paper_trader.log`\\n\"}"
+          }
+        }
+      ]
+    },
+    {
+      "role": "tool",
+      "content": "{\"bytes_written\": 20027, \"dirs_created\": true}",
+      "tool_call_id": "call_function_d9dbgfnaw9av_1"
+    },
+    {
+      "role": "assistant",
+      "content": "",
+      "reasoning": "Now let me create the multi-timeframe-analysis skill.",
+      "finish_reason": "tool_calls",
+      "reasoning_content": "Now let me create the multi-timeframe-analysis skill.",
+      "reasoning_details": [
+        {
+          "signature": "1a3310d55a26caa31e641101a04d19ae9b0ee5225c0ac5b82fdbfe56523fa591",
+          "thinking": "Now let me create the multi-timeframe-analysis skill.",
+          "type": "thinking"
+        }
+      ],
+      "tool_calls": [
+        {
+          "id": "call_function_qpq5i9m72v95_1",
+          "call_id": "call_function_qpq5i9m72v95_1",
+          "response_item_id": "fc_function_qpq5i9m72v95_1",
+          "type": "function",
+          "function": {
+            "name": "write_file",
+            "arguments": "{\"path\": \"/home/marco/.hermes/skills/trading/multi-timeframe-analysis/SKILL.md\", \"content\": \"---\\nname: multi-timeframe-analysis\\ndescription: Perform multi-timeframe analysis (MTF) for trading \\u2014 combining trend direction, momentum, and structure across multiple timeframes (e.g., 1H, 4H, 1D) to confirm trade signals and avoid false breakouts. Covers framework, confirmation rules, API data fetching, and common analysis errors.\\n---\\n\\n# Multi-Timeframe Analysis (MTF)\\n\\n## Trigger\\nUse when the user needs to:\\n- Confirm a trading signal using a higher/higher timeframe (HTF) trend\\n- Identify trend exhaustion or continuation across timeframes\\n- Avoid trading counter-trend on a lower timeframe when the HTF opposes you\\n- Screen for setups where all timeframes are aligned (confluence)\\n- Build an MTF indicator dashboard\\n\\n## Core Principle\\n\\n**Trade in the direction of the higher timeframe trend.** The lower timeframe gives you the entry timing. Never short a bounce on 1H if the 4H and Daily trends are both bullish.\\n\\n```\\n\\u250c\\u2500\\u2500\\u2500\\u2500\\u2500\\u2500\\u2500\\u2500\\u2500\\u2500\\u2500\\u2500\\u2500\\u2500\\u2500\\u2500\\u2500\\u2500\\u2500\\u2500\\u2500\\u2500\\u2500\\u2500\\u2500\\u2500\\u2500\\u2500\\u2500\\u2500\\u2500\\u2500\\u2500\\u2500\\u2500\\u2500\\u2500\\u2500\\u2500\\u2500\\u2500\\u2500\\u2500\\u2500\\u2500\\u2500\\u2500\\u2500\\u2500\\u2500\\u2500\\u2500\\u2500\\u2500\\u2500\\u2500\\u2500\\u2510\\n\\u2502                    DAILY (HTF)                          \\u2502\\n\\u2502  \\u2192 Primary trend direction (trend indicator)            \\u2502\\n\\u2502  \\u2192 Key support/resistance zones                         \\u2502\\n\\u2502  \\u2192 Major structure breaks                               \\u2502\\n\\u2502                                                         \\u2502\\n\\u2502  \\u250c\\u2500\\u2500\\u2500\\u2500\\u2500\\u2500\\u2500\\u2500\\u2500\\u2500\\u2500\\u2500\\u2500\\u2500\\u2500\\u2500\\u2500\\u2500\\u2500\\u2500\\u2500\\u2500\\u2500\\u2500\\u2500\\u2500\\u2500\\u2500\\u2500\\u2500\\u2500\\u2500\\u2500\\u2500\\u2500\\u2500\\u2500\\u2500\\u2500\\u2500\\u2500\\u2500\\u2500\\u2500\\u2500\\u2500\\u2500\\u2500\\u2500\\u2510   \\u2502\\n\\u2502  \\u2502              4H (MTF)                            \\u2502   \\u2502\\n\\u2502  \\u2502  \\u2192 Momentum confirmation (RSI, MACD)            \\u2502   \\u2502\\n\\u2502  \\u2502  \\u2192 Entry zone refinement                         \\u2502   \\u2502\\n\\u2502  \\u2502                                                  \\u2502   \\u2502\\n\\u2502  \\u2502  \\u250c\\u2500\\u2500\\u2500\\u2500\\u2500\\u2500\\u2500\\u2500\\u2500\\u2500\\u2500\\u2500\\u2500\\u2500\\u2500\\u2500\\u2500\\u2500\\u2500\\u2500\\u2500\\u2500\\u2500\\u2500\\u2500\\u2500\\u2500\\u2500\\u2500\\u2500\\u2500\\u2500\\u2500\\u2500\\u2500\\u2500\\u2500\\u2500\\u2500\\u2500\\u2500\\u2510    \\u2502   \\u2502\\n\\u2502  \\u2502  \\u2502           1H / 15M (LTF)                 \\u2502    \\u2502   \\u2502\\n\\u2502  \\u2502  \\u2502  \\u2192 Precise entry timing                  \\u2502    \\u2502   \\u2502\\n\\u2502  \\u2502  \\u2502  \\u2192 SL placement                         \\u2502    \\u2502   \\u2502\\n\\u2502  \\u2502  \\u2502  \\u2192 Exit management                       \\u2502    \\u2502   \\u2502\\n\\u2502  \\u2502  \\u2514\\u2500\\u2500\\u2500\\u2500\\u2500\\u2500\\u2500\\u2500\\u2500\\u2500\\u2500\\u2500\\u2500\\u2500\\u2500\\u2500\\u2500\\u2500\\u2500\\u2500\\u2500\\u2500\\u2500\\u2500\\u2500\\u2500\\u2500\\u2500\\u2500\\u2500\\u2500\\u2500\\u2500\\u2500\\u2500\\u2500\\u2500\\u2500\\u2500\\u2500\\u2500\\u2518    \\u2502   \\u2502\\n\\u2502  \\u2514\\u2500\\u2500\\u2500\\u2500\\u2500\\u2500\\u2500\\u2500\\u2500\\u2500\\u2500\\u2500\\u2500\\u2500\\u2500\\u2500\\u2500\\u2500\\u2500\\u2500\\u2500\\u2500\\u2500\\u2500\\u2500\\u2500\\u2500\\u2500\\u2500\\u2500\\u2500\\u2500\\u2500\\u2500\\u2500\\u2500\\u2500\\u2500\\u2500\\u2500\\u2500\\u2500\\u2500\\u2500\\u2500\\u2500\\u2500\\u2500\\u2500\\u2518   \\u2502\\n\\u2514\\u2500\\u2500\\u2500\\u2500\\u2500\\u2500\\u2500\\u2500\\u2500\\u2500\\u2500\\u2500\\u2500\\u2500\\u2500\\u2500\\u2500\\u2500\\u2500\\u2500\\u2500\\u2500\\u2500\\u2500\\u2500\\u2500\\u2500\\u2500\\u2500\\u2500\\u2500\\u2500\\u2500\\u2500\\u2500\\u2500\\u2500\\u2500\\u2500\\u2500\\u2500\\u2500\\u2500\\u2500\\u2500\\u2500\\u2500\\u2500\\u2500\\u2500\\u2500\\u2500\\u2500\\u2500\\u2500\\u2500\\u2500\\u2518\\n```\\n\\n## Standard Timeframe Hierarchy\\n\\n| Role | Timeframe | Purpose |\\n|------|-----------|---------|\\n| HTF (Higher) | Daily / Weekly | Trend direction, major S/R, position sizing |\\n| MTF (Medium) | 4H / 1H | Momentum confirmation, entry zones |\\n| LTF (Lower) | 15M / 5M | Precise entry, SL, exit timing |\\n\\n**Rule of thumb:** Use 4-6x ratio between timeframes (e.g., 15M \\u2192 1H \\u2192 4H \\u2192 1D)\\n\\n## MTF Analysis Framework\\n\\n### Step 1 \\u2014 Identify HTF Trend\\n```python\\ndef get_htf_trend(symbol: str, htf_interval: str = \\\"1d\\\") -> dict:\\n    \\\"\\\"\\\"Determine trend on higher timeframe using EMA crossover + RSI.\\\"\\\"\\\"\\n    df = get_klines(symbol, htf_interval, limit=200)\\n    ema21 = calculate_ema(df, 21)\\n    ema50 = calculate_ema(df, 50)\\n    rsi = calculate_rsi(df, 14)\\n\\n    trend = \\\"NEUTRAL\\\"\\n    if ema21.iloc[-1] > ema50.iloc[-1] and rsi.iloc[-1] > 50:\\n        trend = \\\"BULLISH\\\"\\n    elif ema21.iloc[-1] < ema50.iloc[-1] and rsi.iloc[-1] < 50:\\n        trend = \\\"BEARISH\\\"\\n\\n    return {\\n        \\\"trend\\\": trend,\\n        \\\"ema21\\\": ema21.iloc[-1],\\n        \\\"ema50\\\": ema50.iloc[-1],\\n        \\\"rsi\\\": rsi.iloc[-1],\\n        \\\"price\\\": df.iloc[-1][\\\"close\\\"],\\n        \\\"interval\\\": htf_interval,\\n    }\\n\\n# Example output\\n# {\\\"trend\\\": \\\"BULLISH\\\", \\\"ema21\\\": 52140.22, \\\"ema50\\\": 51800.15, \\\"rsi\\\": 58.4, \\\"price\\\": 52215.50}\\n```\\n\\n### Step 2 \\u2014 Check MTF Momentum\\n```python\\ndef get_mtf_momentum(symbol: str, mtf_interval: str = \\\"4h\\\") -> dict:\\n    \\\"\\\"\\\"Confirm momentum on medium timeframe.\\\"\\\"\\\"\\n    df = get_klines(symbol, mtf_interval, limit=200)\\n    ema21 = calculate_ema(df, 21)\\n    ema50 = calculate_ema(df, 50)\\n    rsi = calculate_rsi(df, 14)\\n    macd_line, signal_line, hist = calculate_macd(df[\\\"close\\\"])\\n\\n    momentum = \\\"NEUTRAL\\\"\\n    if rsi.iloc[-1] > 50 and macd_line.iloc[-1] > signal_line.iloc[-1]:\\n        momentum = \\\"BULLISH\\\"\\n    elif rsi.iloc[-1] < 50 and macd_line.iloc[-1] < signal_line.iloc[-1]:\\n        momentum = \\\"BEARISH\\\"\\n\\n    return {\\n        \\\"momentum\\\": momentum,\\n        \\\"rsi\\\": rsi.iloc[-1],\\n        \\\"macd_cross\\\": \\\"BULLISH\\\" if macd_line.iloc[-1] > signal_line.iloc[-1] else \\\"BEARISH\\\",\\n        \\\"macd_histogram\\\": hist.iloc[-1],\\n        \\\"ema_alignment\\\": \\\"BULLISH\\\" if ema21.iloc[-1] > ema50.iloc[-1] else \\\"BEARISH\\\",\\n    }\\n```\\n\\n### Step 3 \\u2014 LTF Entry Signal\\n```python\\ndef get_ltf_entry(symbol: str, ltf_interval: str = \\\"15m\\\") -> dict:\\n    \\\"\\\"\\\"Generate precise entry signal on lower timeframe.\\\"\\\"\\\"\\n    df = get_klines(symbol, ltf_interval, limit=200)\\n    rsi = calculate_rsi(df, 14)\\n    atr = calculate_atr(df, 14)\\n    ema9 = calculate_ema(df, 9)\\n    ema21 = calculate_ema(df, 21)\\n\\n    latest = df.iloc[-1]\\n    prev = df.iloc[-2]\\n\\n    # Entry signal: RSI reversal from oversold + EMA bullish cross\\n    signal = \\\"NONE\\\"\\n    entry_price = None\\n    stop_loss = None\\n\\n    # Bullish: RSI crossed above 40 AND EMA9 crossed above EMA21\\n    if (prev[\\\"rsi\\\"] < 40 <= rsi.iloc[-1]) and (prev[\\\"ema9\\\"] <= ema9.iloc[-1] < prev[\\\"ema9\\\"]):\\n        signal = \\\"LONG\\\"\\n        entry_price = float(latest[\\\"close\\\"])\\n        stop_loss = entry_price - (atr.iloc[-1] * 2)\\n    # Bearish: RSI crossed below 60 AND EMA9 crossed below EMA21\\n    elif (prev[\\\"rsi\\\"] > 60 >= rsi.iloc[-1]) and (prev[\\\"ema9\\\"] >= ema9.iloc[-1] > prev[\\\"ema9\\\"]):\\n        signal = \\\"SHORT\\\"\\n        entry_price = float(latest[\\\"close\\\"])\\n        stop_loss = entry_price + (atr.iloc[-1] * 2)\\n\\n    return {\\n        \\\"signal\\\": signal,\\n        \\\"entry\\\": entry_price,\\n        \\\"stop_loss\\\": stop_loss,\\n        \\\"atr\\\": atr.iloc[-1],\\n        \\\"rsi\\\": rsi.iloc[-1],\\n    }\\n```\\n\\n## MTF Confluence Dashboard\\n\\n```python\\nimport pandas as pd\\n\\ndef mtf_dashboard(symbols: list[str] = [\\\"BTCUSDT\\\", \\\"ETHUSDT\\\", \\\"BNBUSDT\\\"]):\\n    \\\"\\\"\\\"Build an MTF confluence table for multiple symbols.\\\"\\\"\\\"\\n    results = []\\n    for sym in symbols:\\n        htf = get_htf_trend(sym, \\\"1d\\\")\\n        mtf = get_mtf_momentum(sym, \\\"4h\\\")\\n        ltf = get_ltf_entry(sym, \\\"15m\\\")\\n\\n        # Confluence score: 1-3 based on alignment\\n        score = 0\\n        if htf[\\\"trend\\\"] == \\\"BULLISH\\\": score += 1\\n        if mtf[\\\"momentum\\\"] == \\\"BULLISH\\\": score += 1\\n        if ltf[\\\"signal\\\"] == \\\"LONG\\\": score += 1\\n        if htf[\\\"trend\\\"] == \\\"BEARISH\\\": score -= 1\\n        if mtf[\\\"momentum\\\"] == \\\"BEARISH\\\": score -= 1\\n        if ltf[\\\"signal\\\"] == \\\"SHORT\\\": score -= 1\\n\\n        results.append({\\n            \\\"Symbol\\\": sym,\\n            \\\"Daily_Trend\\\": htf[\\\"trend\\\"],\\n            \\\"4H_Momentum\\\": mtf[\\\"momentum\\\"],\\n            \\\"15M_Signal\\\": ltf[\\\"signal\\\"],\\n            \\\"RSI_4H\\\": round(mtf[\\\"rsi\\\"], 1),\\n            \\\"RSI_15M\\\": round(ltf[\\\"rsi\\\"], 1),\\n            \\\"Confluence\\\": score,\\n            \\\"Entry\\\": ltf[\\\"entry\\\"],\\n            \\\"SL\\\": ltf[\\\"stop_loss\\\"],\\n        })\\n\\n    return pd.DataFrame(results).sort_values(\\\"Confluence\\\", ascending=False)\\n```\\n\\n**Example output:**\\n```\\n   Symbol  Daily_Trend  4H_Momentum  15M_Signal  RSI_4H  RSI_15M  Confluence  Entry       SL\\n0  ETHUSDT    BULLISH     BULLISH       LONG     58.3    45.2         3      2892.50  2840.12\\n1  BTCUSDT    BULLISH     BULLISH       NONE     56.1    52.0         2        None     None\\n2  BNBUSDT    BEARISH     BEARISH       SHORT    38.2    61.0        -3      618.40   625.10\\n```\\n\\n## Trade Filtering Rules\\n\\n| HTF Trend | MTF Momentum | LTF Signal | Action |\\n|-----------|-------------|------------|--------|\\n| BULLISH | BULLISH | LONG | \\u2705 Take the trade |\\n| BULLISH | BULLISH | SHORT | \\u26a0\\ufe0f Ignore (counter-trend on LTF) |\\n| BULLISH | BEARISH | LONG | \\u26a0\\ufe0f Wait for MTF reversal |\\n| BEARISH | BEARISH | SHORT | \\u2705 Take the trade |\\n| NEUTRAL | ANY | ANY | \\u26a0\\ufe0f Reduce size or skip |\\n| ANY | NEUTRAL | ANY | \\u26a0\\ufe0f No entry \\u2014 no momentum |\\n\\n## Support & Resistance on Multiple Timeframes\\n\\n```python\\ndef find_mtf_support_resistance(symbol: str) -> dict:\\n    \\\"\\\"\\\"Find S/R zones that align across timeframes.\\\"\\\"\\\"\\n    intervals = {\\\"15m\\\": 50, \\\"1h\\\": 100, \\\"4h\\\": 100, \\\"1d\\\": 100}\\n    zones = []\\n\\n    for interval, limit in intervals.items():\\n        df = get_klines(symbol, interval, limit=limit)\\n        # Find swing highs/lows as S/R\\n        highs = df[\\\"high\\\"].rolling(5).max().shift(-5)\\n        lows = df[\\\"low\\\"].rolling(5).min().shift(-5)\\n\\n        # Recent significant levels (within 2% of current price)\\n        price = df.iloc[-1][\\\"close\\\"]\\n        for i in range(len(df) - 10, len(df)):\\n            if abs(highs.iloc[i] - price) / price < 0.02:\\n                zones.append({\\\"type\\\": \\\"RESISTANCE\\\", \\\"price\\\": highs.iloc[i], \\\"tf\\\": interval})\\n            if abs(lows.iloc[i] - price) / price < 0.02:\\n                zones.append({\\\"type\\\": \\\"SUPPORT\\\", \\\"price\\\": lows.iloc[i], \\\"tf\\\": interval})\\n\\n    # Deduplicate and sort\\n    zones.sort(key=lambda x: abs(x[\\\"price\\\"] - price))\\n    return {\\\"current_price\\\": price, \\\"zones\\\": zones[:8]}\\n```\\n\\n## Common MTF Analysis Errors\\n\\n| Error | Why It Matters | Fix |\\n|-------|---------------|-----|\\n| **Ignoring HTF trend** | Counter-trend trades have lower win rate | Always check Daily before entry |\\n| **Mismatched timeframes** | Using 1H + 4H is too close; 1M + 1H is too noisy | Use 4-6x ratio between TF levels |\\n| **Data lookback too short** | Moving averages are unreliable with < 100 candles | Use at least 100 candles per TF |\\n| **Wrong RSI period for TF** | RSI(14) on 1M is meaningless noise | Use RSI(14) on 4H+, shorter periods for LTF |\\n| **Stale analysis** | HTF candles update slowly (4H bar may not close for hours) | Use `df.iloc[-1][\\\"close_time\\\"]` to check bar age |\\n| **Conflicting signals across TF** | If all 3 TFs disagree, stay flat | Wait for at least 2/3 alignment |\\n| **Over-trading on LTF noise** | Price whipsaws on 1M/5M during low volume | Only trade LTF signals aligned with HTF |\\n| **Not checking HTF news/events** | High-impact news can invalidate any technical setup | Add calendar filter before HTF analysis |\\n\\n## Binance Endpoints for MTF Data\\n\\n```bash\\n# Fetch klines for multiple timeframes\\ncurl -s \\\"https://api.binance.com/api/v3/klines?symbol=BTCUSDT&interval=1d&limit=100\\\"\\ncurl -s \\\"https://api.binance.com/api/v3/klines?symbol=BTCUSDT&interval=4h&limit=100\\\"\\ncurl -s \\\"https://api.binance.com/api/v3/klines?symbol=BTCUSDT&interval=15m&limit=100\\\"\\n\\n# Get RSI/MACD indicators from TA library\\npython3 -c \\\"\\nimport pandas as pd, numpy as np\\nimport requests\\n\\ndef get_klines(sym, interval, limit=200):\\n    url = f'https://api.binance.com/api/v3/klines?symbol={sym}&interval={interval}&limit={limit}'\\n    df = pd.DataFrame(requests.get(url, timeout=10).json())\\n    df.columns = ['open_time','open','high','low','close','volume','close_time','quote','n_trades','taker_buy_base','taker_buy_quote','ignore']\\n    for c in ['open','high','low','close','volume']:\\n        df[c] = df[c].astype(float)\\n    return df\\n\\n# Example: MTF dashboard for BTC\\nfor tf, label in [('1d','Daily'), ('4h','4H'), ('15m','15M')]:\\n    df = get_klines('BTCUSDT', tf, 100)\\n    close = df['close']\\n    ema21 = close.ewm(span=21).mean().iloc[-1]\\n    ema50 = close.ewm(span=50).mean().iloc[-1]\\n    delta = close.diff()\\n    gain = delta.where(delta > 0, 0).rolling(14).mean()\\n    loss = (-delta.where(delta < 0, 0)).rolling(14).mean()\\n    rs = gain / loss\\n    rsi = (100 - 100 / (1 + rs)).iloc[-1]\\n    print(f'{label}: price={close.iloc[-1]:.2f} ema21={ema21:.2f} ema50={ema50:.2f} rsi={rsi:.1f}')\\n\\\"\\n```\\n\\n## Indicator Calculations (Self-Contained)\\n\\n```python\\nimport pandas as pd\\nimport numpy as np\\n\\ndef calculate_rsi(series: pd.Series, period: int = 14) -> pd.Series:\\n    delta = series.diff()\\n    gain = delta.where(delta > 0, 0).rolling(period).mean()\\n    loss = (-delta.where(delta < 0, 0)).rolling(period).mean()\\n    rs = gain / loss\\n    return 100 - (100 / (1 + rs))\\n\\ndef calculate_ema(series: pd.Series, period: int) -> pd.Series:\\n    return series.ewm(span=period, adjust=False).mean()\\n\\ndef calculate_atr(df: pd.DataFrame, period: int = 14) -> pd.Series:\\n    high = df[\\\"high\\\"].astype(float)\\n    low = df[\\\"low\\\"].astype(float)\\n    close = df[\\\"close\\\"].astype(float)\\n    tr = pd.concat([\\n        high - low,\\n        abs(high - close.shift(1)),\\n        abs(low - close.shift(1))\\n    ], axis=1).max(axis=1)\\n    return tr.rolling(period).mean()\\n\\ndef calculate_macd(series: pd.Series, fast: int = 12, slow: int = 26, signal: int = 9):\\n    ema_fast = series.ewm(span=fast, adjust=False).mean()\\n    ema_slow = series.ewm(span=slow, adjust=False).mean()\\n    macd_line = ema_fast - ema_slow\\n    signal_line = macd_line.ewm(span=signal, adjust=False).mean()\\n    histogram = macd_line - signal_line\\n    return macd_line, signal_line, histogram\\n\\ndef calculate_bollinger_bands(series: pd.Series, period: int = 20, std_dev: float = 2.0):\\n    mid = series.rolling(period).mean()\\n    std = series.rolling(period).std()\\n    upper = mid + (std * std_dev)\\n    lower = mid - (std * std_dev)\\n    return upper, mid, lower\\n```\\n\\n## Key Principles Summary\\n\\n1. **HTF sets the bias** \\u2014 Daily trend is the boss. If Daily is bullish, only go long.\\n2. **MTF confirms momentum** \\u2014 4H RSI + MACD must agree before entry.\\n3. **LTF times the entry** \\u2014 15M/5M gives precise entry without fighting the trend.\\n4. **Wait for close** \\u2014 Never act on a HTF candle that hasn't closed.\\n5. **All 3 aligned = high probability** \\u2014 When Daily + 4H + 15M all agree, the trade has the best expectancy.\\n6. **Confluence > any single indicator** \\u2014 A signal with 3-timeframe alignment outperforms any single-TF signal.\\n\\n## Files Referenced\\n- Binance klines fetcher: `get_klines()` from `automated-trading-bot` skill\\n- Indicator helpers: `calculate_rsi`, `calculate_ema`, `calculate_atr`, `calculate_macd` (see above)\\n- State persistence: `wun_states_v3/*.json` for tracking positions across timeframes\\n\"}"
+          }
+        }
+      ]
+    },
+    {
+      "role": "tool",
+      "content": "{\"bytes_written\": 14282, \"dirs_created\": true}",
+      "tool_call_id": "call_function_qpq5i9m72v95_1"
+    },
+    {
+      "role": "assistant",
+      "content": "",
+      "reasoning": "Both files have been written. Let me verify they exist and check their sizes.",
+      "finish_reason": "tool_calls",
+      "reasoning_content": "Both files have been written. Let me verify they exist and check their sizes.",
+      "reasoning_details": [
+        {
+          "signature": "09ec8f86c9ca7ee4bb98a2f2ef839bae0897c69892d89802a6fdbf33c50df005",
+          "thinking": "Both files have been written. Let me verify they exist and check their sizes.",
+          "type": "thinking"
+        }
+      ],
+      "tool_calls": [
+        {
+          "id": "call_function_nqo56718tkmv_1",
+          "call_id": "call_function_nqo56718tkmv_1",
+          "response_item_id": "fc_function_nqo56718tkmv_1",
+          "type": "function",
+          "function": {
+            "name": "terminal",
+            "arguments": "{\"command\": \"ls -lh ~/.hermes/skills/trading/automated-trading-bot/ ~/.hermes/skills/trading/multi-timeframe-analysis/\"}"
+          }
+        }
+      ]
+    },
+    {
+      "role": "tool",
+      "content": "{\"output\": \"/home/marco/.hermes/skills/trading/automated-trading-bot/:\\ntotal 20K\\n-rw-rw-r-- 1 marco marco 20K mag  3 15:19 SKILL.md\\n\\n/home/marco/.hermes/skills/trading/multi-timeframe-analysis/:\\ntotal 16K\\n-rw-rw-r-- 1 marco marco 14K mag  3 15:20 SKILL.md\", \"exit_code\": 0, \"error\": null}",
+      "tool_call_id": "call_function_nqo56718tkmv_1"
+    },
+    {
+      "role": "assistant",
+      "content": "## What I Built\n\nCreated two new skills under `~/.hermes/skills/trading/`:\n\n---\n\n### 1. `automated-trading-bot/` — 20KB SKILL.md\n\nA comprehensive guide to building and running a **fully automated trading bot** with:\n\n- **Bot architecture diagram** — data fetcher → strategy → signal engine → order executor → position manager → notifier\n- **Exchange API integration** — Binance (public + signed), WunderTrading, Alpaca — with full code for each\n- **Order types reference table** — MARKET, LIMIT, STOP_LOSS, TAKE_PROFIT, TRAILING_STOP with exchange support\n- **Risk management rules** — position sizing (1-2% per trade), stop-loss formula (`entry ± ATR×multiplier`), 3-tranche TP pattern, daily loss limit, max concurrent positions cap\n- **Position state machine** — `FLAT → PENDING_ENTRY → OPEN → PENDING_EXIT → CLOSED` with JSON persistence\n- **Complete trading loop** — signal generation, fill checking, SL/TP monitoring, partial closes, Discord notifications\n- **Scheduler options** — Python `schedule`, cron with `flock` for singleton enforcement, systemd service\n- **14 production pitfalls** — rate limiting (429 errors), order idempotency, stale SL, timezone/timestamp issues, precision errors, flash crash SL bypass, and more\n- **Indicator helpers** — RSI, EMA, ATR, Bollinger Bands\n- **API endpoints summary** — Binance public, WunderTrading, Alpaca\n\n---\n\n### 2. `multi-timeframe-analysis/` — 14KB SKILL.md\n\nA framework for **MTF-confirmed trade entries** using 3-tier analysis:\n\n- **Framework diagram** — Daily (HTF bias) → 4H (momentum confirmation) → 15M (entry timing)\n- **Standard hierarchy table** — timeframe roles with 4-6x ratio guideline\n- **3-step analysis** — HTF trend (`get_htf_trend`), MTF momentum (`get_mtf_momentum`), LTF entry signal (`get_ltf_entry`)\n- **MTF Confluence Dashboard** — Python function returning a sorted table of symbols with confluence scores (1–3 or -1 to -3)\n- **Trade filtering rules table** — which combos to take, ignore, or wait on\n- **Multi-TF S/R detection** — finding zones that align across timeframes\n- **8 common MTF errors** — mismatched ratios, short lookback, stale candles, conflicting signals, LTF noise, etc.\n- **Self-contained indicators** — RSI, EMA, ATR, MACD, Bollinger Bands implementations\n\n---\n\n**Files created:**\n```\n~/.hermes/skills/trading/automated-trading-bot/SKILL.md   (20KB)\n~/.hermes/skills/trading/multi-timeframe-analysis/SKILL.md (14KB)\n```",
+      "reasoning": "Both files are created. Let me provide a summary.",
+      "finish_reason": "stop",
+      "reasoning_content": "Both files are created. Let me provide a summary.",
+      "reasoning_details": [
+        {
+          "signature": "526d74459295a539381333c1632e4f13bf5b5e1011181bb9b4f850859979eaba",
+          "thinking": "Both files are created. Let me provide a summary.",
+          "type": "thinking"
+        }
+      ]
+    }
+  ]
+}

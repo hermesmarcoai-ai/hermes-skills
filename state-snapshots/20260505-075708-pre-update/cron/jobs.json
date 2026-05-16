@@ -1,0 +1,131 @@
+{
+  "jobs": [
+    {
+      "id": "dc41f1d0b65b",
+      "name": "Morning Brief - Daily at 6AM (Telegram)",
+      "prompt": "You are Hermes, an execution-focused AI agent acting as a daily research assistant and strategic operator.\nYour job is to deliver a high-signal daily brief that improves decision-making speed and drives real-world results.\n\nOBJECTIVE: Produce a daily briefing that:\n- Can be read in under 3 minutes\n- Surfaces only high-value information\n- Translates information into actionable opportunities\n\nEXECUTION RULES:\n- Be concise, structured, and direct\n- Prioritize signal over noise\n- Eliminate generic insights\n- Focus on leverage, scalability, and asymmetric upside\n- When in doubt, choose usefulness over completeness\n\nDAILY BRIEF STRUCTURE:\n1. WEATHER (AOSTA) \u2014 Short, relevant summary only\n2. TOP NEWS (AI, CRYPTO, TECH, WORLD) \u2014 Select top 3-5 developments total (not per category). For each: 2 concise sentences + source link + \"Why it matters\" (1 line, impact-focused)\n3. CURATED SIGNAL \u2014 Extract high-value insights from trends, social content, or emerging narratives. Focus on: AI, Developer tools, Indie hacking, Content creation, Online business\n4. BUSINESS IDEAS (HIGH LEVERAGE ONLY) \u2014 2-3 ideas that are Actionable, Scalable, Trend-aligned. Avoid generic ideas\n5. PRIORITY TASKS \u2014 Show only high-impact tasks from the user's task system\n6. HERMES RECOMMENDATIONS (CRITICAL) \u2014 2-4 tasks to execute today that: Increase income potential, Build long-term leverage, Are realistically executable today\n7. OPTIONAL: CONTENT / VIDEO IDEAS \u2014 Include only if strong signal exists. Focus on asymmetric upside topics\n\nOUTPUT STYLE:\n- No fluff, no repetition, no generic advice\n- Clear formatting for fast scanning\n- Take <3 min to read\n- Contains at least one actionable opportunity\n\nDELIVERY: Send the brief as a text message AND as a voice message (TTS) in Italian using ElevenLabs API directly. The ElevenLabs API key is sk_28d54e9acdd2adbaa8f270cffd4127767b88e2397bb8374c. Use voice_id \"pNInz6obpgDQGcFmaJgB\" and model \"eleven_multilingual_v2\". First send the text, then generate the audio with ElevenLabs and send it as a voice message.\n\nWeather: Use curl to fetch from wttr.in/Aosta?format=j1\nNews: Use curl to fetch from Google News RSS feed\n\nStart by getting the weather and news, then compose the brief. Generate the audio using ElevenLabs API and send both text and voice to the origin Telegram channel.",
+      "skills": [],
+      "skill": null,
+      "model": "MiniMax-M2.7-highspeed",
+      "provider": "minimax",
+      "base_url": null,
+      "script": null,
+      "schedule": {
+        "kind": "cron",
+        "expr": "0 6 * * *",
+        "display": "0 6 * * *"
+      },
+      "schedule_display": "0 6 * * *",
+      "repeat": {
+        "times": null,
+        "completed": 5
+      },
+      "enabled": true,
+      "state": "scheduled",
+      "paused_at": null,
+      "paused_reason": null,
+      "created_at": "2026-04-30T10:43:06.555381+02:00",
+      "next_run_at": "2026-05-06T06:00:00+02:00",
+      "last_run_at": "2026-05-05T06:00:39.367754+02:00",
+      "last_status": "error",
+      "last_error": "RuntimeError: Connection error.",
+      "last_delivery_error": "delivery error: Telegram send failed: httpx.ConnectError: [Errno -3] Temporary failure in name resolution",
+      "deliver": "telegram:Morning-Brief",
+      "origin": {
+        "platform": "telegram",
+        "chat_id": "-5213862707",
+        "chat_name": "Morning-Brief",
+        "thread_id": null
+      },
+      "enabled_toolsets": null
+    },
+    {
+      "id": "ca13a190a5fb",
+      "name": "Alpaca HyperPerfect Paper Trader",
+      "prompt": "Run the Alpaca paper trading SL/TP monitor and signal checker.\n\nExecute: python3 /home/Obsidian-Vault/Trading/alpaca_paper_trader.py --monitor\n\nRead the output. If it contains \"ACTION:\" or \"\u2705\" (new position opened, position closed, TP/SL hit), forward the relevant section to the user in Italian.\n\nIf it's just a routine check with no actions (\u23f8\ufe0f No signal, \u23f8\ufe0f Already in position with nothing hit), do NOT send any message \u2014 just stay silent.\n\nKeep notifications concise: what happened, current price, P/L if relevant.",
+      "skills": [],
+      "skill": null,
+      "model": null,
+      "provider": null,
+      "base_url": null,
+      "script": null,
+      "context_from": null,
+      "schedule": {
+        "kind": "cron",
+        "expr": "*/15 * * * *",
+        "display": "*/15 * * * *"
+      },
+      "schedule_display": "*/15 * * * *",
+      "repeat": {
+        "times": 999,
+        "completed": 82
+      },
+      "enabled": true,
+      "state": "scheduled",
+      "paused_at": null,
+      "paused_reason": null,
+      "created_at": "2026-05-04T12:49:58.530529+02:00",
+      "next_run_at": "2026-05-05T10:00:00+02:00",
+      "last_run_at": "2026-05-05T09:45:43.122315+02:00",
+      "last_status": "ok",
+      "last_error": null,
+      "last_delivery_error": null,
+      "deliver": "origin",
+      "origin": {
+        "platform": "telegram",
+        "chat_id": "-5005037525",
+        "chat_name": "Paper-Trading",
+        "thread_id": null
+      },
+      "enabled_toolsets": [
+        "terminal",
+        "file"
+      ],
+      "workdir": null
+    },
+    {
+      "id": "21acd7fbda9a",
+      "name": "Hermes auto-update check",
+      "prompt": "Check if Hermes Agent is up to date and silently update if new commits are available. \n\nSteps:\n1. cd ~/.hermes/hermes-agent && git fetch origin main\n2. Run: git rev-list HEAD..origin/main --count\n3. If count > 0: git pull origin main\n4. If update was performed, send a brief Telegram message to Marco (chat_id: 8177017832) saying \"Hermes updated to latest version\"\n5. If already up to date, do nothing (silent)\n\nSend the notification via curl to Telegram API:\nBOT_TOKEN should be read from ~/.hermes/.env (MINIMAX_BOT_TOKEN or check for a Telegram bot token)\nCHAT_ID=8177017832\nURL=\"https://api.telegram.org/bot${BOT_TOKEN}/sendMessage\"\ncurl -s -X POST $URL -d chat_id=$CHAT_ID -d text=\"\ud83e\udd16 Hermes auto-update: updated to latest version\"",
+      "skills": [
+        "autonomous-ai-agents/hermes-agent"
+      ],
+      "skill": "autonomous-ai-agents/hermes-agent",
+      "model": null,
+      "provider": null,
+      "base_url": null,
+      "script": null,
+      "context_from": null,
+      "schedule": {
+        "kind": "cron",
+        "expr": "30 5 * * *",
+        "display": "30 5 * * *"
+      },
+      "schedule_display": "30 5 * * *",
+      "repeat": {
+        "times": null,
+        "completed": 1
+      },
+      "enabled": true,
+      "state": "scheduled",
+      "paused_at": null,
+      "paused_reason": null,
+      "created_at": "2026-05-04T17:46:02.935758+02:00",
+      "next_run_at": "2026-05-06T05:30:00+02:00",
+      "last_run_at": "2026-05-05T05:30:39.553767+02:00",
+      "last_status": "error",
+      "last_error": "RuntimeError: Connection error.",
+      "last_delivery_error": "delivery error: Telegram send failed: httpx.ConnectError: [Errno -3] Temporary failure in name resolution",
+      "deliver": "origin",
+      "origin": {
+        "platform": "telegram",
+        "chat_id": "8177017832",
+        "chat_name": "Marco Olivero",
+        "thread_id": null
+      },
+      "enabled_toolsets": null,
+      "workdir": null
+    }
+  ],
+  "updated_at": "2026-05-05T09:45:43.123286+02:00"
+}

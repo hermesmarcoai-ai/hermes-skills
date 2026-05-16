@@ -1,0 +1,903 @@
+{
+  "session_id": "20260505_121735_b36bc4",
+  "model": "MiniMax-M2.7-highspeed",
+  "base_url": "https://api.minimax.io/anthropic",
+  "platform": "telegram",
+  "session_start": "2026-05-05T12:17:35.427661",
+  "last_updated": "2026-05-05T12:20:10.191712",
+  "system_prompt": "You are Hermes Agent, an intelligent AI assistant created by Nous Research. You are helpful, knowledgeable, and direct. You assist users with a wide range of tasks including answering questions, writing and editing code, analyzing information, creative work, and executing actions via your tools. You communicate clearly, admit uncertainty when appropriate, and prioritize being genuinely useful over being verbose unless otherwise directed below. Be targeted and efficient in your exploration and investigations.\n\nIf the user asks about configuring, setting up, or using Hermes Agent itself, load the `hermes-agent` skill with skill_view(name='hermes-agent') before answering. Docs: https://hermes-agent.nousresearch.com/docs\n\nConversation started: Tuesday, May 05, 2026 12:17 PM\nModel: MiniMax-M2.7-highspeed\nProvider: minimax\n\nYou are on a text messaging communication platform, Telegram. Standard markdown is automatically converted to Telegram format. Supported: **bold**, *italic*, ~~strikethrough~~, ||spoiler||, `inline code`, ```code blocks```, [links](url), and ## headers. Telegram has NO table syntax — prefer bullet lists or labeled key: value pairs over pipe tables (any tables you do emit are auto-rewritten into row-group bullets, which you can produce directly for cleaner output). You can send media files natively: to deliver a file to the user, include MEDIA:/absolute/path/to/file in your response. Images (.png, .jpg, .webp) appear as photos, audio (.ogg) sends as voice bubbles, and videos (.mp4) play inline. You can also include image URLs in markdown format ![alt](url) and they will be sent as native photos.",
+  "tools": [
+    {
+      "type": "function",
+      "function": {
+        "name": "patch",
+        "description": "Targeted find-and-replace edits in files. Use this instead of sed/awk in terminal. Uses fuzzy matching (9 strategies) so minor whitespace/indentation differences won't break it. Returns a unified diff. Auto-runs syntax checks after editing.\n\nReplace mode (default): find a unique string and replace it.\nPatch mode: apply V4A multi-file patches for bulk changes.",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "mode": {
+              "type": "string",
+              "enum": [
+                "replace",
+                "patch"
+              ],
+              "description": "Edit mode: 'replace' for targeted find-and-replace, 'patch' for V4A multi-file patches",
+              "default": "replace"
+            },
+            "path": {
+              "type": "string",
+              "description": "File path to edit (required for 'replace' mode)"
+            },
+            "old_string": {
+              "type": "string",
+              "description": "Text to find in the file (required for 'replace' mode). Must be unique in the file unless replace_all=true. Include enough surrounding context to ensure uniqueness."
+            },
+            "new_string": {
+              "type": "string",
+              "description": "Replacement text (required for 'replace' mode). Can be empty string to delete the matched text."
+            },
+            "replace_all": {
+              "type": "boolean",
+              "description": "Replace all occurrences instead of requiring a unique match (default: false)",
+              "default": false
+            },
+            "patch": {
+              "type": "string",
+              "description": "V4A format patch content (required for 'patch' mode). Format:\n*** Begin Patch\n*** Update File: path/to/file\n@@ context hint @@\n context line\n-removed line\n+added line\n*** End Patch"
+            }
+          },
+          "required": [
+            "mode"
+          ]
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "process",
+        "description": "Manage background processes started with terminal(background=true). Actions: 'list' (show all), 'poll' (check status + new output), 'log' (full output with pagination), 'wait' (block until done or timeout), 'kill' (terminate), 'write' (send raw stdin data without newline), 'submit' (send data + Enter, for answering prompts), 'close' (close stdin/send EOF).",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "action": {
+              "type": "string",
+              "enum": [
+                "list",
+                "poll",
+                "log",
+                "wait",
+                "kill",
+                "write",
+                "submit",
+                "close"
+              ],
+              "description": "Action to perform on background processes"
+            },
+            "session_id": {
+              "type": "string",
+              "description": "Process session ID (from terminal background output). Required for all actions except 'list'."
+            },
+            "data": {
+              "type": "string",
+              "description": "Text to send to process stdin (for 'write' and 'submit' actions)"
+            },
+            "timeout": {
+              "type": "integer",
+              "description": "Max seconds to block for 'wait' action. Returns partial output on timeout.",
+              "minimum": 1
+            },
+            "offset": {
+              "type": "integer",
+              "description": "Line offset for 'log' action (default: last 200 lines)"
+            },
+            "limit": {
+              "type": "integer",
+              "description": "Max lines to return for 'log' action",
+              "minimum": 1
+            }
+          },
+          "required": [
+            "action"
+          ]
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "read_file",
+        "description": "Read a text file with line numbers and pagination. Use this instead of cat/head/tail in terminal. Output format: 'LINE_NUM|CONTENT'. Suggests similar filenames if not found. Use offset and limit for large files. Reads exceeding ~100K characters are rejected; use offset and limit to read specific sections of large files. NOTE: Cannot read images or binary files — use vision_analyze for images.",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "path": {
+              "type": "string",
+              "description": "Path to the file to read (absolute, relative, or ~/path)"
+            },
+            "offset": {
+              "type": "integer",
+              "description": "Line number to start reading from (1-indexed, default: 1)",
+              "default": 1,
+              "minimum": 1
+            },
+            "limit": {
+              "type": "integer",
+              "description": "Maximum number of lines to read (default: 500, max: 2000)",
+              "default": 500,
+              "maximum": 2000
+            }
+          },
+          "required": [
+            "path"
+          ]
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "search_files",
+        "description": "Search file contents or find files by name. Use this instead of grep/rg/find/ls in terminal. Ripgrep-backed, faster than shell equivalents.\n\nContent search (target='content'): Regex search inside files. Output modes: full matches with line numbers, file paths only, or match counts.\n\nFile search (target='files'): Find files by glob pattern (e.g., '*.py', '*config*'). Also use this instead of ls — results sorted by modification time.",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "pattern": {
+              "type": "string",
+              "description": "Regex pattern for content search, or glob pattern (e.g., '*.py') for file search"
+            },
+            "target": {
+              "type": "string",
+              "enum": [
+                "content",
+                "files"
+              ],
+              "description": "'content' searches inside file contents, 'files' searches for files by name",
+              "default": "content"
+            },
+            "path": {
+              "type": "string",
+              "description": "Directory or file to search in (default: current working directory)",
+              "default": "."
+            },
+            "file_glob": {
+              "type": "string",
+              "description": "Filter files by pattern in grep mode (e.g., '*.py' to only search Python files)"
+            },
+            "limit": {
+              "type": "integer",
+              "description": "Maximum number of results to return (default: 50)",
+              "default": 50
+            },
+            "offset": {
+              "type": "integer",
+              "description": "Skip first N results for pagination (default: 0)",
+              "default": 0
+            },
+            "output_mode": {
+              "type": "string",
+              "enum": [
+                "content",
+                "files_only",
+                "count"
+              ],
+              "description": "Output format for grep mode: 'content' shows matching lines with line numbers, 'files_only' lists file paths, 'count' shows match counts per file",
+              "default": "content"
+            },
+            "context": {
+              "type": "integer",
+              "description": "Number of context lines before and after each match (grep mode only)",
+              "default": 0
+            }
+          },
+          "required": [
+            "pattern"
+          ]
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "terminal",
+        "description": "Execute shell commands on a Linux environment. Filesystem usually persists between calls.\n\nDo NOT use cat/head/tail to read files — use read_file instead.\nDo NOT use grep/rg/find to search — use search_files instead.\nDo NOT use ls to list directories — use search_files(target='files') instead.\nDo NOT use sed/awk to edit files — use patch instead.\nDo NOT use echo/cat heredoc to create files — use write_file instead.\nReserve terminal for: builds, installs, git, processes, scripts, network, package managers, and anything that needs a shell.\n\nForeground (default): Commands return INSTANTLY when done, even if the timeout is high. Set timeout=300 for long builds/scripts — you'll still get the result in seconds if it's fast. Prefer foreground for short commands.\nBackground: Set background=true to get a session_id. Two patterns:\n  (1) Long-lived processes that never exit (servers, watchers).\n  (2) Long-running tasks with notify_on_complete=true — you can keep working on other things and the system auto-notifies you when the task finishes. Great for test suites, builds, deployments, or anything that takes more than a minute.\nFor servers/watchers, do NOT use shell-level background wrappers (nohup/disown/setsid/trailing '&') in foreground mode. Use background=true so Hermes can track lifecycle and output.\nAfter starting a server, verify readiness with a health check or log signal, then run tests in a separate terminal() call. Avoid blind sleep loops.\nUse process(action=\"poll\") for progress checks, process(action=\"wait\") to block until done.\nWorking directory: Use 'workdir' for per-command cwd.\nPTY mode: Set pty=true for interactive CLI tools (Codex, Claude Code, Python REPL).\n\nDo NOT use vim/nano/interactive tools without pty=true — they hang without a pseudo-terminal. Pipe git output to cat if it might page.\n",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "command": {
+              "type": "string",
+              "description": "The command to execute on the VM"
+            },
+            "background": {
+              "type": "boolean",
+              "description": "Run the command in the background. Two patterns: (1) Long-lived processes that never exit (servers, watchers). (2) Long-running tasks paired with notify_on_complete=true — you can keep working and get notified when the task finishes. For short commands, prefer foreground with a generous timeout instead.",
+              "default": false
+            },
+            "timeout": {
+              "type": "integer",
+              "description": "Max seconds to wait (default: 180, foreground max: 600). Returns INSTANTLY when command finishes — set high for long tasks, you won't wait unnecessarily. Foreground timeout above 600s is rejected; use background=true for longer commands.",
+              "minimum": 1
+            },
+            "workdir": {
+              "type": "string",
+              "description": "Working directory for this command (absolute path). Defaults to the session working directory."
+            },
+            "pty": {
+              "type": "boolean",
+              "description": "Run in pseudo-terminal (PTY) mode for interactive CLI tools like Codex, Claude Code, or Python REPL. Only works with local and SSH backends. Default: false.",
+              "default": false
+            },
+            "notify_on_complete": {
+              "type": "boolean",
+              "description": "When true (and background=true), you'll be automatically notified exactly once when the process finishes. **This is the right choice for almost every long-running task** — tests, builds, deployments, multi-item batch jobs, anything that takes over a minute and has a defined end. Use this and keep working on other things; the system notifies you on exit. MUTUALLY EXCLUSIVE with watch_patterns — when both are set, watch_patterns is dropped.",
+              "default": false
+            },
+            "watch_patterns": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              },
+              "description": "Strings to watch for in background process output. HARD RATE LIMIT: at most 1 notification per 15 seconds per process — matches arriving inside the cooldown are dropped. After 3 consecutive 15-second windows with dropped matches, watch_patterns is automatically disabled for that process and promoted to notify_on_complete behavior (one notification on exit, no more mid-process spam). USE ONLY for truly rare, one-shot mid-process signals on LONG-LIVED processes that will never exit on their own — e.g. ['Application startup complete'] on a server so you know when to hit its endpoint, or ['migration done'] on a daemon. DO NOT use for: (1) end-of-run markers like 'DONE'/'PASS' — use notify_on_complete instead; (2) error patterns like 'ERROR'/'Traceback' in loops or multi-item batch jobs — they fire on every iteration and you'll hit the strike limit fast; (3) anything you'd ever combine with notify_on_complete. When in doubt, choose notify_on_complete. MUTUALLY EXCLUSIVE with notify_on_complete — set one, not both."
+            }
+          },
+          "required": [
+            "command"
+          ]
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "write_file",
+        "description": "Write content to a file, completely replacing existing content. Use this instead of echo/cat heredoc in terminal. Creates parent directories automatically. OVERWRITES the entire file — use 'patch' for targeted edits.",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "path": {
+              "type": "string",
+              "description": "Path to the file to write (will be created if it doesn't exist, overwritten if it does)"
+            },
+            "content": {
+              "type": "string",
+              "description": "Complete content to write to the file"
+            }
+          },
+          "required": [
+            "path",
+            "content"
+          ]
+        }
+      }
+    }
+  ],
+  "message_count": 40,
+  "messages": [
+    {
+      "role": "user",
+      "content": "Install flowstate-qmd for Hermes Agent — anticipatory memory that pre-fetches relevant context before queries hit the agent.\n\nInstall from: https://github.com/amanning3390/flowstate-qmd\n\nSteps:\n1. Clone to /tmp/flowstate-qmd\n2. Read README for installation\n3. Install into ~/.hermes/skills/\n4. Verify\n5. Report what was installed and any setup needed"
+    },
+    {
+      "role": "assistant",
+      "content": "",
+      "reasoning": "Let me start by cloning the repository to /tmp/flowstate-qmd, then read the README to understand installation requirements.",
+      "finish_reason": "tool_calls",
+      "reasoning_content": "Let me start by cloning the repository to /tmp/flowstate-qmd, then read the README to understand installation requirements.",
+      "reasoning_details": [
+        {
+          "signature": "604d3e9595059bd6178837d56959c67a8cb5447de7cc1d69e78519b228f9bdef",
+          "thinking": "Let me start by cloning the repository to /tmp/flowstate-qmd, then read the README to understand installation requirements.",
+          "type": "thinking"
+        }
+      ],
+      "tool_calls": [
+        {
+          "id": "call_function_5zoww3im7bvv_1",
+          "call_id": "call_function_5zoww3im7bvv_1",
+          "response_item_id": "fc_function_5zoww3im7bvv_1",
+          "type": "function",
+          "function": {
+            "name": "terminal",
+            "arguments": "{\"command\": \"git clone https://github.com/amanning3390/flowstate-qmd /tmp/flowstate-qmd\", \"timeout\": 60}"
+          }
+        }
+      ]
+    },
+    {
+      "role": "tool",
+      "name": "terminal",
+      "content": "{\"output\": \"Cloning into '/tmp/flowstate-qmd'...\", \"exit_code\": 0, \"error\": null}\n\n[Subdirectory context discovered: /tmp/flowstate-qmd/CLAUDE.md]\n# QMD - Query Markup Documents\n\nUse Bun instead of Node.js (`bun` not `node`, `bun install` not `npm install`).\n\n## Commands\n\n```sh\nqmd collection add . --name <n>   # Create/index collection\nqmd collection list               # List all collections with details\nqmd collection remove <name>      # Remove a collection by name\nqmd collection rename <old> <new> # Rename a collection\nqmd ls [collection[/path]]        # List collections or files in a collection\nqmd context add [path] \"text\"     # Add context for path (defaults to current dir)\nqmd context list                  # List all contexts\nqmd context check                 # Check for collections/paths missing context\nqmd context rm <path>             # Remove context\nqmd get <file>                    # Get document by path or docid (#abc123)\nqmd multi-get <pattern>           # Get multiple docs by glob or comma-separated list\nqmd status                        # Show index status and collections\nqmd update [--pull]               # Re-index all collections (--pull: git pull first)\nqmd embed                         # Generate vector embeddings (uses node-llama-cpp)\nqmd query <query>                 # Search with query expansion + reranking (recommended)\nqmd search <query>                # Full-text keyword search (BM25, no LLM)\nqmd vsearch <query>               # Vector similarity search (no reranking)\nqmd mcp                           # Start MCP server (stdio transport)\nqmd mcp --http [--port N]         # Start MCP server (HTTP, default port 8181)\nqmd mcp --http --daemon           # Start as background daemon\nqmd mcp stop                      # Stop background MCP daemon\nqmd init --target <targets>       # Bootstrap agent wrapper configs (hermes,claude-code,...)\nqmd init --target all             # Bootstrap all supported agent wrappers\nqmd doctor                        # Check host readiness (models, deps, profiles)\nqmd doctor --json                 # Machine-readable doctor output\nqmd flow <logfile>                # Start FlowState anticipatory cache watcher\nqmd flow <logfile> --lite         # FlowState in lite mode (skip reranking, smaller limits)\n```\n\n## Collection Management\n\n```sh\n# List all collections\nqmd collection list\n\n# Create a collection with explicit name\nqmd collection add ~/Documents/notes --name mynotes --mask '**/*.md'\n\n# Remove a collection\nqmd collection remove mynotes\n\n# Rename a collection\nqmd collection rename mynotes my-notes\n\n# List all files in a collection\nqmd ls mynotes\n\n# List files with a path prefix\nqmd ls journals/2025\nqmd ls qmd://journals/2025\n```\n\n## Context Management\n\n```sh\n# Add context to current directory (auto-detects collection)\nqmd context add \"Description of these files\"\n\n# Add context to a specific path\nqmd context add /subfolder \"Description for subfolder\"\n\n# Add global context to all collections (system message)\nqmd context add / \"Always include this context\"\n\n# Add context using virtual paths\nqmd context add qmd://journals/ \"Context for entire journals collection\"\nqmd context add qmd://journals/2024 \"Journal entries from 2024\"\n\n# List all contexts\nqmd context list\n\n# Check for collections or paths without context\nqmd context check\n\n# Remove context\nqmd context rm qmd://journals/2024\nqmd context rm /  # Remove global context\n```\n\n## Document IDs (docid)\n\nEach document has a unique short ID (docid) - the first 6 characters of its content hash.\nDocids are shown in search results as `#abc123` and can be used with `get` and `multi-get`:\n\n```sh\n# Search returns docid in results\nqmd search \"query\" --json\n# Output: [{\"docid\": \"#abc123\", \"score\": 0.85, \"file\": \"docs/readme.md\", ...}]\n\n# Get document by docid\nqmd get \"#abc123\"\nqmd get abc123              # Leading # is optional\n\n# Docids also work in multi-get comma-separated lists\nqmd multi-get \"#abc123, #def456\"\n```\n\n## Options\n\n```sh\n# Search & retrieval\n-c, --collection <name>  # Restrict search to a collection (matches pwd suffix)\n-n <num>                 # Number of results\n--all                    # Return all matches\n--min-score <num>        # Minimum score threshold\n--full                   # Show full document content\n--line-numbers           # Add line numbers to output\n\n# Multi-get specific\n-l <num>                 # Maximum lines per file\n--max-bytes <num>        # Skip files larger than this (default 10KB)\n\n# Output formats (search and multi-get)\n--json, --csv, --md, --xml, --files\n```\n\n## Development\n\n```sh\nbun src/cli/qmd.ts <command>   # Run from source\nbun link               # Install globally as 'qmd'\n```\n\n## Tests\n\nAll tests live in `test/`. Run everything:\n\n```sh\nnpx vitest run --reporter=verbose test/\nbun test --preload ./src/test-preload.ts test/\n```\n\n## Architecture\n\n- SQLite FTS5 for full-text search (BM25)\n- sqlite-vec for vector similarity search\n- node-llama-cpp for embeddings (embeddinggemma), reranking (qwen3-reranker), and query expansion (Qwen3)\n- Reciprocal Rank Fusion (RRF) for combining results\n- Smart chunking: 900 tokens/chunk with 15% overlap, prefers markdown headings as boundaries\n\n## FlowState Anticipatory Cache\n\nThe FlowState engine (`src/flow/engine.ts`) watches an agent's session log via `fs.watch` with\n1500ms debounce, runs `hybridQuery()` on the last 8KB of context, and caches top-3 results to\n`~/.cache/qmd/intuition.json`. Telemetry (hit/miss counts, refresh latency) is persisted to\n`~/.cache/qmd/telemetry.json` and surfaced via `qmd status` and the MCP `status` tool.\n\n## Multi-Agent Idempotency\n\nDocuments are deduplicated at index time using cosine similarity against `vectors_vec`.\nThreshold: 0.90 (configurable via `DEDUP_SIMILARITY_THRESHOLD`). Documents above the\nthreshold annotate the existing record instead of creating duplicates. Stats are tracked\nvia `getDedupStats()` and visible in `qmd status`.\n\n## Benchmarks\n\nReproducible benchmarks live in `bench/`:\n\n```sh\nbun bench/latency.ts       # FTS vs hybrid vs hybrid-lite search latency\nbun bench/cache-hit.ts     # Intuition cache read/parse latency\nbun bench/tool-calls.ts    # MCP tool round-trip simulation\n```\n\nAll output JSON for programmatic consumption.\n\n## Important: Do NOT run automatically\n\n- Never run `qmd collection add`, `qmd embed`, or `qmd update` automatically\n- Never modify the SQLite database directly\n- Write out example commands for the user to run manually\n- Index is stored at `~/.cache/qmd/index.sqlite`\n\n## Do NOT compile\n\n- Never run `bun build --compile` - it overwrites the shell wrapper and breaks sqlite-vec\n- The `qmd` file is a shell script that runs compiled JS from `dist/` - do not replace it\n- `npm run build` compiles TypeScript to `dist/` via `tsc -p tsconfig.build.json`\n\n## Releasing\n\nUse `/release <version>` to cut a release. Full changelog standards,\nrelease workflow, and git hook setup are documented in the\n[release skill](skills/release/SKILL.md).\n\nKey points:\n- Add changelog entries under `## [Unreleased]` **as you make changes**\n- The release script renames `[Unreleased]` → `[X.Y.Z] - date` at release time\n- Credit external PRs with `#NNN (thanks @username)`\n- GitHub releases roll up the full minor series (e.g. 1.2.0 through 1.2.3)",
+      "tool_call_id": "call_function_5zoww3im7bvv_1"
+    },
+    {
+      "role": "assistant",
+      "content": "",
+      "reasoning": "The README has useful info. Key things I notice:\n- Uses Bun, not Node.js\n- Need to run `bun link` to install globally as `qmd`\n- FlowState is part of it, watching session logs\n- Index stored at `~/.cache/qmd/index.sqlite`\n\nLet me read the CLAUDE.md file in the repo root to understand installation better, and check if there's a package.json or skill file.",
+      "finish_reason": "tool_calls",
+      "reasoning_content": "The README has useful info. Key things I notice:\n- Uses Bun, not Node.js\n- Need to run `bun link` to install globally as `qmd`\n- FlowState is part of it, watching session logs\n- Index stored at `~/.cache/qmd/index.sqlite`\n\nLet me read the CLAUDE.md file in the repo root to understand installation better, and check if there's a package.json or skill file.",
+      "reasoning_details": [
+        {
+          "signature": "b044e506200f92e4dd06149d95bb1cf6e2821c5af87e36daa4fec90fd810c465",
+          "thinking": "The README has useful info. Key things I notice:\n- Uses Bun, not Node.js\n- Need to run `bun link` to install globally as `qmd`\n- FlowState is part of it, watching session logs\n- Index stored at `~/.cache/qmd/index.sqlite`\n\nLet me read the CLAUDE.md file in the repo root to understand installation better, and check if there's a package.json or skill file.",
+          "type": "thinking"
+        }
+      ],
+      "tool_calls": [
+        {
+          "id": "call_function_jm54je80hmr0_1",
+          "call_id": "call_function_jm54je80hmr0_1",
+          "response_item_id": "fc_function_jm54je80hmr0_1",
+          "type": "function",
+          "function": {
+            "name": "read_file",
+            "arguments": "{\"path\": \"/tmp/flowstate-qmd/CLAUDE.md\"}"
+          }
+        },
+        {
+          "id": "call_function_jm54je80hmr0_2",
+          "call_id": "call_function_jm54je80hmr0_2",
+          "response_item_id": "fc_function_jm54je80hmr0_2",
+          "type": "function",
+          "function": {
+            "name": "terminal",
+            "arguments": "{\"command\": \"ls -la /tmp/flowstate-qmd/\"}"
+          }
+        }
+      ]
+    },
+    {
+      "role": "tool",
+      "name": "read_file",
+      "content": "{\"content\": \"     1|# QMD - Query Markup Documents\\n     2|\\n     3|Use Bun instead of Node.js (`bun` not `node`, `bun install` not `npm install`).\\n     4|\\n     5|## Commands\\n     6|\\n     7|```sh\\n     8|qmd collection add . --name <n>   # Create/index collection\\n     9|qmd collection list               # List all collections with details\\n    10|qmd collection remove <name>      # Remove a collection by name\\n    11|qmd collection rename <old> <new> # Rename a collection\\n    12|qmd ls [collection[/path]]        # List collections or files in a collection\\n    13|qmd context add [path] \\\"text\\\"     # Add context for path (defaults to current dir)\\n    14|qmd context list                  # List all contexts\\n    15|qmd context check                 # Check for collections/paths missing context\\n    16|qmd context rm <path>             # Remove context\\n    17|qmd get <file>                    # Get document by path or docid (#abc123)\\n    18|qmd multi-get <pattern>           # Get multiple docs by glob or comma-separated list\\n    19|qmd status                        # Show index status and collections\\n    20|qmd update [--pull]               # Re-index all collections (--pull: git pull first)\\n    21|qmd embed                         # Generate vector embeddings (uses node-llama-cpp)\\n    22|qmd query <query>                 # Search with query expansion + reranking (recommended)\\n    23|qmd search <query>                # Full-text keyword search (BM25, no LLM)\\n    24|qmd vsearch <query>               # Vector similarity search (no reranking)\\n    25|qmd mcp                           # Start MCP server (stdio transport)\\n    26|qmd mcp --http [--port N]         # Start MCP server (HTTP, default port 8181)\\n    27|qmd mcp --http --daemon           # Start as background daemon\\n    28|qmd mcp stop                      # Stop background MCP daemon\\n    29|qmd init --target <targets>       # Bootstrap agent wrapper configs (hermes,claude-code,...)\\n    30|qmd init --target all             # Bootstrap all supported agent wrappers\\n    31|qmd doctor                        # Check host readiness (models, deps, profiles)\\n    32|qmd doctor --json                 # Machine-readable doctor output\\n    33|qmd flow <logfile>                # Start FlowState anticipatory cache watcher\\n    34|qmd flow <logfile> --lite         # FlowState in lite mode (skip reranking, smaller limits)\\n    35|```\\n    36|\\n    37|## Collection Management\\n    38|\\n    39|```sh\\n    40|# List all collections\\n    41|qmd collection list\\n    42|\\n    43|# Create a collection with explicit name\\n    44|qmd collection add ~/Documents/notes --name mynotes --mask '**/*.md'\\n    45|\\n    46|# Remove a collection\\n    47|qmd collection remove mynotes\\n    48|\\n    49|# Rename a collection\\n    50|qmd collection rename mynotes my-notes\\n    51|\\n    52|# List all files in a collection\\n    53|qmd ls mynotes\\n    54|\\n    55|# List files with a path prefix\\n    56|qmd ls journals/2025\\n    57|qmd ls qmd://journals/2025\\n    58|```\\n    59|\\n    60|## Context Management\\n    61|\\n    62|```sh\\n    63|# Add context to current directory (auto-detects collection)\\n    64|qmd context add \\\"Description of these files\\\"\\n    65|\\n    66|# Add context to a specific path\\n    67|qmd context add /subfolder \\\"Description for subfolder\\\"\\n    68|\\n    69|# Add global context to all collections (system message)\\n    70|qmd context add / \\\"Always include this context\\\"\\n    71|\\n    72|# Add context using virtual paths\\n    73|qmd context add qmd://journals/ \\\"Context for entire journals collection\\\"\\n    74|qmd context add qmd://journals/2024 \\\"Journal entries from 2024\\\"\\n    75|\\n    76|# List all contexts\\n    77|qmd context list\\n    78|\\n    79|# Check for collections or paths without context\\n    80|qmd context check\\n    81|\\n    82|# Remove context\\n    83|qmd context rm qmd://journals/2024\\n    84|qmd context rm /  # Remove global context\\n    85|```\\n    86|\\n    87|## Document IDs (docid)\\n    88|\\n    89|Each document has a unique short ID (docid) - the first 6 characters of its content hash.\\n    90|Docids are shown in search results as `#abc123` and can be used with `get` and `multi-get`:\\n    91|\\n    92|```sh\\n    93|# Search returns docid in results\\n    94|qmd search \\\"query\\\" --json\\n    95|# Output: [{\\\"docid\\\": \\\"#abc123\\\", \\\"score\\\": 0.85, \\\"file\\\": \\\"docs/readme.md\\\", ...}]\\n    96|\\n    97|# Get document by docid\\n    98|qmd get \\\"#abc123\\\"\\n    99|qmd get abc123              # Leading # is optional\\n   100|\\n   101|# Docids also work in multi-get comma-separated lists\\n   102|qmd multi-get \\\"#abc123, #def456\\\"\\n   103|```\\n   104|\\n   105|## Options\\n   106|\\n   107|```sh\\n   108|# Search & retrieval\\n   109|-c, --collection <name>  # Restrict search to a collection (matches pwd suffix)\\n   110|-n <num>                 # Number of results\\n   111|--all                    # Return all matches\\n   112|--min-score <num>        # Minimum score threshold\\n   113|--full                   # Show full document content\\n   114|--line-numbers           # Add line numbers to output\\n   115|\\n   116|# Multi-get specific\\n   117|-l <num>                 # Maximum lines per file\\n   118|--max-bytes <num>        # Skip files larger than this (default 10KB)\\n   119|\\n   120|# Output formats (search and multi-get)\\n   121|--json, --csv, --md, --xml, --files\\n   122|```\\n   123|\\n   124|## Development\\n   125|\\n   126|```sh\\n   127|bun src/cli/qmd.ts <command>   # Run from source\\n   128|bun link               # Install globally as 'qmd'\\n   129|```\\n   130|\\n   131|## Tests\\n   132|\\n   133|All tests live in `test/`. Run everything:\\n   134|\\n   135|```sh\\n   136|npx vitest run --reporter=verbose test/\\n   137|bun test --preload ./src/test-preload.ts test/\\n   138|```\\n   139|\\n   140|## Architecture\\n   141|\\n   142|- SQLite FTS5 for full-text search (BM25)\\n   143|- sqlite-vec for vector similarity search\\n   144|- node-llama-cpp for embeddings (embeddinggemma), reranking (qwen3-reranker), and query expansion (Qwen3)\\n   145|- Reciprocal Rank Fusion (RRF) for combining results\\n   146|- Smart chunking: 900 tokens/chunk with 15% overlap, prefers markdown headings as boundaries\\n   147|\\n   148|## FlowState Anticipatory Cache\\n   149|\\n   150|The FlowState engine (`src/flow/engine.ts`) watches an agent's session log via `fs.watch` with\\n   151|1500ms debounce, runs `hybridQuery()` on the last 8KB of context, and caches top-3 results to\\n   152|`~/.cache/qmd/intuition.json`. Telemetry (hit/miss counts, refresh latency) is persisted to\\n   153|`~/.cache/qmd/telemetry.json` and surfaced via `qmd status` and the MCP `status` tool.\\n   154|\\n   155|## Multi-Agent Idempotency\\n   156|\\n   157|Documents are deduplicated at index time using cosine similarity against `vectors_vec`.\\n   158|Threshold: 0.90 (configurable via `DEDUP_SIMILARITY_THRESHOLD`). Documents above the\\n   159|threshold annotate the existing record instead of creating duplicates. Stats are tracked\\n   160|via `getDedupStats()` and visible in `qmd status`.\\n   161|\\n   162|## Benchmarks\\n   163|\\n   164|Reproducible benchmarks live in `bench/`:\\n   165|\\n   166|```sh\\n   167|bun bench/latency.ts       # FTS vs hybrid vs hybrid-lite search latency\\n   168|bun bench/cache-hit.ts     # Intuition cache read/parse latency\\n   169|bun bench/tool-calls.ts    # MCP tool round-trip simulation\\n   170|```\\n   171|\\n   172|All output JSON for programmatic consumption.\\n   173|\\n   174|## Important: Do NOT run automatically\\n   175|\\n   176|- Never run `qmd collection add`, `qmd embed`, or `qmd update` automatically\\n   177|- Never modify the SQLite database directly\\n   178|- Write out example commands for the user to run manually\\n   179|- Index is stored at `~/.cache/qmd/index.sqlite`\\n   180|\\n   181|## Do NOT compile\\n   182|\\n   183|- Never run `bun build --compile` - it overwrites the shell wrapper and breaks sqlite-vec\\n   184|- The `qmd` file is a shell script that runs compiled JS from `dist/` - do not replace it\\n   185|- `npm run build` compiles TypeScript to `dist/` via `tsc -p tsconfig.build.json`\\n   186|\\n   187|## Releasing\\n   188|\\n   189|Use `/release <version>` to cut a release. Full changelog standards,\\n   190|release workflow, and git hook setup are documented in the\\n   191|[release skill](skills/release/SKILL.md).\\n   192|\\n   193|Key points:\\n   194|- Add changelog entries under `## [Unreleased]` **as you make changes**\\n   195|- The release script renames `[Unreleased]` → `[X.Y.Z] - date` at release time\\n   196|- Credit external PRs with `#NNN (thanks @username)`\\n   197|- GitHub releases roll up the full minor series (e.g. 1.2.0 through 1.2.3)\\n   198|\", \"total_lines\": 197, \"file_size\": 7139, \"truncated\": false, \"is_binary\": false, \"is_image\": false}",
+      "tool_call_id": "call_function_jm54je80hmr0_1"
+    },
+    {
+      "role": "tool",
+      "name": "terminal",
+      "content": "{\"output\": \"total 204\\ndrwxrwxr-x 15 marco marco   680 mag  5 12:17 .\\ndrwxrwxrwt 37 root  root   9200 mag  5 12:17 ..\\ndrwxrwxr-x  4 marco marco   140 mag  5 12:17 assets\\ndrwxrwxr-x  2 marco marco   160 mag  5 12:17 bench\\ndrwxrwxr-x  2 marco marco    60 mag  5 12:17 bin\\n-rw-rw-r--  1 marco marco  1006 mag  5 12:17 biome.json\\n-rw-rw-r--  1 marco marco 81789 mag  5 12:17 bun.lock\\n-rw-rw-r--  1 marco marco 29460 mag  5 12:17 CHANGELOG.md\\n-rw-rw-r--  1 marco marco  7139 mag  5 12:17 CLAUDE.md\\ndrwxrwxr-x  2 marco marco    60 mag  5 12:17 .claude-plugin\\ndrwxrwxr-x  2 marco marco   100 mag  5 12:17 docs\\n-rw-rw-r--  1 marco marco   950 mag  5 12:17 example-index.yml\\ndrwxrwxr-x  8 marco marco   420 mag  5 12:17 finetune\\n-rw-rw-r--  1 marco marco  1499 mag  5 12:17 flake.lock\\n-rw-rw-r--  1 marco marco  2523 mag  5 12:17 flake.nix\\ndrwxrwxr-x  8 marco marco   260 mag  5 12:17 .git\\n-rw-rw-r--  1 marco marco    70 mag  5 12:17 .gitattributes\\ndrwxrwxr-x  3 marco marco    60 mag  5 12:17 .github\\n-rw-rw-r--  1 marco marco   354 mag  5 12:17 .gitignore\\n-rw-rw-r--  1 marco marco  1141 mag  5 12:17 LICENSE\\n-rw-rw-r--  1 marco marco  5359 mag  5 12:17 migrate-schema.ts\\n-rw-rw-r--  1 marco marco  2643 mag  5 12:17 package.json\\ndrwxrwxr-x  2 marco marco    60 mag  5 12:17 .pi\\n-rw-rw-r--  1 marco marco 12106 mag  5 12:17 README.md\\ndrwxrwxr-x  2 marco marco   120 mag  5 12:17 scripts\\ndrwxrwxr-x  4 marco marco    80 mag  5 12:17 skills\\ndrwxrwxr-x  5 marco marco   300 mag  5 12:17 src\\n-rw-rw-r--  1 marco marco  8617 mag  5 12:17 SUBMISSION.md\\ndrwxrwxr-x  3 marco marco   520 mag  5 12:17 test\\n-rw-rw-r--  1 marco marco   264 mag  5 12:17 tsconfig.build.json\\n-rw-rw-r--  1 marco marco   710 mag  5 12:17 tsconfig.json\\n-rw-rw-r--  1 marco marco  1021 mag  5 12:17 update_embedded_skill.py\\n-rw-rw-r--  1 marco marco  3096 mag  5 12:17 update_skill.py\\n-rw-rw-r--  1 marco marco   156 mag  5 12:17 vitest.config.ts\", \"exit_code\": 0, \"error\": null}",
+      "tool_call_id": "call_function_jm54je80hmr0_2"
+    },
+    {
+      "role": "assistant",
+      "content": "",
+      "reasoning": "Let me read the README.md and also check if there's a skills directory and how skills work in this project.",
+      "finish_reason": "tool_calls",
+      "reasoning_content": "Let me read the README.md and also check if there's a skills directory and how skills work in this project.",
+      "reasoning_details": [
+        {
+          "signature": "a88853c747a42bf21914120c4fbb5f23bfac9449dc2f47e26fb07fe0f2eff9e1",
+          "thinking": "Let me read the README.md and also check if there's a skills directory and how skills work in this project.",
+          "type": "thinking"
+        }
+      ],
+      "tool_calls": [
+        {
+          "id": "call_function_x6yaa5vwd9l7_1",
+          "call_id": "call_function_x6yaa5vwd9l7_1",
+          "response_item_id": "fc_function_x6yaa5vwd9l7_1",
+          "type": "function",
+          "function": {
+            "name": "read_file",
+            "arguments": "{\"path\": \"/tmp/flowstate-qmd/README.md\"}"
+          }
+        },
+        {
+          "id": "call_function_x6yaa5vwd9l7_2",
+          "call_id": "call_function_x6yaa5vwd9l7_2",
+          "response_item_id": "fc_function_x6yaa5vwd9l7_2",
+          "type": "function",
+          "function": {
+            "name": "terminal",
+            "arguments": "{\"command\": \"ls -la /tmp/flowstate-qmd/skills/ && ls -la /tmp/flowstate-qmd/.claude-plugin/\"}"
+          }
+        }
+      ]
+    },
+    {
+      "role": "tool",
+      "name": "read_file",
+      "content": "{\"content\": \"     1|# FlowState-QMD\\n     2|\\n     3|**The fastest, most trustworthy memory layer for coding agents.**\\n     4|\\n     5|FlowState-QMD turns local markdown knowledge into shared project memory for Codex-, Claude-, Cursor-, and MCP-style agents. It combines a durable markdown memory store with a FlowState anticipatory cache so agents can pull relevant context before they fall into a reactive search loop.\\n     6|\\n     7|[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)\\n     8|[![Base: QMD](https://img.shields.io/badge/Base-tobi%2Fqmd-blue)](https://github.com/tobi/qmd)\\n     9|[![Hackathon: Hermes 2026](https://img.shields.io/badge/Hackathon-Hermes%202026-black)](#)\\n    10|\\n    11|![FlowState-QMD architecture](assets/qmd-architecture.png)\\n    12|\\n    13|## Why This Wins\\n    14|\\n    15|- **Anticipatory memory, not just stored memory.** FlowState prefetches context into `~/.cache/qmd/intuition.json` so agents can start from the right documents instead of deciding to search after the fact.\\n    16|- **Built for coding agents.** It works best on docs, ADRs, RFCs, notes, runbooks, changelogs, migration logs, and benchmark writeups.\\n    17|- **Local-first and inspectable.** Everything runs on your machine with SQLite, `sqlite-vec`, and local GGUF models via `node-llama-cpp`.\\n    18|- **MCP-native.** The default experience is a clean MCP server plus a packaged agent skill.\\n    19|- **Trust over magic.** Results keep file paths, doc IDs, snippets, and explain traces so the agent can show its work.\\n    20|\\n    21|## Memory Model\\n    22|\\n    23|- **Durable knowledge**: indexed markdown files in named collections\\n    24|- **Working memory**: the FlowState anticipatory cache at `~/.cache/qmd/intuition.json`\\n    25|- **Context overlays**: human-authored collection/path summaries added with `qmd context add`\\n    26|\\n    27|## 90-Second Quickstart\\n    28|\\n    29|```bash\\n    30|git clone https://github.com/amanning3390/flowstate-qmd.git\\n    31|cd flowstate-qmd\\n    32|bun install\\n    33|\\n    34|# Verify the host, recommend a profile, and emit wrapper configs\\n    35|qmd init --target all\\n    36|\\n    37|# Inspect readiness any time\\n    38|qmd doctor\\n    39|\\n    40|# Index your repo memory\\n    41|qmd collection add ./docs --name docs\\n    42|qmd collection add ./notes --name notes\\n    43|qmd embed\\n    44|\\n    45|# Start the coding-agent memory server\\n    46|qmd mcp\\n    47|```\\n    48|\\n    49|If you want FlowState anticipatory memory too:\\n    50|\\n    51|```bash\\n    52|# Watch the current agent session log and keep the anticipatory cache warm\\n    53|qmd flow ~/.codex/sessions/current.log --lite\\n    54|\\n    55|# Compatibility alias also supported:\\n    56|qmd flow start --watch ~/.codex/sessions/current.log --lite\\n    57|```\\n    58|\\n    59|## Demo Path\\n    60|\\n    61|The best live demo for judges or teammates:\\n    62|\\n    63|1. Index a repo's `docs/`, `notes/`, `CHANGELOG.md`, and ADRs.\\n    64|2. Start `qmd flow` on an active coding-agent session log.\\n    65|3. Ask a question like:\\n    66|   - \\\"Why did we roll back the auth migration?\\\"\\n    67|   - \\\"What changed after the database incident?\\\"\\n    68|   - \\\"What did we decide about the API contract in the ADR?\\\"\\n    69|4. Have the agent call `fetch_anticipatory_context` before a regular search.\\n    70|5. Show that the returned memories already include the ADR, changelog, or meeting note the agent needed.\\n    71|\\n    72|See [docs/DEMO.md](docs/DEMO.md) for an exact script.\\n    73|\\n    74|## What Makes FlowState Different\\n    75|\\n    76|Traditional RAG for agents looks like this:\\n    77|\\n    78|```text\\n    79|user asks → agent decides to search → tool call → wait → result processing → answer\\n    80|```\\n    81|\\n    82|FlowState-QMD changes the loop:\\n    83|\\n    84|```text\\n    85|user asks → anticipatory context already exists → agent answers or deepens with query/get\\n    86|```\\n    87|\\n    88|That difference matters most in coding workflows where the missing context is often already in:\\n    89|\\n    90|- design docs\\n    91|- changelogs\\n    92|- migration notes\\n    93|- incident writeups\\n    94|- RFCs / ADRs\\n    95|- benchmark reports\\n    96|\\n    97|## Core Workflow\\n    98|\\n    99|### 1. Index project memory\\n   100|\\n   101|```bash\\n   102|qmd collection add . --name repo-memory --mask '**/*.md'\\n   103|\\n   104|# Compatibility alias\\n   105|qmd index . --name repo-memory --mask '**/*.md'\\n   106|```\\n   107|\\n   108|### 2. Add context overlays\\n   109|\\n   110|```bash\\n   111|qmd context add qmd://repo-memory/docs \\\"Project documentation and architecture notes\\\"\\n   112|qmd context add qmd://repo-memory/adr \\\"Architecture decision records and tradeoff history\\\"\\n   113|qmd context add / \\\"Answer as a coding agent using the repo's documented decisions\\\"\\n   114|```\\n   115|\\n   116|### 3. Generate embeddings\\n   117|\\n   118|```bash\\n   119|qmd embed\\n   120|```\\n   121|\\n   122|### 4. Query project memory\\n   123|\\n   124|```bash\\n   125|# Auto-expand + rerank\\n   126|qmd query \\\"why was the rollout reverted\\\"\\n   127|\\n   128|# Structured search for better control\\n   129|qmd query $'lex: \\\"auth rollback\\\" migration\\\\nvec: why did we revert the auth migration?'\\n   130|\\n   131|# Inspect why memories were chosen\\n   132|qmd query --json --explain \\\"performance regression in auth service\\\"\\n   133|```\\n   134|\\n   135|### 5. Fetch exact evidence\\n   136|\\n   137|```bash\\n   138|qmd get \\\"#abc123\\\"\\n   139|qmd multi-get \\\"docs/**/*.md,CHANGELOG.md\\\"\\n   140|```\\n   141|\\n   142|### 6. Run as MCP memory for agents\\n   143|\\n   144|```bash\\n   145|qmd mcp\\n   146|```\\n   147|\\n   148|The flagship tool order for coding agents is:\\n   149|\\n   150|1. `fetch_anticipatory_context`\\n   151|2. `query`\\n   152|3. `get` / `multi_get`\\n   153|4. `status`\\n   154|\\n   155|## MCP Setup\\n   156|\\n   157|### Claude Code / Codex-style local agents\\n   158|\\n   159|```json\\n   160|{\\n   161|  \\\"mcpServers\\\": {\\n   162|    \\\"qmd\\\": { \\\"command\\\": \\\"qmd\\\", \\\"args\\\": [\\\"mcp\\\"] }\\n   163|  }\\n   164|}\\n   165|```\\n   166|\\n   167|### One-command wrapper bootstrap\\n   168|\\n   169|```bash\\n   170|qmd init --target hermes\\n   171|qmd init --target gemini,kiro,vscode\\n   172|qmd doctor --json\\n   173|```\\n   174|\\n   175|`qmd init` now:\\n   176|\\n   177|- profiles the host and recommends `standard` or `lite`\\n   178|- writes a bootstrap report to `~/.cache/qmd/bootstrap-report.json`\\n   179|- emits or installs config for Hermes, Claude Code, Codex, Gemini CLI, Kiro, VS Code, OpenClaw, and pi\\n   180|- keeps the canonical `qmd` MCP namespace and tool order across every client\\n   181|\\n   182|### Wrapper targets\\n   183|\\n   184|- `hermes`: installs `~/.hermes/config.yaml`\\n   185|- `claude-code`: installs `~/.claude.json`\\n   186|- `codex`: installs `~/.codex/config.toml`\\n   187|- `gemini`: installs `~/.gemini/settings.json`\\n   188|- `kiro`: installs `.kiro/settings/mcp.json`\\n   189|- `vscode`: installs `.vscode/mcp.json`\\n   190|- `openclaw`, `pi`: emits ready-to-apply artifacts under `~/.cache/qmd/targets/`\\n   191|\\n   192|### Install the packaged skill\\n   193|\\n   194|```bash\\n   195|qmd skill install --global --yes\\n   196|```\\n   197|\\n   198|The packaged skill is optimized for coding-agent memory and teaches the agent to:\\n   199|\\n   200|- use `fetch_anticipatory_context` first\\n   201|- use `query` for deeper retrieval\\n   202|- use `get` / `multi_get` for exact evidence\\n   203|\\n   204|## Anticipatory Memory Tool\\n   205|\\n   206|`fetch_anticipatory_context` prefers the FlowState cache and falls back to a live project-memory query when needed.\\n   207|\\n   208|Example payload:\\n   209|\\n   210|```json\\n   211|{\\n   212|  \\\"recent_conversation\\\": \\\"What changed in the auth rollback plan and why did we revert the migration?\\\",\\n   213|  \\\"refresh\\\": false,\\n   214|  \\\"lite_mode\\\": false\\n   215|}\\n   216|```\\n   217|\\n   218|Typical uses:\\n   219|\\n   220|- current coding question with recent local context\\n   221|- migration/debugging follow-up questions\\n   222|- ADR/changelog lookups where the agent should feel preloaded\\n   223|\\n   224|## CLI Highlights\\n   225|\\n   226|```bash\\n   227|qmd status\\n   228|qmd collection list\\n   229|qmd collection update-cmd docs 'git pull --rebase --ff-only'\\n   230|qmd collection exclude archive\\n   231|qmd ls repo-memory/docs\\n   232|qmd cleanup\\n   233|```\\n   234|\\n   235|## Hardware Profiles\\n   236|\\n   237|### Standard\\n   238|\\n   239|- Qwen3 embedding + reranker models\\n   240|- best quality\\n   241|- recommended for Apple Silicon with 16GB+ RAM or comparable Linux hardware\\n   242|\\n   243|### Lite\\n   244|\\n   245|- **Models:** Qwen3-Embedding-0.6B + Qwen3-Reranker-0.6B (~1.2GB VRAM total)\\n   246|- **Use case:** Laptops, CI environments, or demo setups with <8GB RAM\\n   247|- **Behavior:** `hybridQuery()` caps results at 5, limits candidates to 15, and **skips LLM reranking**\\n   248|- **Auto-engaged:** Systems with <8GB RAM automatically use Lite mode\\n   249|\\n   250|Use:\\n   251|\\n   252|```bash\\n   253|qmd flow ~/.codex/sessions/current.log --lite\\n   254|```\\n   255|\\n   256|The `--lite` flag can also be passed to `qmd query` and `qmd embed` for consistent low-memory operation.\\n   257|\\n   258|## Known Limits\\n   259|\\n   260|- The best results come from markdown knowledge, not arbitrary binary project assets.\\n   261|- Anticipatory memory depends on having an active session log to watch.\\n   262|- First model-backed search can be slower while local models warm up.\\n   263|- `qmd collection add`, `qmd embed`, and `qmd update` are intentionally manual operations; they are not auto-run by this repo's agents.\\n   264|\\n   265|## Development\\n   266|\\n   267|Use Bun in this repo.\\n   268|\\n   269|```bash\\n   270|bun install\\n   271|npx vitest run --reporter=verbose test/\\n   272|bun test --preload ./src/test-preload.ts test/\\n   273|```\\n   274|\\n   275|Important commands:\\n   276|\\n   277|```bash\\n   278|bun src/cli/qmd.ts <command>\\n   279|qmd skill show\\n   280|qmd mcp --http --daemon\\n   281|qmd mcp stop\\n   282|```\\n   283|\\n   284|## Multi-Agent Idempotency\\n   285|\\n   286|When multiple agents index the same project, FlowState-QMD prevents duplicate memories:\\n   287|\\n   288|```bash\\n   289|# Agent A indexes a doc about auth rollback\\n   290|# Agent B tries to index a semantically identical doc\\n   291|# → QMD detects 0.94 cosine similarity (threshold: 0.90)\\n   292|# → Annotates existing memory instead of duplicating\\n   293|```\\n   294|\\n   295|Dedup stats are tracked via `getDedupStats()` and visible in `qmd status`.\\n   296|\\n   297|## Cache Telemetry\\n   298|\\n   299|FlowState tracks cache hit/miss rates and refresh latency in `~/.cache/qmd/telemetry.json`, surfaced via `qmd status` and the MCP `status` tool.\\n   300|\\n   301|## Benchmarks\\n   302|\\n   303|Reproducible benchmarks in `bench/`:\\n   304|\\n   305|```bash\\n   306|bun bench/latency.ts       # FTS vs hybrid vs hybrid-lite search latency\\n   307|bun bench/cache-hit.ts     # Intuition cache read/parse latency (1000 rounds)\\n   308|bun bench/tool-calls.ts    # MCP tool round-trip simulation\\n   309|```\\n   310|\\n   311|All output JSON for programmatic consumption.\\n   312|\\n   313|## Architecture\\n   314|\\n   315|```\\n   316|┌─────────────────────────────────────────────────────────────┐\\n   317|│                     Agent (Hermes, Claude Code, Codex, ...) │\\n   318|│                              │                              │\\n   319|│                    MCP tool calls                           │\\n   320|│                              ▼                              │\\n   321|│  ┌─────────────────────────────────────────────────────┐    │\\n   322|│  │              MCP Server (stdio / HTTP)               │    │\\n   323|│  │  fetch_anticipatory_context │ query │ get │ status   │    │\\n   324|│  └──────────────┬──────────────┴───────┴─────┴──────┘    │\\n   325|│                 │                        │               │\\n   326|│     ┌───────────▼──────────┐   ┌────────▼────────┐      │\\n   327|│     │   FlowState Engine   │   │   Store (SQLite) │      │\\n   328|│     │  fs.watch + debounce │   │  FTS5 + vec      │      │\\n   329|│     │  intuition.json      │   │  BM25 + cosine   │      │\\n   330|│     │  telemetry.json      │   │  RRF fusion      │      │\\n   331|│     └──────────────────────┘   │  LLM reranking   │      │\\n   332|│                                │  Idempotency     │      │\\n   333|│                                └──────────────────┘      │\\n   334|│                                         │                │\\n   335|│                              ┌──────────▼──────────┐     │\\n   336|│                              │   node-llama-cpp    │     │\\n   337|│                              │  Qwen3 Embed + Rank │     │\\n   338|│                              └─────────────────────┘     │\\n   339|└─────────────────────────────────────────────────────────────┘\\n   340|```\\n   341|\\n   342|- **Store**: SQLite + FTS5 + `sqlite-vec`\\n   343|- **Retrieval**: BM25 + vector search + reciprocal rank fusion + reranking\\n   344|- **FlowState**: event-driven watcher that keeps `intuition.json` fresh\\n   345|- **Idempotency**: cosine similarity dedup at 0.90 threshold on document ingest\\n   346|- **Telemetry**: cache hit/miss tracking persisted to `telemetry.json`\\n   347|- **Interfaces**: CLI, MCP server, SDK, packaged agent skill\\n   348|\\n   349|## Submission Assets\\n   350|\\n   351|- Demo script: [docs/DEMO.md](docs/DEMO.md)\\n   352|- Submission writeup: [SUBMISSION.md](SUBMISSION.md)\\n   353|- Promo/demo video assets: [assets/video](assets/video)\\n   354|\\n   355|## Why Ask When Your Agent Can Already Know?\\n   356|\\n   357|FlowState-QMD is not trying to be every kind of memory system. It is trying to be the best coding-agent memory layer: fast, local, inspectable, shared across agents, and strong enough to make project context feel native.\\n   358|\", \"total_lines\": 357, \"file_size\": 12106, \"truncated\": false, \"is_binary\": false, \"is_image\": false}",
+      "tool_call_id": "call_function_x6yaa5vwd9l7_1"
+    },
+    {
+      "role": "tool",
+      "name": "terminal",
+      "content": "{\"output\": \"total 0\\ndrwxrwxr-x  4 marco marco  80 mag  5 12:17 .\\ndrwxrwxr-x 15 marco marco 680 mag  5 12:17 ..\\ndrwxrwxr-x  3 marco marco  80 mag  5 12:17 qmd\\ndrwxrwxr-x  3 marco marco  80 mag  5 12:17 release\\ntotal 4\\ndrwxrwxr-x  2 marco marco  60 mag  5 12:17 .\\ndrwxrwxr-x 15 marco marco 680 mag  5 12:17 ..\\n-rw-rw-r--  1 marco marco 546 mag  5 12:17 marketplace.json\", \"exit_code\": 0, \"error\": null}",
+      "tool_call_id": "call_function_x6yaa5vwd9l7_2"
+    },
+    {
+      "role": "assistant",
+      "content": "",
+      "reasoning": "Let me look at the skills structure and see what needs to be installed. The README mentions `qmd init --target hermes` for Hermes integration and `qmd skill install --global --yes` for installing the packaged skill. Let me check the skill structure.",
+      "finish_reason": "tool_calls",
+      "reasoning_content": "Let me look at the skills structure and see what needs to be installed. The README mentions `qmd init --target hermes` for Hermes integration and `qmd skill install --global --yes` for installing the packaged skill. Let me check the skill structure.",
+      "reasoning_details": [
+        {
+          "signature": "a2c50758f453320e76efdaeae4241925ac78bb733b8c36a42501b47ced06a333",
+          "thinking": "Let me look at the skills structure and see what needs to be installed. The README mentions `qmd init --target hermes` for Hermes integration and `qmd skill install --global --yes` for installing the packaged skill. Let me check the skill structure.",
+          "type": "thinking"
+        }
+      ],
+      "tool_calls": [
+        {
+          "id": "call_function_9k5mi12fgvy1_1",
+          "call_id": "call_function_9k5mi12fgvy1_1",
+          "response_item_id": "fc_function_9k5mi12fgvy1_1",
+          "type": "function",
+          "function": {
+            "name": "terminal",
+            "arguments": "{\"command\": \"ls -laR /tmp/flowstate-qmd/skills/\"}"
+          }
+        },
+        {
+          "id": "call_function_9k5mi12fgvy1_2",
+          "call_id": "call_function_9k5mi12fgvy1_2",
+          "response_item_id": "fc_function_9k5mi12fgvy1_2",
+          "type": "function",
+          "function": {
+            "name": "terminal",
+            "arguments": "{\"command\": \"which bun && bun --version\"}"
+          }
+        }
+      ]
+    },
+    {
+      "role": "tool",
+      "name": "terminal",
+      "content": "{\"output\": \"/tmp/flowstate-qmd/skills/:\\ntotal 0\\ndrwxrwxr-x  4 marco marco  80 mag  5 12:17 .\\ndrwxrwxr-x 15 marco marco 680 mag  5 12:17 ..\\ndrwxrwxr-x  3 marco marco  80 mag  5 12:17 qmd\\ndrwxrwxr-x  3 marco marco  80 mag  5 12:17 release\\n\\n/tmp/flowstate-qmd/skills/qmd:\\ntotal 4\\ndrwxrwxr-x 3 marco marco   80 mag  5 12:17 .\\ndrwxrwxr-x 4 marco marco   80 mag  5 12:17 ..\\ndrwxrwxr-x 2 marco marco   60 mag  5 12:17 references\\n-rw-rw-r-- 1 marco marco 3669 mag  5 12:17 SKILL.md\\n\\n/tmp/flowstate-qmd/skills/qmd/references:\\ntotal 4\\ndrwxrwxr-x 2 marco marco   60 mag  5 12:17 .\\ndrwxrwxr-x 3 marco marco   80 mag  5 12:17 ..\\n-rw-rw-r-- 1 marco marco 2440 mag  5 12:17 mcp-setup.md\\n\\n/tmp/flowstate-qmd/skills/release:\\ntotal 8\\ndrwxrwxr-x 3 marco marco   80 mag  5 12:17 .\\ndrwxrwxr-x 4 marco marco   80 mag  5 12:17 ..\\ndrwxrwxr-x 2 marco marco   60 mag  5 12:17 scripts\\n-rw-rw-r-- 1 marco marco 4800 mag  5 12:17 SKILL.md\\n\\n/tmp/flowstate-qmd/skills/release/scripts:\\ntotal 4\\ndrwxrwxr-x 2 marco marco   60 mag  5 12:17 .\\ndrwxrwxr-x 3 marco marco   80 mag  5 12:17 ..\\n-rwxrwxr-x 1 marco marco 1165 mag  5 12:17 install-hooks.sh\", \"exit_code\": 0, \"error\": null}",
+      "tool_call_id": "call_function_9k5mi12fgvy1_1"
+    },
+    {
+      "role": "tool",
+      "name": "terminal",
+      "content": "{\"output\": \"\", \"exit_code\": 1, \"error\": null}",
+      "tool_call_id": "call_function_9k5mi12fgvy1_2"
+    },
+    {
+      "role": "assistant",
+      "content": "",
+      "reasoning": "Bun is not installed. I need to install Bun first. Let me check what package managers are available and install Bun.",
+      "finish_reason": "tool_calls",
+      "reasoning_content": "Bun is not installed. I need to install Bun first. Let me check what package managers are available and install Bun.",
+      "reasoning_details": [
+        {
+          "signature": "395a45d58560d176b355d1e8c845fa424f43f738f3432402f5bda1b7956f9087",
+          "thinking": "Bun is not installed. I need to install Bun first. Let me check what package managers are available and install Bun.",
+          "type": "thinking"
+        }
+      ],
+      "tool_calls": [
+        {
+          "id": "call_function_v1omsa6z0fi5_1",
+          "call_id": "call_function_v1omsa6z0fi5_1",
+          "response_item_id": "fc_function_v1omsa6z0fi5_1",
+          "type": "function",
+          "function": {
+            "name": "terminal",
+            "arguments": "{\"command\": \"which node && node --version; which npm && npm --version; cat /etc/os-release | head -5\"}"
+          }
+        }
+      ]
+    },
+    {
+      "role": "tool",
+      "name": "terminal",
+      "content": "{\"output\": \"/usr/bin/node\\nv22.22.2\\n/usr/bin/npm\\n10.9.7\\nPRETTY_NAME=\\\"Ubuntu 24.04.4 LTS\\\"\\nNAME=\\\"Ubuntu\\\"\\nVERSION_ID=\\\"24.04\\\"\\nVERSION=\\\"24.04.4 LTS (Noble Numbat)\\\"\\nVERSION_CODENAME=noble\", \"exit_code\": 0, \"error\": null}",
+      "tool_call_id": "call_function_v1omsa6z0fi5_1"
+    },
+    {
+      "role": "assistant",
+      "content": "",
+      "reasoning": "Bun is not installed. The README says to use Bun, but npm is available. Let me check if we can install bun or use npm. But wait - the CLAUDE.md says \"Use Bun instead of Node.js\". Let me see if we can install bun easily.\n\nActually, let me re-read the installation steps. The task is to install this INTO ~/.hermes/skills/. So I should:\n\n1. Create ~/.hermes/skills/ if it doesn't exist\n2. Copy the skill files there\n3. Install the qmd tool itself (possibly via npm if bun isn't available)\n\nLet me first check if bun can be installed quickly, and also check what ~/.hermes/skills looks like currently.",
+      "finish_reason": "tool_calls",
+      "reasoning_content": "Bun is not installed. The README says to use Bun, but npm is available. Let me check if we can install bun or use npm. But wait - the CLAUDE.md says \"Use Bun instead of Node.js\". Let me see if we can install bun easily.\n\nActually, let me re-read the installation steps. The task is to install this INTO ~/.hermes/skills/. So I should:\n\n1. Create ~/.hermes/skills/ if it doesn't exist\n2. Copy the skill files there\n3. Install the qmd tool itself (possibly via npm if bun isn't available)\n\nLet me first check if bun can be installed quickly, and also check what ~/.hermes/skills looks like currently.",
+      "reasoning_details": [
+        {
+          "signature": "74246895aa817bfe7432553527c3510e93f8874314f52f5b9778c15f86c8799a",
+          "thinking": "Bun is not installed. The README says to use Bun, but npm is available. Let me check if we can install bun or use npm. But wait - the CLAUDE.md says \"Use Bun instead of Node.js\". Let me see if we can install bun easily.\n\nActually, let me re-read the installation steps. The task is to install this INTO ~/.hermes/skills/. So I should:\n\n1. Create ~/.hermes/skills/ if it doesn't exist\n2. Copy the skill files there\n3. Install the qmd tool itself (possibly via npm if bun isn't available)\n\nLet me first check if bun can be installed quickly, and also check what ~/.hermes/skills looks like currently.",
+          "type": "thinking"
+        }
+      ],
+      "tool_calls": [
+        {
+          "id": "call_function_u6dp4kt5o9s8_1",
+          "call_id": "call_function_u6dp4kt5o9s8_1",
+          "response_item_id": "fc_function_u6dp4kt5o9s8_1",
+          "type": "function",
+          "function": {
+            "name": "terminal",
+            "arguments": "{\"command\": \"ls -la ~/.hermes/ 2>/dev/null || echo \\\"~/.hermes does not exist\\\"; mkdir -p ~/.hermes/skills && ls -la ~/.hermes/\"}"
+          }
+        }
+      ]
+    },
+    {
+      "role": "tool",
+      "name": "terminal",
+      "content": "{\"output\": \"total 67124\\ndrwx------ 33 marco marco     4096 mag  5 12:18 .\\ndrwxr-x--- 59 marco marco     4096 mag  5 12:12 ..\\ndrwxrwxr-x  2 marco marco     4096 mag  4 17:45 audio_cache\\n-rw-------  1 marco marco     1823 mag  5 09:56 auth.json\\n-rw-rw-r--  1 marco marco        0 apr 29 18:40 auth.lock\\ndrwxrwxr-x  9 marco marco     4096 apr 29 18:28 automaton\\ndrwxrwxr-x  2 marco marco     4096 apr 29 18:53 bin\\ndrwxrwxr-x  6 marco marco     4096 mag  5 10:34 cache\\n-rw-------  1 marco marco     9990 mag  5 12:16 channel_directory.json\\ndrwxrwxr-x 11 marco marco     4096 mag  5 10:05 checkpoints\\n-rw-------  1 marco marco     9466 mag  5 12:14 config.yaml\\ndrwx------  3 marco marco     4096 mag  5 12:15 cron\\ndrwxrwxr-x  2 marco marco     4096 apr 25 14:12 decisions\\ndrwxrwxr-x  2 marco marco     4096 mag  5 10:00 desktop\\n-rw-rw-r--  1 marco marco       91 apr 29 21:01 discord.env\\n-rw-rw-r--  1 marco marco       92 apr 29 21:35 discord_threads.json\\ndrwxrwxr-x  7 marco marco     4096 apr 29 18:24 dotfiles\\n-rw-------  1 marco marco      433 mag  2 18:06 .env\\n-rw-rw-r--  1 marco marco      162 mag  5 10:46 gateway.lock\\n-rwxrwxr-x  1 marco marco      162 mag  5 10:46 gateway.pid\\n-rw-rw-r--  1 marco marco      764 mag  5 10:46 gateway_state.json\\ndrwxrwxr-x  8 marco marco     4096 mag  4 08:54 .git\\ndrwxrwxr-x 34 marco marco     4096 mag  5 09:57 hermes-agent\\n-rw-rw-r--  1 marco marco     3299 mag  5 10:03 .hermes_history\\ndrwxrwxr-x 13 marco marco     4096 mag  5 09:59 hermes-office\\ndrwxrwxr-x  8 marco marco     4096 apr 28 12:28 hermes-webui\\ndrwxrwxr-x  2 marco marco     4096 mag  2 18:35 hooks\\ndrwxrwxr-x  2 marco marco     4096 mag  2 18:35 image_cache\\ndrwxrwxr-x  2 marco marco     4096 apr 25 18:53 images\\n-rw-rw-r--  1 marco marco      663 apr 29 20:58 interrupt_debug.log\\n-rw-r--r--  1 marco marco   102400 mag  1 08:41 kanban.db\\ndrwx------  3 marco marco     4096 mag  5 10:45 logs\\ndrwx------  2 marco marco     4096 mag  4 18:41 memories\\ndrwxrwxr-x  3 marco marco     4096 apr 29 18:39 memory\\n-rw-------  1 marco marco  1876768 mag  5 12:00 models_dev_cache.json\\n-rw-rw-r--  1 marco marco     2748 mag  5 09:57 models.json\\ndrwxrwxr-x  3 marco marco     4096 apr 29 18:39 node_modules\\ndrwxrwxr-x 11 marco marco     4096 apr 27 09:58 open-webui\\ndrwxrwxr-x  2 marco marco     4096 mag  2 18:35 pairing\\ndrwxrwxr-x  2 marco marco     4096 apr 29 18:50 pastes\\ndrwxrwxr-x  3 marco marco     4096 apr 22 18:30 platforms\\ndrwxrwxr-x  4 marco marco     4096 mag  5 12:14 plugins\\n-rw-------  1 marco marco        2 mag  5 10:46 processes.json\\n-rw-r--r--  1 marco marco    20480 mag  2 18:07 response_store.db\\n-rw-r--r--  1 marco marco    32768 mag  5 10:46 response_store.db-shm\\n-rw-r--r--  1 marco marco        0 mag  5 10:46 response_store.db-wal\\ndrwxrwxr-x  3 marco marco     4096 apr 22 16:52 sandboxes\\ndrwxrwxr-x  5 marco marco     4096 mag  4 12:49 scripts\\ndrwx------  2 marco marco    36864 mag  5 12:18 sessions\\ndrwxrwxr-x 96 marco marco     4096 mag  5 12:15 skills\\n-rw-------  1 marco marco   186268 mag  5 11:00 .skills_prompt_snapshot.json\\n-rw-rw-r--  1 marco marco        0 apr 30 18:37 .skip_upstream_prompt\\n-rw-------  1 marco marco      513 apr 29 18:39 SOUL.md\\n-rw-r--r--  1 marco marco 52113408 mag  5 12:17 state.db\\n-rw-r--r--  1 marco marco    32768 mag  5 12:17 state.db-shm\\n-rw-r--r--  1 marco marco 14098672 mag  5 12:18 state.db-wal\\ndrwxrwxr-x  5 marco marco     4096 mag  5 09:57 state-snapshots\\n-rw-rw-r--  1 marco marco       18 mag  2 19:14 tasks.json\\n-rw-rw-r--  1 marco marco       52 mag  5 09:58 .update_check\\ndrwxrwxr-x  3 marco marco     4096 apr 29 18:39 webui-state\\ntotal 67124\\ndrwx------ 33 marco marco     4096 mag  5 12:18 .\\ndrwxr-x--- 59 marco marco     4096 mag  5 12:12 ..\\ndrwxrwxr-x  2 marco marco     4096 mag  4 17:45 audio_cache\\n-rw-------  1 marco marco     1823 mag  5 09:56 auth.json\\n-rw-rw-r--  1 marco marco        0 apr 29 18:40 auth.lock\\ndrwxrwxr-x  9 marco marco     4096 apr 29 18:28 automaton\\ndrwxrwxr-x  2 marco marco     4096 apr 29 18:53 bin\\ndrwxrwxr-x  6 marco marco     4096 mag  5 10:34 cache\\n-rw-------  1 marco marco     9990 mag  5 12:16 channel_directory.json\\ndrwxrwxr-x 11 marco marco     4096 mag  5 10:05 checkpoints\\n-rw-------  1 marco marco     9466 mag  5 12:14 config.yaml\\ndrwx------  3 marco marco     4096 mag  5 12:15 cron\\ndrwxrwxr-x  2 marco marco     4096 apr 25 14:12 decisions\\ndrwxrwxr-x  2 marco marco     4096 mag  5 10:00 desktop\\n-rw-rw-r--  1 marco marco       91 apr 29 21:01 discord.env\\n-rw-rw-r--  1 marco marco       92 apr 29 21:35 discord_threads.json\\ndrwxrwxr-x  7 marco marco     4096 apr 29 18:24 dotfiles\\n-rw-------  1 marco marco      433 mag  2 18:06 .env\\n-rw-rw-r--  1 marco marco      162 mag  5 10:46 gateway.lock\\n-rwxrwxr-x  1 marco marco      162 mag  5 10:46 gateway.pid\\n-rw-rw-r--  1 marco marco      764 mag  5 10:46 gateway_state.json\\ndrwxrwxr-x  8 marco marco     4096 mag  4 08:54 .git\\ndrwxrwxr-x 34 marco marco     4096 mag  5 09:57 hermes-agent\\n-rw-rw-r--  1 marco marco     3299 mag  5 10:03 .hermes_history\\ndrwxrwxr-x 13 marco marco     4096 mag  5 09:59 hermes-office\\ndrwxrwxr-x  8 marco marco     4096 apr 28 12:28 hermes-webui\\ndrwxrwxr-x  2 marco marco     4096 mag  2 18:35 hooks\\ndrwxrwxr-x  2 marco marco     4096 mag  2 18:35 image_cache\\ndrwxrwxr-x  2 marco marco     4096 apr 25 18:53 images\\n-rw-rw-r--  1 marco marco      663 apr 29 20:58 interrupt_debug.log\\n-rw-r--r--  1 marco marco   102400 mag  1 08:41 kanban.db\\ndrwx------  3 marco marco     4096 mag  5 10:45 logs\\ndrwx------  2 marco marco     4096 mag  4 18:41 memories\\ndrwxrwxr-x  3 marco marco     4096 apr 29 18:39 memory\\n-rw-------  1 marco marco  1876768 mag  5 12:00 models_dev_cache.json\\n-rw-rw-r--  1 marco marco     2748 mag  5 09:57 models.json\\ndrwxrwxr-x  3 marco marco     4096 apr 29 18:39 node_modules\\ndrwxrwxr-x 11 marco marco     4096 apr 27 09:58 open-webui\\ndrwxrwxr-x  2 marco marco     4096 mag  2 18:35 pairing\\ndrwxrwxr-x  2 marco marco     4096 apr 29 18:50 pastes\\ndrwxrwxr-x  3 marco marco     4096 apr 22 18:30 platforms\\ndrwxrwxr-x  4 marco marco     4096 mag  5 12:14 plugins\\n-rw-------  1 marco marco        2 mag  5 10:46 processes.json\\n-rw-r--r--  1 marco marco    20480 mag  2 18:07 response_store.db\\n-rw-r--r--  1 marco marco    32768 mag  5 10:46 response_store.db-shm\\n-rw-r--r--  1 marco marco        0 mag  5 10:46 response_store.db-wal\\ndrwxrwxr-x  3 marco marco     4096 apr 22 16:52 sandboxes\\ndrwxrwxr-x  5 marco marco     4096 mag  4 12:49 scripts\\ndrwx------  2 marco marco    36864 mag  5 12:18 sessions\\ndrwxrwxr-x 96 marco marco     4096 mag  5 12:15 skills\\n-rw-------  1 marco marco   186268 mag  5 11:00 .skills_prompt_snapshot.json\\n-rw-rw-r--  1 marco marco        0 apr 30 18:37 .skip_upstream_prompt\\n-rw-------  1 marco marco      513 apr 29 18:39 SOUL.md\\n-rw-r--r--  1 marco marco 52113408 mag  5 12:17 state.db\\n-rw-r--r--  1 marco marco    32768 mag  5 12:17 state.db-shm\\n-rw-r--r--  1 marco marco 14098672 mag  5 12:18 state.db-wal\\ndrwxrwxr-x  5 marco marco     4096 mag  5 09:57 state-snapshots\\n-rw-rw-r--  1 marco marco       18 mag  2 19:14 tasks.json\\n-rw-rw-r--  1 marco marco       52 mag  5 09:58 .update_check\\ndrwxrwxr-x  3 marco marco     4096 apr 29 18:39 webui-state\", \"exit_code\": 0, \"error\": null}\n\n[Subdirectory context discovered: .hermes/skills/CLAUDE.md]\n# CLAUDE.md\n\nThis file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.\n\n## Repository Purpose\n\nThis is a collection of 42 agent skills for Claude Code and agentskills.io-compatible agents. Skills provide specialized domain knowledge and frameworks for specific use cases (UX design, marketing, product strategy, sales, operations, positioning, virality, code quality, systems architecture, etc.).\n\n## Repository Structure\n\n```\nskills/\n├── .claude-plugin/\n│   └── marketplace.json   # Marketplace configuration for plugin installation\n├── {skill-name}/\n│   ├── SKILL.md           # Main skill file with YAML frontmatter + markdown instructions\n│   └── references/        # Supporting reference files (optional)\n│       └── *.md\n├── scripts/               # Utility scripts\n├── CLAUDE.md              # This file\n└── README.md              # Skill catalog with descriptions and installation instructions\n```\n\n## Current Skills (42)\n\n| Category | Skills |\n|----------|--------|\n| **UX/Design** | refactoring-ui, ios-hig-design, ux-heuristics, hooked-ux, improve-retention, web-typography, top-design, design-everyday-things, lean-ux, microinteractions |\n| **Marketing/CRO** | cro-methodology, storybrand-messaging, scorecard-marketing, contagious, one-page-marketing |\n| **Sales/Influence** | influence-psychology, predictable-revenue, made-to-stick, hundred-million-offers |\n| **Product/Innovation** | jobs-to-be-done, lean-startup, design-sprint, inspired-product, continuous-discovery, 37signals-way |\n| **Product/Strategy** | mom-test, negotiation |\n| **Strategy/Growth** | crossing-the-chasm, blue-ocean-strategy, traction-eos, obviously-awesome |\n| **Code Quality** | clean-code, refactoring-patterns, software-design-philosophy, pragmatic-programmer, domain-driven-design |\n| **Systems/Architecture** | ddia-systems, system-design, clean-architecture, release-it, high-perf-browser |\n| **Other** | drive-motivation |\n\n## Skill File Format\n\nEach skill has a `SKILL.md` with this structure:\n\n```markdown\n---\nname: skill-name\ndescription: 'Framework description based on Author''s \"Book Title\". Use when you need to: (1) first use case, (2) second use case, (3) third use case.'\nlicense: MIT\nmetadata:\n  author: wondelai\n  version: \"1.0.0\"\n---\n\n# Skill Title\n\nIntro paragraph about the framework.\n\n## Core Principle\n\n**Bold opening statement.** Foundation paragraph.\n\n## Scoring\n\n**Goal: 10/10.** Rate 0-10 based on adherence to the principles below...\n\n## Framework Sections\n\n### 1. First Section\n\n**Core concept:** ...\n**Why it works:** ...\n**Key insights:** (bullet list)\n**Product applications:** (table: Context | Application | Example)\n**Copy patterns:** (bullet list with quoted examples)\n**Ethical boundary:** ...\nSee: [references/file.md](references/file.md)\n\n## Common Mistakes\n(Table: Mistake | Why It Fails | Fix)\n\n## Quick Diagnostic\n(Table: Question | If No | Action)\n\n## Reference Files\n(List with descriptions)\n\n## Further Reading\n(Amazon links with ?tag=wondelai00-20)\n\n## About the Author\n(Author bio)\n```\n\n### Required Fields\n- `name`: Unique identifier (lowercase, hyphens for spaces, max 64 chars)\n- `description`: What the skill does and when to use it (max 1024 chars). Use numbered use cases: `(1) ..., (2) ..., (3) ...`\n\n### Recommended Fields (for marketplace)\n- `license`: License name (we use MIT)\n- `metadata.author`: Author/organization name (we use `wondelai`)\n- `metadata.version`: Semantic version\n\nThe YAML frontmatter `description` field is critical for skill discovery - it should include keywords and trigger phrases that help match user requests to the skill. Single quotes in YAML values must be escaped by doubling them (`''`).\n\n## Adding New Skills\n\n1. Create a new folder: `{skill-name}/`\n2. Create `SKILL.md` with YAML frontmatter (`name`, `description`) and skill instructions\n3. Add `references/` folder with supporting `.md` files (each 1500-3000 words)\n4. Add the skill to `README.md`:\n   - Add to \"Via skills.sh\" installation list\n   - Add row to \"Available Skills\" table\n   - Add \"Skill Details\" section (description, About the author, Use when, Example prompts)\n   - Add to \"Copyright & Disclaimer\" section\n5. Add the skill to `.claude-plugin/marketplace.json` under the appropriate plugin collection\n\n## Installation\n\n### Via Claude Code Plugin Marketplace\n```bash\n/plugin marketplace add wondelai/skills\n\n/plugin install product-strategy@wondelai-skills    # Jobs to Be Done, Negotiation, Mom Test\n/plugin install ux-design@wondelai-skills           # Refactoring UI, iOS HIG, UX Heuristics, Hooked, Improve Retention, Web Typography, Top Design, Design of Everyday Things, Lean UX, Microinteractions\n/plugin install marketing-cro@wondelai-skills       # CRO, StoryBrand, Scorecard Marketing, Contagious, 1-Page Marketing\n/plugin install sales-influence@wondelai-skills     # Influence Psychology, Predictable Revenue, Made to Stick, $100M Offers\n/plugin install product-innovation@wondelai-skills  # Lean Startup, Design Sprint, Design of Everyday Things, Inspired, Continuous Discovery\n/plugin install strategy-growth@wondelai-skills     # Crossing the Chasm, Blue Ocean Strategy, Traction/EOS, Obviously Awesome\n/plugin install team-motivation@wondelai-skills     # Drive (Autonomy, Mastery, Purpose)\n/plugin install code-craftsmanship@wondelai-skills  # Clean Code, Refactoring Patterns, Software Design Philosophy, Pragmatic Programmer, DDD\n/plugin install systems-architecture@wondelai-skills # DDIA, System Design, Clean Architecture, Release It!, High Performance Browser Networking\n```\n\n### Via skills.sh\n```bash\nnpx skills add wondelai/skills              # All skills\nnpx skills add wondelai/skills/{skill-name} # Individual skill\n```\n\n## Versioning Policy\n\nSkills use semantic versioning (`MAJOR.MINOR.PATCH`):\n- **MAJOR**: Breaking changes or complete rewrites\n- **MINOR**: New features, significant enhancements, new sections\n- **PATCH**: Bug fixes, typo corrections, small clarifications\n\n**Auto-increment rule:** When modifying a skill's `SKILL.md` or its `references/` files, always bump the version in the frontmatter:\n- Content addition/enhancement → bump MINOR (e.g., `1.0.0` → `1.1.0`)\n- Small fix/typo → bump PATCH (e.g., `1.1.0` → `1.1.1`)\n\nExample:\n```yaml\nmetadata:\n  author: wondelai\n  version: \"1.1.0\"\n```\n\n## Commit Policy\n\nCommit directly to main.",
+      "tool_call_id": "call_function_u6dp4kt5o9s8_1"
+    },
+    {
+      "role": "assistant",
+      "content": "",
+      "reasoning": "Now I understand the structure. I need to:\n1. Install the `qmd` skill into `~/.hermes/skills/` (the qmd skill from skills/qmd)\n2. Build/install the `qmd` CLI tool\n\nLet me look at the skill file and the install instructions more carefully. The skill goes into ~/.hermes/skills/qmd/\n\nLet me also check what `qmd init --target hermes` does to set up the MCP config.\n\nFirst, let me install bun since it's required, then build the project and install the skill.",
+      "finish_reason": "tool_calls",
+      "reasoning_content": "Now I understand the structure. I need to:\n1. Install the `qmd` skill into `~/.hermes/skills/` (the qmd skill from skills/qmd)\n2. Build/install the `qmd` CLI tool\n\nLet me look at the skill file and the install instructions more carefully. The skill goes into ~/.hermes/skills/qmd/\n\nLet me also check what `qmd init --target hermes` does to set up the MCP config.\n\nFirst, let me install bun since it's required, then build the project and install the skill.",
+      "reasoning_details": [
+        {
+          "signature": "5b7919fb98474eb6ccafa80d283bb4a6f8d49a0b73a979dbad3c1f59d09f1313",
+          "thinking": "Now I understand the structure. I need to:\n1. Install the `qmd` skill into `~/.hermes/skills/` (the qmd skill from skills/qmd)\n2. Build/install the `qmd` CLI tool\n\nLet me look at the skill file and the install instructions more carefully. The skill goes into ~/.hermes/skills/qmd/\n\nLet me also check what `qmd init --target hermes` does to set up the MCP config.\n\nFirst, let me install bun since it's required, then build the project and install the skill.",
+          "type": "thinking"
+        }
+      ],
+      "tool_calls": [
+        {
+          "id": "call_function_0vofdg7o1ecg_1",
+          "call_id": "call_function_0vofdg7o1ecg_1",
+          "response_item_id": "fc_function_0vofdg7o1ecg_1",
+          "type": "function",
+          "function": {
+            "name": "terminal",
+            "arguments": "{\"command\": \"curl -fsSL https://bun.sh/install | bash && export BUN_INSTALL=\\\"$HOME/.bun\\\" && export PATH=\\\"$BUN_INSTALL/bin:$PATH\\\" && bun --version\", \"timeout\": 120, \"workdir\": \"/tmp/flowstate-qmd\"}"
+          }
+        }
+      ]
+    },
+    {
+      "role": "tool",
+      "name": "terminal",
+      "content": "{\"output\": \"#=#=#                                                                          \\r##O#-#                                                                         \\r##O=#  #                                                                       \\r\\r                                                                           0.5%\\r#                                                                          2.2%\\r####                                                                       5.6%\\r#######                                                                   10.0%\\r########                                                                  12.0%\\r###########                                                               15.7%\\r##############                                                            20.2%\\r#################                                                         24.1%\\r###################                                                       27.2%\\r#######################                                                   32.2%\\r############################                                              40.1%\\r################################                                          44.6%\\r####################################                                      50.8%\\r#########################################                                 57.4%\\r#############################################                             62.6%\\r################################################                          67.0%\\r####################################################                      73.1%\\r########################################################                  78.1%\\r#############################################################             84.8%\\r##############################################################            86.2%\\r##################################################################        92.6%\\r######################################################################    97.6%\\r######################################################################## 100.0%\\nbun was installed successfully to ~/.bun/bin/bun \\n\\nAdded \\\"~/.bun/bin\\\" to $PATH in \\\"~/.bashrc\\\" \\n\\nTo get started, run: \\n\\n  source /home/marco/.bashrc \\n  bun --help \\n1.3.13\", \"exit_code\": 0, \"error\": null}",
+      "tool_call_id": "call_function_0vofdg7o1ecg_1"
+    },
+    {
+      "role": "assistant",
+      "content": "",
+      "reasoning": "Bun is installed. Now I need to install the dependencies for flowstate-qmd and then install it. Let me proceed.",
+      "finish_reason": "tool_calls",
+      "reasoning_content": "Bun is installed. Now I need to install the dependencies for flowstate-qmd and then install it. Let me proceed.",
+      "reasoning_details": [
+        {
+          "signature": "3afbde1a7b8b32a832137f56415ce6b0699d89fe2b03743973f4866ef4a1bffa",
+          "thinking": "Bun is installed. Now I need to install the dependencies for flowstate-qmd and then install it. Let me proceed.",
+          "type": "thinking"
+        }
+      ],
+      "tool_calls": [
+        {
+          "id": "call_function_c4ykqlgr8apy_1",
+          "call_id": "call_function_c4ykqlgr8apy_1",
+          "response_item_id": "fc_function_c4ykqlgr8apy_1",
+          "type": "function",
+          "function": {
+            "name": "terminal",
+            "arguments": "{\"command\": \"cd /tmp/flowstate-qmd && ~/.bun/bin/bun install\", \"timeout\": 120}"
+          }
+        }
+      ]
+    },
+    {
+      "role": "tool",
+      "name": "terminal",
+      "content": "{\"output\": \"bun install v1.3.13 (bf2e2cec)\\nResolving dependencies\\nResolved, downloaded and extracted [4]\\nSaved lockfile\\n\\n$ [ -d .git ] && ./scripts/install-hooks.sh || true\\nInstalled git hooks: pre-push\\n\\n+ @types/better-sqlite3@7.6.13\\n+ @types/node@24.10.1 (v25.6.0 available)\\n+ tsx@4.21.0\\n+ vitest@3.2.4\\n+ sqlite-vec-linux-x64@0.1.7-alpha.2\\n+ @modelcontextprotocol/sdk@1.25.1\\n+ better-sqlite3@12.6.2\\n+ fast-glob@3.3.3\\n+ node-llama-cpp@3.17.1\\n+ picomatch@4.0.3\\n+ sqlite-vec@0.1.7-alpha.2\\n+ yaml@2.8.2\\n+ zod@4.2.1 (v4.4.3 available)\\n+ typescript@5.9.3\\n\\n303 packages installed [33.35s]\", \"exit_code\": 0, \"error\": null}",
+      "tool_call_id": "call_function_c4ykqlgr8apy_1"
+    },
+    {
+      "role": "assistant",
+      "content": "",
+      "reasoning": "Good, bun install succeeded. Now I need to build the project. According to CLAUDE.md:\n- `npm run build` compiles TypeScript to `dist/` via `tsc -p tsconfig.build.json`\n- Then `bun link` installs globally as 'qmd'\n\nLet me build it.",
+      "finish_reason": "tool_calls",
+      "reasoning_content": "Good, bun install succeeded. Now I need to build the project. According to CLAUDE.md:\n- `npm run build` compiles TypeScript to `dist/` via `tsc -p tsconfig.build.json`\n- Then `bun link` installs globally as 'qmd'\n\nLet me build it.",
+      "reasoning_details": [
+        {
+          "signature": "6a678acbb47cc42a6d3146a79357982e1bd44b0d8cd82192aaf8cb8a67f6a274",
+          "thinking": "Good, bun install succeeded. Now I need to build the project. According to CLAUDE.md:\n- `npm run build` compiles TypeScript to `dist/` via `tsc -p tsconfig.build.json`\n- Then `bun link` installs globally as 'qmd'\n\nLet me build it.",
+          "type": "thinking"
+        }
+      ],
+      "tool_calls": [
+        {
+          "id": "call_function_2tbdo2lnf2t7_1",
+          "call_id": "call_function_2tbdo2lnf2t7_1",
+          "response_item_id": "fc_function_2tbdo2lnf2t7_1",
+          "type": "function",
+          "function": {
+            "name": "terminal",
+            "arguments": "{\"command\": \"cd /tmp/flowstate-qmd && ~/.bun/bin/bun run build\", \"timeout\": 120}"
+          }
+        }
+      ]
+    },
+    {
+      "role": "tool",
+      "name": "terminal",
+      "content": "{\"output\": \"$ tsc -p tsconfig.build.json && printf '#!/usr/bin/env node\\n' | cat - dist/cli/qmd.js > dist/cli/qmd.tmp && mv dist/cli/qmd.tmp dist/cli/qmd.js && chmod +x dist/cli/qmd.js\", \"exit_code\": 0, \"error\": null}",
+      "tool_call_id": "call_function_2tbdo2lnf2t7_1"
+    },
+    {
+      "role": "assistant",
+      "content": "",
+      "reasoning": "Good, the build succeeded. Now let me link it globally and copy the skill files to ~/.hermes/skills/.",
+      "finish_reason": "tool_calls",
+      "reasoning_content": "Good, the build succeeded. Now let me link it globally and copy the skill files to ~/.hermes/skills/.",
+      "reasoning_details": [
+        {
+          "signature": "c901f76d212a571619e579371d7b4b35281f699b21913f34f6b0a3ce047e8886",
+          "thinking": "Good, the build succeeded. Now let me link it globally and copy the skill files to ~/.hermes/skills/.",
+          "type": "thinking"
+        }
+      ],
+      "tool_calls": [
+        {
+          "id": "call_function_bxckxbktokvr_1",
+          "call_id": "call_function_bxckxbktokvr_1",
+          "response_item_id": "fc_function_bxckxbktokvr_1",
+          "type": "function",
+          "function": {
+            "name": "terminal",
+            "arguments": "{\"command\": \"cd /tmp/flowstate-qmd && ~/.bun/bin/bun link\", \"workdir\": \"/tmp/flowstate-qmd\"}"
+          }
+        }
+      ]
+    },
+    {
+      "role": "tool",
+      "name": "terminal",
+      "content": "{\"output\": \"bun link v1.3.13 (bf2e2cec)\\nSuccess! Registered \\\"flowstate-qmd\\\"\\n\\nTo use flowstate-qmd in a project, run:\\n  bun link flowstate-qmd\\n\\nOr add it in dependencies in your package.json file:\\n  \\\"flowstate-qmd\\\": \\\"link:flowstate-qmd\\\"\", \"exit_code\": 0, \"error\": null}",
+      "tool_call_id": "call_function_bxckxbktokvr_1"
+    },
+    {
+      "role": "assistant",
+      "content": "",
+      "reasoning": "Wait, `bun link` doesn't install the CLI globally - it just links the local package. I need to install it globally. Let me check how to install the `qmd` CLI globally with bun.\n\nActually, looking at the README:\n```bash\nbun link               # Install globally as 'qmd'\n```\n\nBut `bun link` doesn't install globally - it creates a link in the current project. Let me check if there's a different approach.\n\nActually, the output says \"bun link\" which should make the `qmd` command available. But typically with bun, to install a CLI globally from a linked package, you'd need to use `bun link -g` or just install it globally.\n\n\nLet me verify whether `bun link -g` is what I actually need here.",
+      "finish_reason": "tool_calls",
+      "reasoning_content": "Wait, `bun link` doesn't install the CLI globally - it just links the local package. I need to install it globally. Let me check how to install the `qmd` CLI globally with bun.\n\nActually, looking at the README:\n```bash\nbun link               # Install globally as 'qmd'\n```\n\nBut `bun link` doesn't install globally - it creates a link in the current project. Let me check if there's a different approach.\n\nActually, the output says \"bun link\" which should make the `qmd` command available. But typically with bun, to install a CLI globally from a linked package, you'd need to use `bun link -g` or just install it globally.\n\n\nLet me verify whether `bun link -g` is what I actually need here.",
+      "reasoning_details": [
+        {
+          "signature": "744cd08cfcdfa7b1674f2562ff38441024495dc8c5bc4a607d45e5e697f5c217",
+          "thinking": "Wait, `bun link` doesn't install the CLI globally - it just links the local package. I need to install it globally. Let me check how to install the `qmd` CLI globally with bun.\n\nActually, looking at the README:\n```bash\nbun link               # Install globally as 'qmd'\n```\n\nBut `bun link` doesn't install globally - it creates a link in the current project. Let me check if there's a different approach.\n\nActually, the output says \"bun link\" which should make the `qmd` command available. But typically with bun, to install a CLI globally from a linked package, you'd need to use `bun link -g` or just install it globally.\n\n\nLet me verify whether `bun link -g` is what I actually need here.",
+          "type": "thinking"
+        }
+      ],
+      "tool_calls": [
+        {
+          "id": "call_function_763a8bpdfdoo_1",
+          "call_id": "call_function_763a8bpdfdoo_1",
+          "response_item_id": "fc_function_763a8bpdfdoo_1",
+          "type": "function",
+          "function": {
+            "name": "terminal",
+            "arguments": "{\"command\": \"~/.bun/bin/bun link -g && which qmd && qmd --version\", \"workdir\": \"/tmp/flowstate-qmd\"}"
+          }
+        }
+      ]
+    },
+    {
+      "role": "tool",
+      "name": "terminal",
+      "content": "{\"output\": \"bun link v1.3.13 (bf2e2cec)\\nerror: package.json missing \\\"name\\\" in \\\"/home/marco/.bun/install/global/package.json\\\"\", \"exit_code\": 1, \"error\": null}",
+      "tool_call_id": "call_function_763a8bpdfdoo_1"
+    },
+    {
+      "role": "assistant",
+      "content": "",
+      "reasoning": "Let me try a different approach - I can create a global bin link by manually linking it:",
+      "finish_reason": "tool_calls",
+      "reasoning_content": "Let me try a different approach - I can create a global bin link by manually linking it:",
+      "reasoning_details": [
+        {
+          "signature": "d6a4356eae587a41f3393b604642f569a65270c744538128192edcdc81789006",
+          "thinking": "Let me try a different approach - I can create a global bin link by manually linking it:",
+          "type": "thinking"
+        }
+      ],
+      "tool_calls": [
+        {
+          "id": "call_function_g2vhomlt37s7_1",
+          "call_id": "call_function_g2vhomlt37s7_1",
+          "response_item_id": "fc_function_g2vhomlt37s7_1",
+          "type": "function",
+          "function": {
+            "name": "terminal",
+            "arguments": "{\"command\": \"export PATH=\\\"$HOME/.bun/bin:$PATH\\\" && cd /tmp/flowstate-qmd && bun run build && ln -sf /tmp/flowstate-qmd/dist/cli/qmd.js ~/bin/qmd && chmod +x ~/bin/qmd && qmd --version\", \"workdir\": \"/tmp/flowstate-qmd\"}"
+          }
+        }
+      ]
+    },
+    {
+      "role": "tool",
+      "name": "terminal",
+      "content": "{\"output\": \"$ tsc -p tsconfig.build.json && printf '#!/usr/bin/env node\\n' | cat - dist/cli/qmd.js > dist/cli/qmd.tmp && mv dist/cli/qmd.tmp dist/cli/qmd.js && chmod +x dist/cli/qmd.js\\nqmd 1.0.0 (505f824)\", \"exit_code\": 0, \"error\": null}",
+      "tool_call_id": "call_function_g2vhomlt37s7_1"
+    },
+    {
+      "role": "assistant",
+      "content": "",
+      "reasoning": "Good, `qmd` is now available. Now I need to copy the skill files to `~/.hermes/skills/`. Let me copy the `skills/qmd` directory to `~/.hermes/skills/qmd`.",
+      "finish_reason": "tool_calls",
+      "reasoning_content": "Good, `qmd` is now available. Now I need to copy the skill files to `~/.hermes/skills/`. Let me copy the `skills/qmd` directory to `~/.hermes/skills/qmd`.",
+      "reasoning_details": [
+        {
+          "signature": "e789d51548f5ab90783168d969d652b01d6abb638fbd950c351940fb714d5358",
+          "thinking": "Good, `qmd` is now available. Now I need to copy the skill files to `~/.hermes/skills/`. Let me copy the `skills/qmd` directory to `~/.hermes/skills/qmd`.",
+          "type": "thinking"
+        }
+      ],
+      "tool_calls": [
+        {
+          "id": "call_function_xf9xqpepxu2e_1",
+          "call_id": "call_function_xf9xqpepxu2e_1",
+          "response_item_id": "fc_function_xf9xqpepxu2e_1",
+          "type": "function",
+          "function": {
+            "name": "terminal",
+            "arguments": "{\"command\": \"cp -r /tmp/flowstate-qmd/skills/qmd ~/.hermes/skills/ && ls -la ~/.hermes/skills/qmd/\"}"
+          }
+        }
+      ]
+    },
+    {
+      "role": "tool",
+      "name": "terminal",
+      "content": "{\"output\": \"total 16\\ndrwxrwxr-x  3 marco marco 4096 mag  5 12:19 .\\ndrwxrwxr-x 97 marco marco 4096 mag  5 12:19 ..\\ndrwxrwxr-x  2 marco marco 4096 mag  5 12:19 references\\n-rw-rw-r--  1 marco marco 3669 mag  5 12:19 SKILL.md\", \"exit_code\": 0, \"error\": null}",
+      "tool_call_id": "call_function_xf9xqpepxu2e_1"
+    },
+    {
+      "role": "assistant",
+      "content": "",
+      "reasoning": "Good. Now let me run `qmd doctor` to check readiness and also try `qmd init --target hermes` to set up the Hermes MCP configuration.",
+      "finish_reason": "tool_calls",
+      "reasoning_content": "Good. Now let me run `qmd doctor` to check readiness and also try `qmd init --target hermes` to set up the Hermes MCP configuration.",
+      "reasoning_details": [
+        {
+          "signature": "5d650316f8eaed5b83a0f8cd7954c01edcae3a7cfbfb03c43d75b5113590bef8",
+          "thinking": "Good. Now let me run `qmd doctor` to check readiness and also try `qmd init --target hermes` to set up the Hermes MCP configuration.",
+          "type": "thinking"
+        }
+      ],
+      "tool_calls": [
+        {
+          "id": "call_function_2set58ezeuvy_1",
+          "call_id": "call_function_2set58ezeuvy_1",
+          "response_item_id": "fc_function_2set58ezeuvy_1",
+          "type": "function",
+          "function": {
+            "name": "terminal",
+            "arguments": "{\"command\": \"export PATH=\\\"$HOME/.bun/bin:$PATH\\\" && qmd doctor\", \"timeout\": 60}"
+          }
+        }
+      ]
+    },
+    {
+      "role": "tool",
+      "name": "terminal",
+      "content": "{\"output\": \"FlowState-QMD ready with degraded features\\n\\nHost: linux/x64 with 7.7 GB RAM\\nProfile: lite — Lower-memory profile for constrained laptops and always-on FlowState watchers.\\nTool order: fetch_anticipatory_context -> query -> get -> multi_get -> status\\nWatcher target: not detected\\n\\nChecks:\\n- [PASS] Node.js runtime: Node 24.3.0 satisfies the >=22 requirement.\\n- [PASS] Bun runtime: Bun 1.3.13 is available for the Bun-first developer workflow.\\n- [WARN] Model cache: No model cache found at /home/marco/.cache/qmd/models. Run 'qmd pull' before a live demo.\\n- [PASS] Wrapper configs: Generated 1 target configs with the canonical qmd MCP contract.\\n\\nTargets:\\n- hermes: artifact -> /home/marco/.cache/qmd/targets/hermes.config.yaml\", \"exit_code\": 0, \"error\": null}",
+      "tool_call_id": "call_function_2set58ezeuvy_1"
+    },
+    {
+      "role": "assistant",
+      "content": "",
+      "reasoning": "Let me check the skill file content and verify the installation. Also need to understand what setup steps remain.",
+      "finish_reason": "tool_calls",
+      "reasoning_content": "Let me check the skill file content and verify the installation. Also need to understand what setup steps remain.",
+      "reasoning_details": [
+        {
+          "signature": "0bde41697b701f7390d6061723f14aaffe04b360a81a3e217694adb939fcfd5e",
+          "thinking": "Let me check the skill file content and verify the installation. Also need to understand what setup steps remain.",
+          "type": "thinking"
+        }
+      ],
+      "tool_calls": [
+        {
+          "id": "call_function_x5eryws7wumr_1",
+          "call_id": "call_function_x5eryws7wumr_1",
+          "response_item_id": "fc_function_x5eryws7wumr_1",
+          "type": "function",
+          "function": {
+            "name": "read_file",
+            "arguments": "{\"path\": \"~/.hermes/skills/qmd/SKILL.md\"}"
+          }
+        },
+        {
+          "id": "call_function_x5eryws7wumr_2",
+          "call_id": "call_function_x5eryws7wumr_2",
+          "response_item_id": "fc_function_x5eryws7wumr_2",
+          "type": "function",
+          "function": {
+            "name": "read_file",
+            "arguments": "{\"path\": \"~/.hermes/skills/qmd/references/mcp-setup.md\"}"
+          }
+        }
+      ]
+    },
+    {
+      "role": "tool",
+      "name": "read_file",
+      "content": "{\"content\": \"     1|---\\n     2|name: qmd\\n     3|description: FlowState-QMD gives coding agents anticipatory project memory over docs, notes, ADRs, changelogs, and runbooks.\\n     4|license: MIT\\n     5|compatibility: Requires the qmd CLI or MCP server. Install with qmd or npm, then connect agents via MCP.\\n     6|metadata:\\n     7|  author: Adam Manning and Tobi Lutke\\n     8|  version: \\\"2.0.1-flowstate\\\"\\n     9|allowed-tools: Bash(qmd:*), mcp__qmd__*\\n    10|---\\n    11|\\n    12|# QMD for Coding Agents\\n    13|\\n    14|FlowState-QMD is a local-first memory layer for coding agents. It turns markdown knowledge bases into project memory that is fast enough to feel built in.\\n    15|\\n    16|## What It Is Good At\\n    17|\\n    18|- Repo memory: design docs, specs, ADRs, RFCs, changelogs\\n    19|- Team memory: meeting notes, incident reviews, migration summaries\\n    20|- Agent memory: anticipatory context before a reactive search step\\n    21|- Trustworthy recall: inspectable snippets, doc IDs, and explain traces\\n    22|\\n    23|## Status\\n    24|\\n    25|!`qmd status 2>/dev/null || echo \\\"Not installed: run 'qmd skill install --global' or 'npm install -g @tobilu/qmd'\\\"`\\n    26|\\n    27|## Start Here\\n    28|\\n    29|1. Call `fetch_anticipatory_context` at the beginning of a coding turn when recent conversation context is available.\\n    30|2. Use `query` when you need deeper retrieval or want to inspect the evidence directly.\\n    31|3. Use `get` or `multi_get` to pull exact docs, ADRs, changelogs, or notes once you know what matters.\\n    32|\\n    33|## MCP Tool: `fetch_anticipatory_context`\\n    34|\\n    35|Use this first when you want the agent to feel like it already knows the project context.\\n    36|\\n    37|```json\\n    38|{\\n    39|  \\\"recent_conversation\\\": \\\"What changed in the auth rollback plan and why did we revert the migration?\\\",\\n    40|  \\\"refresh\\\": false,\\n    41|  \\\"lite_mode\\\": false\\n    42|}\\n    43|```\\n    44|\\n    45|Returns:\\n    46|- cached anticipatory memories from FlowState when available\\n    47|- or a fresh live query over the current project memory\\n    48|\\n    49|## MCP Tool: `query`\\n    50|\\n    51|```json\\n    52|{\\n    53|  \\\"searches\\\": [\\n    54|    { \\\"type\\\": \\\"lex\\\", \\\"query\\\": \\\"\\\\\\\"auth rollback\\\\\\\" migration changelog\\\" },\\n    55|    { \\\"type\\\": \\\"vec\\\", \\\"query\\\": \\\"why did we revert the authentication migration?\\\" }\\n    56|  ],\\n    57|  \\\"collections\\\": [\\\"docs\\\", \\\"notes\\\"],\\n    58|  \\\"intent\\\": \\\"coding agent project memory for a migration debugging task\\\",\\n    59|  \\\"limit\\\": 8\\n    60|}\\n    61|```\\n    62|\\n    63|### Query Types\\n    64|\\n    65|| Type | Method | Best for |\\n    66||------|--------|----------|\\n    67|| `lex` | BM25 | exact names, code terms, filenames, changelog phrases |\\n    68|| `vec` | Vector | natural-language engineering questions |\\n    69|| `hyde` | Vector | nuanced answers when you know what the result should sound like |\\n    70|\\n    71|### Writing Better Coding-Agent Queries\\n    72|\\n    73|- Start with `lex` when you know a filename, subsystem, ADR title, or error string\\n    74|- Add `vec` when you know the problem but not the vocabulary\\n    75|- Add `intent` for ambiguous queries like \\\"performance\\\", \\\"memory\\\", or \\\"rollback\\\"\\n    76|- Use `--explain` in the CLI when you need to understand why a memory was selected\\n    77|\\n    78|## Other MCP Tools\\n    79|\\n    80|| Tool | Use |\\n    81||------|-----|\\n    82|| `get` | Retrieve a single document by path or `#docid` |\\n    83|| `multi_get` | Pull several related documents by glob or list |\\n    84|| `status` | Check collection health, embedding status, and defaults |\\n    85|\\n    86|## CLI\\n    87|\\n    88|```bash\\n    89|qmd collection add . --name repo-memory\\n    90|qmd embed\\n    91|qmd flow ~/.codex/sessions/current.log --lite\\n    92|qmd query \\\"why was the rollout reverted\\\"\\n    93|qmd query --json --explain \\\"performance regression in auth service\\\"\\n    94|qmd get \\\"#abc123\\\"\\n    95|qmd multi-get \\\"docs/**/*.md,CHANGELOG.md\\\"\\n    96|```\\n    97|\\n    98|## Memory Model\\n    99|\\n   100|- Durable knowledge: indexed markdown files in collections\\n   101|- Working memory: FlowState anticipatory cache in `~/.cache/qmd/intuition.json`\\n   102|- Context overlays: human-authored collection and path summaries via `qmd context add`\\n   103|\\n   104|## Setup\\n   105|\\n   106|```bash\\n   107|qmd skill install --global --yes\\n   108|qmd collection add ~/projects/my-repo/docs --name docs\\n   109|qmd collection add ~/projects/my-repo/notes --name notes\\n   110|qmd embed\\n   111|qmd mcp\\n   112|```\\n   113|\", \"total_lines\": 112, \"file_size\": 3669, \"truncated\": false, \"is_binary\": false, \"is_image\": false}",
+      "tool_call_id": "call_function_x5eryws7wumr_1"
+    },
+    {
+      "role": "tool",
+      "name": "read_file",
+      "content": "{\"content\": \"     1|# FlowState-QMD MCP Setup\\n     2|\\n     3|## Install\\n     4|\\n     5|```bash\\n     6|npm install -g @tobilu/qmd\\n     7|qmd collection add ~/path/to/repo/docs --name docs\\n     8|qmd collection add ~/path/to/repo/notes --name notes\\n     9|qmd embed\\n    10|```\\n    11|\\n    12|## Canonical Agent Setup\\n    13|\\n    14|The default MCP server name is `qmd`.\\n    15|\\n    16|**Hermes Agent** (`~/.hermes/config.yaml`):\\n    17|```yaml\\n    18|mcp_servers:\\n    19|  qmd:\\n    20|    command: qmd\\n    21|    args:\\n    22|      - mcp\\n    23|```\\n    24|\\n    25|**Claude Code** (`~/.claude/settings.json`):\\n    26|```json\\n    27|{\\n    28|  \\\"mcpServers\\\": {\\n    29|    \\\"qmd\\\": { \\\"command\\\": \\\"qmd\\\", \\\"args\\\": [\\\"mcp\\\"] }\\n    30|  }\\n    31|}\\n    32|```\\n    33|\\n    34|**Claude Desktop** (`~/Library/Application Support/Claude/claude_desktop_config.json`):\\n    35|```json\\n    36|{\\n    37|  \\\"mcpServers\\\": {\\n    38|    \\\"qmd\\\": { \\\"command\\\": \\\"qmd\\\", \\\"args\\\": [\\\"mcp\\\"] }\\n    39|  }\\n    40|}\\n    41|```\\n    42|\\n    43|**Codex-style local agents**\\n    44|\\n    45|Use the same stdio server:\\n    46|\\n    47|```json\\n    48|{\\n    49|  \\\"mcpServers\\\": {\\n    50|    \\\"qmd\\\": { \\\"command\\\": \\\"qmd\\\", \\\"args\\\": [\\\"mcp\\\"] }\\n    51|  }\\n    52|}\\n    53|```\\n    54|\\n    55|**Codex** (`~/.codex/config.toml`):\\n    56|```toml\\n    57|[mcp_servers.qmd]\\n    58|command = \\\"qmd\\\"\\n    59|args = [\\\"mcp\\\"]\\n    60|```\\n    61|\\n    62|**Gemini CLI** (`~/.gemini/settings.json`), **Kiro** (`.kiro/settings/mcp.json`), and **VS Code** (`.vscode/mcp.json`) all use the same canonical `qmd` server definition. `qmd init --target all` will emit or install the right config automatically.\\n    63|\\n    64|## Bootstrap\\n    65|\\n    66|```bash\\n    67|qmd init --target hermes\\n    68|qmd init --target all\\n    69|qmd doctor --json\\n    70|```\\n    71|\\n    72|`qmd init` keeps one shared contract across Hermes, Claude Code, Codex, Gemini CLI, Kiro, VS Code, OpenClaw, and pi:\\n    73|\\n    74|1. `fetch_anticipatory_context`\\n    75|2. `query`\\n    76|3. `get` / `multi_get`\\n    77|4. `status`\\n    78|\\n    79|## HTTP Mode\\n    80|\\n    81|```bash\\n    82|qmd mcp --http              # Port 8181\\n    83|qmd mcp --http --daemon     # Background daemon\\n    84|qmd mcp stop                # Stop daemon\\n    85|```\\n    86|\\n    87|## Tool Order For Coding Agents\\n    88|\\n    89|1. `fetch_anticipatory_context` for the current turn\\n    90|2. `query` for deeper retrieval\\n    91|3. `get` / `multi_get` for exact evidence\\n    92|4. `status` when setup or freshness looks wrong\\n    93|\\n    94|## Example Query Payload\\n    95|\\n    96|```json\\n    97|{\\n    98|  \\\"searches\\\": [\\n    99|    { \\\"type\\\": \\\"lex\\\", \\\"query\\\": \\\"\\\\\\\"database migration\\\\\\\" rollback\\\" },\\n   100|    { \\\"type\\\": \\\"vec\\\", \\\"query\\\": \\\"why did the migration rollback and what changed afterward?\\\" }\\n   101|  ],\\n   102|  \\\"collections\\\": [\\\"docs\\\", \\\"notes\\\"],\\n   103|  \\\"intent\\\": \\\"coding agent memory for release debugging\\\",\\n   104|  \\\"limit\\\": 6\\n   105|}\\n   106|```\\n   107|\\n   108|## Troubleshooting\\n   109|\\n   110|- Not starting: `which qmd`, then run `qmd mcp` manually\\n   111|- No useful results: `qmd collection list`, `qmd embed`, `qmd status`\\n   112|- No anticipatory context: ensure FlowState is writing `~/.cache/qmd/intuition.json`\\n   113|- Slow first search: normal local model warmup\\n   114|\", \"total_lines\": 113, \"file_size\": 2440, \"truncated\": false, \"is_binary\": false, \"is_image\": false}",
+      "tool_call_id": "call_function_x5eryws7wumr_2"
+    },
+    {
+      "role": "assistant",
+      "content": "",
+      "reasoning": "Now I need to bootstrap the Hermes config so QMD is connected as an MCP server. Let me run `qmd init --target hermes`.",
+      "finish_reason": "tool_calls",
+      "reasoning_content": "Now I need to bootstrap the Hermes config so QMD is connected as an MCP server. Let me run `qmd init --target hermes`.",
+      "reasoning_details": [
+        {
+          "signature": "8cfee36b5576c76769a05ffa04c8d31ac06b8676c9d32741f239574e068f508c",
+          "thinking": "Now I need to bootstrap the Hermes config so QMD is connected as an MCP server. Let me run `qmd init --target hermes`.",
+          "type": "thinking"
+        }
+      ],
+      "tool_calls": [
+        {
+          "id": "call_function_yzzogdygeawb_1",
+          "call_id": "call_function_yzzogdygeawb_1",
+          "response_item_id": "fc_function_yzzogdygeawb_1",
+          "type": "function",
+          "function": {
+            "name": "terminal",
+            "arguments": "{\"command\": \"export PATH=\\\"$HOME/.bun/bin:$PATH\\\" && qmd init --target hermes\", \"timeout\": 30}"
+          }
+        }
+      ]
+    },
+    {
+      "role": "tool",
+      "name": "terminal",
+      "content": "{\"output\": \"✓ Installed QMD skill to /home/marco/.agents/skills/qmd\\n✓ Linked Claude skill at /home/marco/.claude/skills/qmd\\nFlowState-QMD ready with degraded features\\n\\nHost: linux/x64 with 7.7 GB RAM\\nProfile: lite — Lower-memory profile for constrained laptops and always-on FlowState watchers.\\nTool order: fetch_anticipatory_context -> query -> get -> multi_get -> status\\nWatcher target: not detected\\n\\nChecks:\\n- [PASS] Node.js runtime: Node 24.3.0 satisfies the >=22 requirement.\\n- [PASS] Bun runtime: Bun 1.3.13 is available for the Bun-first developer workflow.\\n- [WARN] Model cache: No model cache found at /home/marco/.cache/qmd/models. Run 'qmd pull' before a live demo.\\n- [PASS] Wrapper configs: Generated 1 target configs with the canonical qmd MCP contract.\\n\\nTargets:\\n- hermes: installed -> /home/marco/.hermes/config.yaml\", \"exit_code\": 0, \"error\": null}",
+      "tool_call_id": "call_function_yzzogdygeawb_1"
+    },
+    {
+      "role": "assistant",
+      "content": "",
+      "reasoning": "It says it installed to `/home/marco/.hermes/config.yaml`. Let me verify the current config and what was added.",
+      "finish_reason": "tool_calls",
+      "reasoning_content": "It says it installed to `/home/marco/.hermes/config.yaml`. Let me verify the current config and what was added.",
+      "reasoning_details": [
+        {
+          "signature": "dd0a07c0791c64be902eacbec89ef5b1198f694781b68e05d5c5520298052df8",
+          "thinking": "It says it installed to `/home/marco/.hermes/config.yaml`. Let me verify the current config and what was added.",
+          "type": "thinking"
+        }
+      ],
+      "tool_calls": [
+        {
+          "id": "call_function_eb8i6rtjcmky_1",
+          "call_id": "call_function_eb8i6rtjcmky_1",
+          "response_item_id": "fc_function_eb8i6rtjcmky_1",
+          "type": "function",
+          "function": {
+            "name": "terminal",
+            "arguments": "{\"command\": \"export PATH=\\\"$HOME/.bun/bin:$PATH\\\" && qmd status\", \"timeout\": 30}"
+          }
+        }
+      ]
+    },
+    {
+      "role": "tool",
+      "name": "terminal",
+      "content": "{\"output\": \"QMD Status\\n\\nIndex: /home/marco/.cache/qmd/index.sqlite\\nSize:  4.0 KB\\nReady: ready_with_degraded_features\\nMode:  lite\\n\\nDocuments\\n  Total:    0 files indexed\\n  Vectors:  0 embedded\\n\\nNo collections. Run 'qmd collection add .' to index markdown files.\\n\\nModels\\n  Embedding:   https://huggingface.co/Qwen/Qwen3-Embedding-4B-GGUF\\n  Reranking:   https://huggingface.co/QuantFactory/Qwen3-Reranker-4B-GGUF\\n  Generation:  https://huggingface.co/tobil/qmd-query-expansion-1.7B-gguf\\n[node-llama-cpp] The prebuilt binary for platform \\\"linux\\\" \\\"x64\\\" with Vulkan support is not compatible with the current system, falling back to using no GPU\\n[node-llama-cpp] Cloning llama.cpp\\n[node-llama-cpp] Cloning ggml-org/llama.cpp (local bundle)                    0%\\n[node-llama-cpp] Cloning ggml-org/llama.cpp (local bundle)                    0%\\n[node-llama-cpp] Cloning ggml-org/llama.cpp (local bundle)                    1%\\n[node-llama-cpp] Cloning ggml-org/llama.cpp (local bundle)\\n15%\\n[node-llama-cpp] Cloning ggml-org/llama.cpp (local bundle)\\n16%\\n[node-llama-cpp] Cloning ggml-org/llama.cpp (local bundle)\\n17%\\n[node-llama-cpp] Cloning ggml-org/llama.cpp (local bundle)\\n18%\\n[node-llama-cpp] Cloning ggml-org/llama.cpp (local bundle)\\n19%\\n[node-llama-cpp] Cloning ggml-org/llama.cpp (local bundle)\\n20%\\n[node-llama-cpp] Cloning ggml-org/llama.cpp (local bundle)\\n21%\\n[node-llama-cpp] Cloning ggml-org/llama.cpp (local bundle)\\n22%\\n[node-llama-cpp] Cloning ggml-org/llama.cpp (local bundle)\\n23%\\n[node-llama-cpp] Cloning ggml-org/llama.cpp (local bundle)\\n24%\\n[node-llama-cpp] Cloning ggml-org/llama.cpp (local bundle)\\n25%\\n[node-llama-cpp] Cloning ggml-org/llama.cpp (local bundle)\\n26%\\n[node-llama-cpp] Cloning ggml-org/llama.cpp (local bundle)\\n27%\\n[node-llama-cpp] Cloning ggml-org/llama.cpp (local bundle)\\n28%\\n[node-llama-cpp] Cloning ggml-org/llama.cpp (local bundle)\\n29%\\n[node-llama-cpp] Cloning ggml-org/llama.cpp (local bundle)\\n30%\\n[node-llama-cpp] Cloning ggml-org/llama.cpp (local bundle)\\n31%\\n[node-llama-cpp] Cloning ggml-org/llama.cpp (local bundle)\\n32%\\n[node-llama-cpp] Cloning ggml-org/llama.cpp (local bundle)\\n33%\\n[node-llama-cpp] Cloning ggml-org/llama.cpp (local bundle)\\n34%\\n[node-llama-cpp] Cloning ggml-org/llama.cpp (local bundle)\\n36%\\n[node-llama-cpp] Cloning ggml-org/llama.cpp (local bundle)\\n37%\\n[node-llama-cpp] Cloning ggml-org/llama.cpp (local bundle)\\n38%\\n[node-llama-cpp] Cloning ggml-org/llama.cpp (local bundle)\\n41%\\n[node-llama-cpp] Cloning ggml-org/llama.cpp (local bundle)\\n43%\\n[node-llama-cpp] Cloning ggml-org/llama.cpp (local bundle)\\n44%\\n[node-llama-cpp] Cloning ggml-org/llama.cpp (local bundle)\\n45%\\n[node-llama-cpp] Cloning ggml-org/llama.cpp (local bundle)\\n46%\\n[node-llama-cpp] Cloning ggml-org/llama.cpp (local bundle)\\n47%\\n[node-llama-cpp] Cloning ggml-org/llama.cpp (local bundle)\\n48%\\n[node-llama-cpp] Cloning ggml-org/llama.cpp (local bundle)\\n49%\\n[node-llama-cpp] Cloning ggml-org/llama.cpp (local bundle)\\n50%\\n[node-llama-cpp] Cloning ggml-org/llama.cpp (local bundle)\\n51%\\n[node-llama-cpp] Cloning ggml-org/llama.cpp (local bundle)\\n52%\\n[node-llama-cpp] Cloning ggml-org/llama.cpp (local bundle)\\n53%\\n[node-llama-cpp] Cloning ggml-org/llama.cpp (local bundle)\\n54%\\n[node-llama-cpp] Cloning ggml-org/llama.cpp (local bundle)\\n55%\\n[node-llama-cpp] Cloning ggml-org/llama.cpp (local bundle)\\n56%\\n[node-llama-cpp] Cloning ggml-org/llama.cpp (local bundle)\\n57%\\n[node-llama-cpp] Cloning ggml-org/llama.cpp (local bundle)\\n58%\\n[node-llama-cpp] Cloning ggml-org/llama.cpp (local bundle)\\n59%\\n[node-llama-cpp] Cloning ggml-org/llama.cpp (local bundle)\\n60%\\n[node-llama-cpp] Cloning ggml-org/llama.cpp (local bundle)\\n61%\\n[node-llama-cpp] Cloning ggml-org/llama.cpp (local bundle)\\n62%\\n[node-llama-cpp] Cloning ggml-org/llama.cpp (local bundle)\\n63%\\n[node-llama-cpp] Cloning ggml-org/llama.cpp (local bundle)\\n64%\\n[node-llama-cpp] Cloning ggml-org/llama.cpp (local bundle)\\n65%\\n[node-llama-cpp] Cloning ggml-org/llama.cpp (local bundle)\\n66%\\n[node-llama-cpp] Cloning ggml-org/llama.cpp (local bundle)\\n67%\\n[node-llama-cpp] Cloning ggml-org/llama.cpp (local bundle)\\n68%\\n[node-llama-cpp] Cloning ggml-org/llama.cpp (local bundle)\\n69%\\n[node-llama-cpp] Cloning ggml-org/llama.cpp (local bundle)\\n70%\\n[node-llama-cpp] Cloning ggml-org/llama.cpp (local bundle)\\n71%\\n[node-llama-cpp] Cloning ggml-org/llama.cpp (local bundle)\\n72%\\n[node-llama-cpp] Cloning ggml-org/llama.cpp (local bundle)\\n73%\\n[node-llama-cpp] Cloning ggml-org/llama.cpp (local bundle)\\n75%\\n[node-llama-cpp] Cloning ggml-org/llama.cpp (local bundle)\\n76%\\n[node-llama-cpp] Cloning ggml-org/llama.cpp (local bundle)\\n77%\\n[node-llama-cpp] Cloning ggml-org/llama.cpp (local bundle)\\n78%\\n[node-llama-cpp] Cloning ggml-org/llama.cpp (local bundle)\\n79%                   0s left\\n[node-llama-cpp] Cloning ggml-org/llama.cpp (local bundle)\\n80%                   0s left\\n[node-llama-cpp] Cloning ggml-org/llama.cpp (local bundle)\\n81%                   0s left\\n[node-llama-cpp] Cloning ggml-org/llama.cpp (local bundle)\\n82%                   0s left\\n[node-llama-cpp] Cloning ggml-org/llama.cpp (local bundle)\\n83%                   0s left\\n[node-llama-cpp] Cloning ggml-org/llama.cpp (local bundle)\\n84%                   0s left\\n[node-llama-cpp] Cloning ggml-org/llama.cpp (local bundle)\\n84%                   0s left\\n[node-llama-cpp] Cloning ggml-org/llama.cpp (local bundle)\\n85%                   0s left\\n[node-llama-cpp] Cloning ggml-org/llama.cpp (local bundle)\\n86%                   0s left\\n[node-llama-cpp] Cloning ggml-org/llama.cpp (local bundle)\\n87%                   0s left\\n[node-llama-cpp] Cloning ggml-org/llama.cpp (local bundle)\\n88%                   0s left\\n[node-llama-cpp] Cloning ggml-org/llama.cpp (local bundle)\\n89%                   0s left\\n[node-llama-cpp] Cloning ggml-org/llama.cpp (local bundle)\\n91%                   0s left\\n[node-llama-cpp] Cloning ggml-org/llama.cpp (local bundle)\\n96%                   0s left\\n[node-llama-cpp] Cloning ggml-org/llama.cpp (local bundle)\\n97%                   0s left\\n[node-llama-cpp] Cloning ggml-org/llama.cpp (local bundle)\\n98%                   0s left\\n[node-llama-cpp] Cloning ggml-org/llama.cpp (local bundle)\\n99%                   0s left\\n[node-llama-cpp] Cloning ggml-org/llama.cpp (local bundle)\\n100%\\n[node-llama-cpp] Cloning ggml-org/llama.cpp (local bundle)                0%\\n(Stage 2)\\n[node-llama-cpp] Cloning ggml-org/llama.cpp (local bundle)                4%\\n(Stage 2)              28s left\\n[node-llama-cpp] Cloning ggml-org/llama.cpp (local bundle)                5%\\n(Stage 2)              22s left\\n[node-llama-cpp] Cloning ggml-org/llama.cpp (local bundle)               11%\\n(Stage 2)              9s left\\n[node-llama-cpp] Cloning ggml-org/llama.cpp (local bundle)               14%\\n(Stage 2)              7s left\\n[node-llama-cpp] Cloning ggml-org/llama.cpp (local bundle)               15%\\n(Stage 2)              6s left\\n[node-llama-cpp] Cloning ggml-org/llama.cpp (local bundle)               41%\\n(Stage 2)              1s left\\n[node-llama-cpp] Cloning ggml-org/llama.cpp (local bundle)               42%\\n(Stage 2)              1s left\\n[node-llama-cpp] Cloning ggml-org/llama.cpp (local bundle)               45%\\n(Stage 2)              1s left\\n[node-llama-cpp] Cloning ggml-org/llama.cpp (local bundle)               59%\\n(Stage 2)              0s left\\n[node-llama-cpp] Cloning ggml-org/llama.cpp (local bundle)               62%\\n(Stage 2)              0s left\\n[node-llama-cpp] Cloning ggml-org/llama.cpp (local bundle)               69%\\n(Stage 2)              0s left\\n[node-llama-cpp] Cloning ggml-org/llama.cpp (local bundle)               72%\\n(Stage 2)              0s left\\n[node-llama-cpp] Cloning ggml-org/llama.cpp (local bundle)               76%\\n(Stage 2)              0s left\\n[node-llama-cpp] Cloning ggml-org/llama.cpp (local bundle)               78%\\n(Stage 2)              0s left\\n[node-llama-cpp] Cloning ggml-org/llama.cpp (local bundle)               80%\\n(Stage 2)              0s left\\n[node-llama-cpp] Cloning ggml-org/llama.cpp (local bundle)               84%\\n(Stage 2)              0s left\\n[node-llama-cpp] Cloning ggml-org/llama.cpp (local bundle)               86%\\n(Stage 2)              0s left\\n[node-llama-cpp] Cloning ggml-org/llama.cpp (local bundle)               95%\\n(Stage 2)              0s left\\n[node-llama-cpp] Cloning ggml-org/llama.cpp (local bundle)               96%\\n(Stage 2)              0s left\\n[node-llama-cpp] Cloning ggml-org/llama.cpp (local bundle)               100%\\n(Stage 2)\\n[node-llama-cpp] Cloning ggml-org/llama.cpp (local bundle)               100%\\n(Stage 2)\\n[node-llama-cpp] Cloning ggml-org/llama.cpp (local bundle)\\n100%\\n[node-llama-cpp] ✔ Cloned ggml-org/llama.cpp (local bundle)\\nNot searching for unused variables given on the command line.\\n-- The C compiler identification is GNU 13.3.0\\n-- The CXX compiler identification is GNU 13.3.0\\n-- Detecting C compiler ABI info\\n-- Detecting C compiler ABI info - done\\n-- Check for working C compiler: /usr/bin/cc - skipped\\n-- Detecting C compile features\\n-- Detecting C compile features - done\\n-- Detecting CXX compiler ABI info\\n-- Detecting CXX compiler ABI info - done\\n-- Check for working CXX compiler: /usr/bin/c++ - skipped\\n-- Detecting CXX compile features\\n-- Detecting CXX compile features - done\\nCMAKE_BUILD_TYPE=Release\\n-- Found Git: /usr/bin/git (found version \\\"2.43.0\\\") \\n-- The ASM compiler identification is GNU\\n-- Found assembler: /usr/bin/cc\\n-- Performing Test CMAKE_HAVE_LIBC_PTHREAD\\n-- Performing Test CMAKE_HAVE_LIBC_PTHREAD - Success\\n-- Found Threads: TRUE  \\n-- CMAKE_SYSTEM_PROCESSOR: x86_64\\n-- GGML_SYSTEM_ARCH: x86\\n-- Including CPU backend\\n-- Found OpenMP_C: -fopenmp (found version \\\"4.5\\\") \\n-- Found OpenMP_CXX: -fopenmp (found version \\\"4.5\\\") \\n-- Found OpenMP: TRUE (found version \\\"4.5\\\")  \\n-- x86 detected\\n-- Adding CPU backend variant ggml-cpu: -march=native \\nCMake Error at /usr/share/cmake-3.28/Modules/FindPackageHandleStandardArgs.cmake:230 (message):\\n  Could NOT find Vulkan (missing: glslc) (found version \\\"1.3.275\\\")\\nCall Stack (most recent call first):\\n  /usr/share/cmake-3.28/Modules/FindPackageHandleStandardArgs.cmake:600 (_FPHSA_FAILURE_MESSAGE)\\n  /usr/share/cmake-3.28/Modules/FindVulkan.cmake:600 (find_package_handle_standard_args)\\n  llama.cpp/ggml/src/ggml-vulkan/CMakeLists.txt:9 (find_package)\\n\\n\\n-- Configuring incomplete, errors occurred!\\nNot searching for unused variables given on the command line.\\n-- The C compiler identification is GNU 13.3.0\\n-- The CXX compiler identification is GNU 13.3.0\\n-- Detecting C compiler ABI info\\n-- Detecting C compiler ABI info - done\\n-- Check for working C compiler: /usr/bin/cc - skipped\\n-- Detecting C compile features\\n-- Detecting C compile features - done\\n-- Detecting CXX compiler ABI info\\n-- Detecting CXX compiler ABI info - done\\n-- Check for working CXX compiler: /usr/bin/c++ - skipped\\n-- Detecting CXX compile features\\n-- Detecting CXX compile features - done\\nCMAKE_BUILD_TYPE=Release\\n-- Found Git: /usr/bin/git (found version \\\"2.43.0\\\") \\n-- The ASM compiler identification is GNU\\n-- Found assembler: /usr/bin/cc\\n-- Performing Test CMAKE_HAVE_LIBC_PTHREAD\\n-- Performing Test CMAKE_HAVE_LIBC_PTHREAD - Success\\n-- Found Threads: TRUE  \\n-- CMAKE_SYSTEM_PROCESSOR: x86_64\\n-- GGML_SYSTEM_ARCH: x86\\n-- Including CPU backend\\n-- Found OpenMP_C: -fopenmp (found version \\\"4.5\\\") \\n-- Found OpenMP_CXX: -fopenmp (found version \\\"4.5\\\") \\n-- Found OpenMP: TRUE (found version \\\"4.5\\\")  \\n-- x86 detected\\n-- Adding CPU backend variant ggml-cpu: -march=native \\nCMake Error at /usr/share/cmake-3.28/Modules/FindPackageHandleStandardArgs.cmake:230 (message):\\n  Could NOT find Vulkan (missing: glslc) (found version \\\"1.3.275\\\")\\nCall Stack (most recent call first):\\n  /usr/share/cmake-3.28/Modules/FindPackageHandleStandardArgs.cmake:600 (_FPHSA_FAILURE_MESSAGE)\\n  /usr/share/cmake-3.28/Modules/FindVulkan.cmake:600 (find_package_handle_standard_args)\\n  llama.cpp/ggml/src/ggml-vulkan/CMakeLists.txt:9 (find_package)\\n\\n\\n-- Configuring incomplete, errors occurred!\\nERROR OMG Process terminated: 1\\n\\n[node-llama-cpp] To resolve errors related to Vulkan compilation, see the Vulkan guide: https://node-llama-cpp.withcat.ai/guide/vulkan\\n[node-llama-cpp] Failed to build llama.cpp with Vulkan support. falling back to no GPU. Error: 29 |                 combinedStd: finalCombinedStd\\n30 |             };\\n31 |         }\\n32 |         function createError(message) {\\n33 |             const { stdout: finalStdout, stderr: finalStderr, combinedStd: finalCombinedStd } = createResult();\\n34 |             return new SpawnError(message, finalStdout, finalStderr, finalCombinedStd);\\n                        ^\\nerror: Command npm run -s cmake-js-llama -- compile --log-level warn --config Release --arch=x64 --out localBuilds/linux-x64-vulkan --runtime-version=24.3.0 --parallel=4 --CDGGML_BUILD_NUMBER=1 --CDCMAKE_CONFIGURATION_TYPES=Release --CDNLC_CURRENT_PLATFORM=linux-x64 --CDNLC_TARGET_PLATFORM=linux-x64 --CDNLC_VARIANT=vulkan.b8179 --CDGGML_METAL=OFF --CDGGML_VULKAN=1 --CDGGML_CCACHE=OFF --CDLLAMA_CURL=OFF --CDLLAMA_HTTPLIB=OFF --CDLLAMA_BUILD_BORINGSSL=OFF --CDLLAMA_OPENSSL=OFF exited with code 1\\n      at createError (/tmp/flowstate-qmd/node_modules/node-llama-cpp/dist/utils/spawnCommand.js:34:20)\\n      at <anonymous> (/tmp/flowstate-qmd/node_modules/node-llama-cpp/dist/utils/spawnCommand.js:47:24)\\n      at emit (node:events:98:22)\\n      at #handleOnExit (node:child_process:520:14)\\n\\nQMD Warning: no GPU acceleration, running on CPU (slow). Run 'qmd status' for details.\\n\\nDevice\\n  GPU:      none (running on CPU — models will be slow)\\n  Tip: Install CUDA, Vulkan, or Metal support for GPU acceleration.\\n  CPU:      2 math cores\", \"exit_code\": 0, \"error\": null}",
+      "tool_call_id": "call_function_eb8i6rtjcmky_1"
+    },
+    {
+      "role": "assistant",
+      "content": "## Summary\n\n**Installed FlowState-QMD for Hermes Agent** — an anticipatory memory layer with RAG and vector search for pre-fetching relevant context.\n\n### What Was Done\n\n1. **Cloned** `https://github.com/amanning3390/flowstate-qmd` → `/tmp/flowstate-qmd`\n2. **Installed Bun** (required runtime) → `~/.bun/bin/bun v1.3.13`\n3. **Built & linked** the `qmd` CLI via `bun install && bun run build && bun link`\n4. **Installed skill** → copied `skills/qmd/` to `~/.hermes/skills/qmd/`\n5. **Initialized Hermes config** → `qmd init --target hermes` updated `~/.hermes/config.yaml`\n\n### Files Installed\n\n- `~/.hermes/skills/qmd/SKILL.md` — Agent skill instructions\n- `~/.hermes/skills/qmd/references/mcp-setup.md` — MCP setup reference\n- `~/bin/qmd` — CLI binary (linked to `/tmp/flowstate-qmd/dist/cli/qmd.js`)\n- `~/.cache/qmd/index.sqlite` — SQLite index (empty, no collections yet)\n- `~/.cache/qmd/targets/hermes.config.yaml` — Hermes MCP config\n\n### Verification\n\n- `qmd doctor` → **PASS** on runtime, **WARN** on model cache\n- `qmd status` → Lite mode, CPU-only (expected for VPS), no collections indexed\n\n### Setup Needed to Activate\n\n```bash\n# 1. Index project memory (e.g., Hermes docs/notes)\nqmd collection add ~/.hermes --name hermes-memory --mask '**/*.md'\n\n# 2. Generate embeddings (pulls ~1.2GB Qwen3 models on first run)\nqmd embed\n\n# 3. Start MCP server (for Hermes to use as tool)\nqmd mcp\n\n# 4. For FlowState anticipatory cache, point at session log:\nqmd flow ~/.hermes/sessions/current.log --lite\n```\n\n**Note:** VPS is running in CPU-only \"lite\" mode (~7.7GB RAM detected). Full GPU acceleration requires CUDA/Vulkan/Metal. First `qmd embed` will download embedding models (~1GB).",
+      "reasoning": "The qmd status shows it's running in \"lite\" mode with CPU only (no GPU). This is expected for a VPS without GPU. The installation is complete. Let me provide a summary.",
+      "finish_reason": "stop",
+      "reasoning_content": "The qmd status shows it's running in \"lite\" mode with CPU only (no GPU). This is expected for a VPS without GPU. The installation is complete. Let me provide a summary.",
+      "reasoning_details": [
+        {
+          "signature": "9de5ed73de74d6c1cb95512f61205786ff138358ab0a3900fb28ca6b81aff2e5",
+          "thinking": "The qmd status shows it's running in \"lite\" mode with CPU only (no GPU). This is expected for a VPS without GPU. The installation is complete. Let me provide a summary.",
+          "type": "thinking"
+        }
+      ]
+    }
+  ]
+}

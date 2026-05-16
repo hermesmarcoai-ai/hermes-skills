@@ -1,0 +1,3 @@
+watch-video.py key fixes: ffmpeg output → stderr (not stdout); subprocess returns bytes → decode before regex; ffmpeg path hardcoded for Python 3.12 compat.
+§
+Marco wants comprehensive implementation: video analysis, trading automation, research agents. Prioritize all-in-one setup. GitHub push has non-fast-forward issues - skills are locally installed but remote sync problematic. AionUI too large to build on VPS (ENOSPC). Focus on software implementation, not GUI.

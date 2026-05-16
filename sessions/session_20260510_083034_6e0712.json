@@ -1,0 +1,693 @@
+{
+  "session_id": "20260510_083034_6e0712",
+  "model": "MiniMax-M2.7-highspeed",
+  "base_url": "https://api.minimax.io/anthropic",
+  "platform": "telegram",
+  "session_start": "2026-05-10T08:30:34.937307",
+  "last_updated": "2026-05-10T08:32:53.413462",
+  "system_prompt": "You are Hermes Agent, an intelligent AI assistant created by Nous Research. You are helpful, knowledgeable, and direct. You assist users with a wide range of tasks including answering questions, writing and editing code, analyzing information, creative work, and executing actions via your tools. You communicate clearly, admit uncertainty when appropriate, and prioritize being genuinely useful over being verbose unless otherwise directed below. Be targeted and efficient in your exploration and investigations.\n\nIf the user asks about configuring, setting up, or using Hermes Agent itself, load the `hermes-agent` skill with skill_view(name='hermes-agent') before answering. Docs: https://hermes-agent.nousresearch.com/docs\n\nConversation started: Sunday, May 10, 2026 08:30 AM\nModel: MiniMax-M2.7-highspeed\nProvider: minimax\n\nHost: Linux (6.17.0-23-generic)\nUser home directory: /home/marco\nCurrent working directory: /home/marco/.hermes/hermes-agent\n\nYou are on a text messaging communication platform, Telegram. Standard markdown is automatically converted to Telegram format. Supported: **bold**, *italic*, ~~strikethrough~~, ||spoiler||, `inline code`, ```code blocks```, [links](url), and ## headers. Telegram has NO table syntax — prefer bullet lists or labeled key: value pairs over pipe tables (any tables you do emit are auto-rewritten into row-group bullets, which you can produce directly for cleaner output). You can send media files natively: to deliver a file to the user, include MEDIA:/absolute/path/to/file in your response. Images (.png, .jpg, .webp) appear as photos, audio (.ogg) sends as voice bubbles, and videos (.mp4) play inline. You can also include image URLs in markdown format ![alt](url) and they will be sent as native photos.",
+  "tools": [
+    {
+      "type": "function",
+      "function": {
+        "name": "process",
+        "description": "Manage background processes started with terminal(background=true). Actions: 'list' (show all), 'poll' (check status + new output), 'log' (full output with pagination), 'wait' (block until done or timeout), 'kill' (terminate), 'write' (send raw stdin data without newline), 'submit' (send data + Enter, for answering prompts), 'close' (close stdin/send EOF).",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "action": {
+              "type": "string",
+              "enum": [
+                "list",
+                "poll",
+                "log",
+                "wait",
+                "kill",
+                "write",
+                "submit",
+                "close"
+              ],
+              "description": "Action to perform on background processes"
+            },
+            "session_id": {
+              "type": "string",
+              "description": "Process session ID (from terminal background output). Required for all actions except 'list'."
+            },
+            "data": {
+              "type": "string",
+              "description": "Text to send to process stdin (for 'write' and 'submit' actions)"
+            },
+            "timeout": {
+              "type": "integer",
+              "description": "Max seconds to block for 'wait' action. Returns partial output on timeout.",
+              "minimum": 1
+            },
+            "offset": {
+              "type": "integer",
+              "description": "Line offset for 'log' action (default: last 200 lines)"
+            },
+            "limit": {
+              "type": "integer",
+              "description": "Max lines to return for 'log' action",
+              "minimum": 1
+            }
+          },
+          "required": [
+            "action"
+          ]
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "terminal",
+        "description": "Execute shell commands on a Linux environment. Filesystem usually persists between calls.\n\nDo NOT use cat/head/tail to read files — use read_file instead.\nDo NOT use grep/rg/find to search — use search_files instead.\nDo NOT use ls to list directories — use search_files(target='files') instead.\nDo NOT use sed/awk to edit files — use patch instead.\nDo NOT use echo/cat heredoc to create files — use write_file instead.\nReserve terminal for: builds, installs, git, processes, scripts, network, package managers, and anything that needs a shell.\n\nForeground (default): Commands return INSTANTLY when done, even if the timeout is high. Set timeout=300 for long builds/scripts — you'll still get the result in seconds if it's fast. Prefer foreground for short commands.\nBackground: Set background=true to get a session_id. Two patterns:\n  (1) Long-lived processes that never exit (servers, watchers).\n  (2) Long-running tasks with notify_on_complete=true — you can keep working on other things and the system auto-notifies you when the task finishes. Great for test suites, builds, deployments, or anything that takes more than a minute.\nFor servers/watchers, do NOT use shell-level background wrappers (nohup/disown/setsid/trailing '&') in foreground mode. Use background=true so Hermes can track lifecycle and output.\nAfter starting a server, verify readiness with a health check or log signal, then run tests in a separate terminal() call. Avoid blind sleep loops.\nUse process(action=\"poll\") for progress checks, process(action=\"wait\") to block until done.\nWorking directory: Use 'workdir' for per-command cwd.\nPTY mode: Set pty=true for interactive CLI tools (Codex, Claude Code, Python REPL).\n\nDo NOT use vim/nano/interactive tools without pty=true — they hang without a pseudo-terminal. Pipe git output to cat if it might page.\n",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "command": {
+              "type": "string",
+              "description": "The command to execute on the VM"
+            },
+            "background": {
+              "type": "boolean",
+              "description": "Run the command in the background. Two patterns: (1) Long-lived processes that never exit (servers, watchers). (2) Long-running tasks paired with notify_on_complete=true — you can keep working and get notified when the task finishes. For short commands, prefer foreground with a generous timeout instead.",
+              "default": false
+            },
+            "timeout": {
+              "type": "integer",
+              "description": "Max seconds to wait (default: 180, foreground max: 600). Returns INSTANTLY when command finishes — set high for long tasks, you won't wait unnecessarily. Foreground timeout above 600s is rejected; use background=true for longer commands.",
+              "minimum": 1
+            },
+            "workdir": {
+              "type": "string",
+              "description": "Working directory for this command (absolute path). Defaults to the session working directory."
+            },
+            "pty": {
+              "type": "boolean",
+              "description": "Run in pseudo-terminal (PTY) mode for interactive CLI tools like Codex, Claude Code, or Python REPL. Only works with local and SSH backends. Default: false.",
+              "default": false
+            },
+            "notify_on_complete": {
+              "type": "boolean",
+              "description": "When true (and background=true), you'll be automatically notified exactly once when the process finishes. **This is the right choice for almost every long-running task** — tests, builds, deployments, multi-item batch jobs, anything that takes over a minute and has a defined end. Use this and keep working on other things; the system notifies you on exit. MUTUALLY EXCLUSIVE with watch_patterns — when both are set, watch_patterns is dropped.",
+              "default": false
+            },
+            "watch_patterns": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              },
+              "description": "Strings to watch for in background process output. HARD RATE LIMIT: at most 1 notification per 15 seconds per process — matches arriving inside the cooldown are dropped. After 3 consecutive 15-second windows with dropped matches, watch_patterns is automatically disabled for that process and promoted to notify_on_complete behavior (one notification on exit, no more mid-process spam). USE ONLY for truly rare, one-shot mid-process signals on LONG-LIVED processes that will never exit on their own — e.g. ['Application startup complete'] on a server so you know when to hit its endpoint, or ['migration done'] on a daemon. DO NOT use for: (1) end-of-run markers like 'DONE'/'PASS' — use notify_on_complete instead; (2) error patterns like 'ERROR'/'Traceback' in loops or multi-item batch jobs — they fire on every iteration and you'll hit the strike limit fast; (3) anything you'd ever combine with notify_on_complete. When in doubt, choose notify_on_complete. MUTUALLY EXCLUSIVE with notify_on_complete — set one, not both."
+            }
+          },
+          "required": [
+            "command"
+          ]
+        }
+      }
+    }
+  ],
+  "message_count": 37,
+  "messages": [
+    {
+      "role": "user",
+      "content": "Research video 2: cEo95olh2j4 - 'Hermes Agent is blowing me away...' by Alex Finn. Get transcript via yt-dlp or Invidious, find GitHub repos, extract setup tips and features shown."
+    },
+    {
+      "role": "assistant",
+      "content": "",
+      "reasoning": "Let me research this YouTube video. I need to:\n1. Get the transcript via yt-dlp or Invidious\n2. Find GitHub repos mentioned\n3. Extract setup tips and features shown\n\nLet me start by getting the video transcript using yt-dlp.",
+      "finish_reason": "tool_calls",
+      "reasoning_content": "Let me research this YouTube video. I need to:\n1. Get the transcript via yt-dlp or Invidious\n2. Find GitHub repos mentioned\n3. Extract setup tips and features shown\n\nLet me start by getting the video transcript using yt-dlp.",
+      "reasoning_details": [
+        {
+          "signature": "9397ca2d11c023c55d36e8b705165cb5c3916219e280e63190b78ae1112a7407",
+          "thinking": "Let me research this YouTube video. I need to:\n1. Get the transcript via yt-dlp or Invidious\n2. Find GitHub repos mentioned\n3. Extract setup tips and features shown\n\nLet me start by getting the video transcript using yt-dlp.",
+          "type": "thinking"
+        }
+      ],
+      "tool_calls": [
+        {
+          "id": "call_function_n80rkcionn5v_1",
+          "call_id": "call_function_n80rkcionn5v_1",
+          "response_item_id": "fc_function_n80rkcionn5v_1",
+          "type": "function",
+          "function": {
+            "name": "terminal",
+            "arguments": "{\"command\": \"yt-dlp --write-auto-transcript --output \\\"/home/marco/video2_transcript\\\" \\\"https://www.youtube.com/watch?v=cEo95olh2j4\\\"\", \"timeout\": 120}"
+          }
+        }
+      ]
+    },
+    {
+      "role": "tool",
+      "name": "terminal",
+      "content": "{\"output\": \"Usage: yt-dlp [OPTIONS] URL [URL...]\\n\\nyt-dlp: error: no such option: --write-auto-transcript\", \"exit_code\": 2, \"error\": null}",
+      "tool_call_id": "call_function_n80rkcionn5v_1"
+    },
+    {
+      "role": "assistant",
+      "content": "",
+      "reasoning": "Let me try with --write-subtitles or check the available options for transcripts.",
+      "finish_reason": "tool_calls",
+      "reasoning_content": "Let me try with --write-subtitles or check the available options for transcripts.",
+      "reasoning_details": [
+        {
+          "signature": "80b209e782f3fef46ac29b7ac02c8a3482045f6052618ed7ce8f65121d27d4e5",
+          "thinking": "Let me try with --write-subtitles or check the available options for transcripts.",
+          "type": "thinking"
+        }
+      ],
+      "tool_calls": [
+        {
+          "id": "call_function_wj57uf6hr29g_1",
+          "call_id": "call_function_wj57uf6hr29g_1",
+          "response_item_id": "fc_function_wj57uf6hr29g_1",
+          "type": "function",
+          "function": {
+            "name": "terminal",
+            "arguments": "{\"command\": \"yt-dlp --list-subs \\\"https://www.youtube.com/watch?v=cEo95olh2j4\\\" 2>&1 | head -30\", \"timeout\": 60}"
+          }
+        }
+      ]
+    },
+    {
+      "role": "tool",
+      "name": "terminal",
+      "content": "{\"output\": \"[youtube] Extracting URL: https://www.youtube.com/watch?v=cEo95olh2j4\\n[youtube] cEo95olh2j4: Downloading webpage\\nWARNING: [youtube] No supported JavaScript runtime could be found. Only deno is enabled by default; to use another runtime add  --js-runtimes RUNTIME[:PATH]  to your command/config. YouTube extraction without a JS runtime has been deprecated, and some formats may be missing. See  https://github.com/yt-dlp/yt-dlp/wiki/EJS  for details on installing one\\n[youtube] cEo95olh2j4: Downloading android vr player API JSON\\n[info] Available automatic captions for cEo95olh2j4:\\nLanguage Name                  Formats\\nab       Abkhazian             vtt, srt, ttml, srv3, srv2, srv1, json3\\naa       Afar                  vtt, srt, ttml, srv3, srv2, srv1, json3\\naf       Afrikaans             vtt, srt, ttml, srv3, srv2, srv1, json3\\nak       Akan                  vtt, srt, ttml, srv3, srv2, srv1, json3\\nsq       Albanian              vtt, srt, ttml, srv3, srv2, srv1, json3\\nam       Amharic               vtt, srt, ttml, srv3, srv2, srv1, json3\\nar       Arabic                vtt, srt, ttml, srv3, srv2, srv1, json3\\nhy       Armenian              vtt, srt, ttml, srv3, srv2, srv1, json3\\nas       Assamese              vtt, srt, ttml, srv3, srv2, srv1, json3\\nay       Aymara                vtt, srt, ttml, srv3, srv2, srv1, json3\\naz       Azerbaijani           vtt, srt, ttml, srv3, srv2, srv1, json3\\nbn       Bangla                vtt, srt, ttml, srv3, srv2, srv1, json3\\nba       Bashkir               vtt, srt, ttml, srv3, srv2, srv1, json3\\neu       Basque                vtt, srt, ttml, srv3, srv2, srv1, json3\\nbe       Belarusian            vtt, srt, ttml, srv3, srv2, srv1, json3\\nbho      Bhojpuri              vtt, srt, ttml, srv3, srv2, srv1, json3\\nbs       Bosnian               vtt, srt, ttml, srv3, srv2, srv1, json3\\nbr       Breton                vtt, srt, ttml, srv3, srv2, srv1, json3\\nbg       Bulgarian             vtt, srt, ttml, srv3, srv2, srv1, json3\\nmy       Burmese               vtt, srt, ttml, srv3, srv2, srv1, json3\\nca       Catalan               vtt, srt, ttml, srv3, srv2, srv1, json3\\nceb      Cebuano               vtt, srt, ttml, srv3, srv2, srv1, json3\\nzh-Hans  Chinese (Simplified)  vtt, srt, ttml, srv3, srv2, srv1, json3\\nzh-Hant  Chinese (Traditional) vtt, srt, ttml, srv3, srv2, srv1, json3\", \"exit_code\": 0, \"error\": null}",
+      "tool_call_id": "call_function_wj57uf6hr29g_1"
+    },
+    {
+      "role": "assistant",
+      "content": "",
+      "reasoning": "Good, there are automatic captions available. Let me download the English auto transcript.",
+      "finish_reason": "tool_calls",
+      "reasoning_content": "Good, there are automatic captions available. Let me download the English auto transcript.",
+      "reasoning_details": [
+        {
+          "signature": "970d7cea9eb978f99bb02b960774ba6c62393c86d0ed9df56fef9ebd23be4de0",
+          "thinking": "Good, there are automatic captions available. Let me download the English auto transcript.",
+          "type": "thinking"
+        }
+      ],
+      "tool_calls": [
+        {
+          "id": "call_function_bbqlui2f10nt_1",
+          "call_id": "call_function_bbqlui2f10nt_1",
+          "response_item_id": "fc_function_bbqlui2f10nt_1",
+          "type": "function",
+          "function": {
+            "name": "terminal",
+            "arguments": "{\"command\": \"yt-dlp --write-auto-sub --sub-langs en --sub-format vtt --output \\\"/home/marco/video2_transcript\\\" \\\"https://www.youtube.com/watch?v=cEo95olh2j4\\\" 2>&1\", \"timeout\": 120}"
+          }
+        }
+      ]
+    },
+    {
+      "role": "tool",
+      "name": "terminal",
+      "content": "{\"output\": \"[youtube] Extracting URL: https://www.youtube.com/watch?v=cEo95olh2j4\\n[youtube] cEo95olh2j4: Downloading webpage\\nWARNING: [youtube] No supported JavaScript runtime could be found. Only deno is enabled by default; to use another runtime add  --js-runtimes RUNTIME[:PATH]  to your command/config. YouTube extraction without a JS runtime has been deprecated, and some formats may be missing. See  https://github.com/yt-dlp/yt-dlp/wiki/EJS  for details on installing one\\n[youtube] cEo95olh2j4: Downloading android vr player API JSON\\n[info] cEo95olh2j4: Downloading subtitles: en\\nWARNING: ffmpeg not found. The downloaded format may not be the best available. Installing ffmpeg is strongly recommended: https://github.com/yt-dlp/yt-dlp#dependencies\\n[info] cEo95olh2j4: Downloading 1 format(s): 18\\n[info] Writing video subtitles to: /home/marco/video2_transcript.en.vtt\\nWARNING: The extractor specified to use impersonation for this download, but no impersonate target is available. If you encounter errors, then see  https://github.com/yt-dlp/yt-dlp#impersonation  for information on installing the required dependencies\\n[download] Destination: /home/marco/video2_transcript.en.vtt\\n\\r[download]    1.00KiB at  Unknown B/s (00:00:00)\\r[download]    3.00KiB at    2.20MiB/s (00:00:00)\\r[download]    7.00KiB at    3.23MiB/s (00:00:00)\\r[download]   15.00KiB at    5.04MiB/s (00:00:00)\\r[download]   31.00KiB at    4.71MiB/s (00:00:00)\\r[download]   63.00KiB at    1.90MiB/s (00:00:00)\\r[download]  127.00KiB at    1.85MiB/s (00:00:00)\\r[download]  189.63KiB at    1.39MiB/s (00:00:00)\\r[download] 100% of  189.63KiB in 00:00:00 at 672.99KiB/s\\n[download] Destination: /home/marco/video2_transcript\\n\\r[download]   0.0% of   33.59MiB at  Unknown B/s ETA Unknown\\r[download]   0.0% of   33.59MiB at  Unknown B/s ETA Unknown\\r[download]   0.0% of   33.59MiB at    5.41MiB/s ETA 00:06  \\r[download]   0.0% of   33.59MiB at    8.77MiB/s ETA 00:03\\r[download]   0.1% of   33.59MiB at   14.37MiB/s ETA 00:02\\r[download]   0.2% of   33.59MiB at    2.90MiB/s ETA 00:11\\r[download]   0.4% of   33.59MiB at    2.15MiB/s ETA 00:15\\r[download]   0.7% of   33.59MiB at    1.54MiB/s ETA 00:21\\r[download]   1.5% of   33.59MiB at    2.35MiB/s ETA 00:14\\r[download]   3.0% of   33.59MiB at    3.68MiB/s ETA 00:08\\r[download]   6.0% of   33.59MiB at    5.44MiB/s ETA 00:05\\r[download]  11.9% of   33.59MiB at    7.87MiB/s ETA 00:03\\r[download]  23.8% of   33.59MiB at    7.82MiB/s ETA 00:03\\r[download]  29.5% of   33.59MiB at    8.05MiB/s ETA 00:02\\r[download]  29.5% of   33.59MiB at  289.66KiB/s ETA 01:24\\r[download]  29.5% of   33.59MiB at  701.82KiB/s ETA 00:34\\r[download]  29.5% of   33.59MiB at    1.37MiB/s ETA 00:17\\r[download]  29.5% of   33.59MiB at    2.58MiB/s ETA 00:09\\r[download]  29.6% of   33.59MiB at    2.22MiB/s ETA 00:10\\r[download]  29.7% of   33.59MiB at    1.76MiB/s ETA 00:13\\r[download]  29.8% of   33.59MiB at  778.63KiB/s ETA 00:30\\r[download]  30.2% of   33.59MiB at    1.38MiB/s ETA 00:17\\r[download]  31.0% of   33.59MiB at    2.23MiB/s ETA 00:10\\r[download]  32.5% of   33.59MiB at    3.60MiB/s ETA 00:06\\r[download]  35.4% of   33.59MiB at    5.84MiB/s ETA 00:03\\r[download]  41.4% of   33.59MiB at    6.35MiB/s ETA 00:03\\r[download]  53.3% of   33.59MiB at    7.56MiB/s ETA 00:02\\r[download]  59.0% of   33.59MiB at    7.33MiB/s ETA 00:01\\r[download]  59.0% of   33.59MiB at  149.97KiB/s ETA 01:34\\r[download]  59.0% of   33.59MiB at  347.51KiB/s ETA 00:40\\r[download]  59.0% of   33.59MiB at  765.30KiB/s ETA 00:18\\r[download]  59.0% of   33.59MiB at    1.51MiB/s ETA 00:09\\r[download]  59.1% of   33.59MiB at    2.22MiB/s ETA 00:06\\r[download]  59.2% of   33.59MiB at    3.41MiB/s ETA 00:04\\r[download]  59.4% of   33.59MiB at    3.49MiB/s ETA 00:03\\r[download]  59.7% of   33.59MiB at    2.05MiB/s ETA 00:06\\r[download]  60.5% of   33.59MiB at    3.02MiB/s ETA 00:04\\r[download]  62.0% of   33.59MiB at    4.14MiB/s ETA 00:03\\r[download]  65.0% of   33.59MiB at    6.29MiB/s ETA 00:01\\r[download]  70.9% of   33.59MiB at    6.36MiB/s ETA 00:01\\r[download]  82.8% of   33.59MiB at    7.22MiB/s ETA 00:00\\r[download]  88.3% of   33.59MiB at    7.35MiB/s ETA 00:00\\r[download]  88.3% of   33.59MiB at  150.48KiB/s ETA 00:26\\r[download]  88.3% of   33.59MiB at  352.24KiB/s ETA 00:11\\r[download]  88.3% of   33.59MiB at  728.29KiB/s ETA 00:05\\r[download]  88.3% of   33.59MiB at    1.43MiB/s ETA 00:02\\r[download]  88.4% of   33.59MiB at    2.25MiB/s ETA 00:01\\r[download]  88.5% of   33.59MiB at    2.91MiB/s ETA 00:01\\r[download]  88.6% of   33.59MiB at    2.81MiB/s ETA 00:01\\r[download]  89.0% of   33.59MiB at    3.27MiB/s ETA 00:01\\r[download]  89.8% of   33.59MiB at    3.64MiB/s ETA 00:00\\r[download]  91.2% of   33.59MiB at    5.57MiB/s ETA 00:00\\r[download]  94.2% of   33.59MiB at    7.62MiB/s ETA 00:00\\r[download] 100.0% of   33.59MiB at    8.71MiB/s ETA 00:00\\r[download] 100% of   33.59MiB in 00:00:05 at 6.58MiB/s\", \"exit_code\": 0, \"error\": null}",
+      "tool_call_id": "call_function_bbqlui2f10nt_1"
+    },
+    {
+      "role": "assistant",
+      "content": "",
+      "reasoning": "Good, I got the transcript. Now let me read the transcript file and also search for the GitHub repos mentioned in the video.",
+      "finish_reason": "tool_calls",
+      "reasoning_content": "Good, I got the transcript. Now let me read the transcript file and also search for the GitHub repos mentioned in the video.",
+      "reasoning_details": [
+        {
+          "signature": "5627c06966b4e1ca70740a689163e9f1abfb59f9db73fa8b67121d23d8150c9a",
+          "thinking": "Good, I got the transcript. Now let me read the transcript file and also search for the GitHub repos mentioned in the video.",
+          "type": "thinking"
+        }
+      ],
+      "tool_calls": [
+        {
+          "id": "call_function_0c1eocap1vhl_1",
+          "call_id": "call_function_0c1eocap1vhl_1",
+          "response_item_id": "fc_function_0c1eocap1vhl_1",
+          "type": "function",
+          "function": {
+            "name": "terminal",
+            "arguments": "{\"command\": \"ls /home/marco/video2_transcript* 2>&1\", \"timeout\": 10}"
+          }
+        }
+      ]
+    },
+    {
+      "role": "tool",
+      "name": "terminal",
+      "content": "{\"output\": \"/home/marco/video2_transcript\\n/home/marco/video2_transcript.en.vtt\", \"exit_code\": 0, \"error\": null}",
+      "tool_call_id": "call_function_0c1eocap1vhl_1"
+    },
+    {
+      "role": "assistant",
+      "content": "",
+      "reasoning": "I got the transcript. Let me read the VTT file and also search for GitHub repos mentioned in the video.",
+      "finish_reason": "tool_calls",
+      "reasoning_content": "I got the transcript. Let me read the VTT file and also search for GitHub repos mentioned in the video.",
+      "reasoning_details": [
+        {
+          "signature": "e49b18844938a0f9507f4c9249662c4d08eb35ac97eb97fe9e0f540016ac83be",
+          "thinking": "I got the transcript. Let me read the VTT file and also search for GitHub repos mentioned in the video.",
+          "type": "thinking"
+        }
+      ],
+      "tool_calls": [
+        {
+          "id": "call_function_4twy8yzm2jnk_1",
+          "call_id": "call_function_4twy8yzm2jnk_1",
+          "response_item_id": "fc_function_4twy8yzm2jnk_1",
+          "type": "function",
+          "function": {
+            "name": "terminal",
+            "arguments": "{\"command\": \"cat /home/marco/video2_transcript.en.vtt\", \"timeout\": 10}"
+          }
+        }
+      ]
+    },
+    {
+      "role": "tool",
+      "name": "terminal",
+      "content": "{\"output\": \"WEBVTT\\nKind: captions\\nLanguage: en\\n\\n00:00:00.080 --> 00:00:01.910 align:start position:0%\\n \\nOkay,<00:00:00.480><c> I</c><00:00:00.719><c> have</c><00:00:00.880><c> to</c><00:00:00.960><c> be</c><00:00:01.120><c> honest</c><00:00:01.360><c> with</c><00:00:01.520><c> you.</c>\\n\\n00:00:01.910 --> 00:00:01.920 align:start position:0%\\nOkay, I have to be honest with you.\\n \\n\\n00:00:01.920 --> 00:00:03.590 align:start position:0%\\nOkay, I have to be honest with you.\\nHermes<00:00:02.480><c> agent</c><00:00:02.800><c> is</c><00:00:02.960><c> now</c><00:00:03.200><c> better</c><00:00:03.439><c> than</c>\\n\\n00:00:03.590 --> 00:00:03.600 align:start position:0%\\nHermes agent is now better than\\n \\n\\n00:00:03.600 --> 00:00:06.390 align:start position:0%\\nHermes agent is now better than\\nOpenClaw.<00:00:04.319><c> OpenClaw</c><00:00:04.960><c> has</c><00:00:05.200><c> fumbled</c><00:00:05.680><c> the</c><00:00:06.000><c> bag</c>\\n\\n00:00:06.390 --> 00:00:06.400 align:start position:0%\\nOpenClaw. OpenClaw has fumbled the bag\\n \\n\\n00:00:06.400 --> 00:00:08.549 align:start position:0%\\nOpenClaw. OpenClaw has fumbled the bag\\nover<00:00:06.640><c> the</c><00:00:06.879><c> last</c><00:00:07.120><c> couple</c><00:00:07.440><c> months.</c><00:00:08.160><c> Every</c>\\n\\n00:00:08.549 --> 00:00:08.559 align:start position:0%\\nover the last couple months. Every\\n \\n\\n00:00:08.559 --> 00:00:11.350 align:start position:0%\\nover the last couple months. Every\\nupdate<00:00:09.040><c> they</c><00:00:09.360><c> put</c><00:00:09.519><c> out</c><00:00:10.080><c> has</c><00:00:10.480><c> broken</c><00:00:11.040><c> the</c>\\n\\n00:00:11.350 --> 00:00:11.360 align:start position:0%\\nupdate they put out has broken the\\n \\n\\n00:00:11.360 --> 00:00:13.669 align:start position:0%\\nupdate they put out has broken the\\nsystem.<00:00:11.759><c> I</c><00:00:12.080><c> have</c><00:00:12.240><c> spent</c><00:00:12.559><c> more</c><00:00:12.880><c> time</c><00:00:13.200><c> fixing</c>\\n\\n00:00:13.669 --> 00:00:13.679 align:start position:0%\\nsystem. I have spent more time fixing\\n \\n\\n00:00:13.679 --> 00:00:15.749 align:start position:0%\\nsystem. I have spent more time fixing\\nOpenClaw<00:00:14.240><c> than</c><00:00:14.400><c> using</c><00:00:14.719><c> OpenClaw.</c><00:00:15.360><c> Now,</c><00:00:15.599><c> this</c>\\n\\n00:00:15.749 --> 00:00:15.759 align:start position:0%\\nOpenClaw than using OpenClaw. Now, this\\n \\n\\n00:00:15.759 --> 00:00:18.150 align:start position:0%\\nOpenClaw than using OpenClaw. Now, this\\nis<00:00:15.920><c> fine</c><00:00:16.160><c> for</c><00:00:16.400><c> me</c><00:00:16.560><c> as</c><00:00:16.800><c> a</c><00:00:16.960><c> technical</c><00:00:17.359><c> person.</c><00:00:18.000><c> I</c>\\n\\n00:00:18.150 --> 00:00:18.160 align:start position:0%\\nis fine for me as a technical person. I\\n \\n\\n00:00:18.160 --> 00:00:19.670 align:start position:0%\\nis fine for me as a technical person. I\\ndon't<00:00:18.320><c> care.</c><00:00:18.560><c> I</c><00:00:18.720><c> can</c><00:00:18.880><c> fix</c><00:00:19.119><c> things</c><00:00:19.359><c> pretty</c>\\n\\n00:00:19.670 --> 00:00:19.680 align:start position:0%\\ndon't care. I can fix things pretty\\n \\n\\n00:00:19.680 --> 00:00:21.910 align:start position:0%\\ndon't care. I can fix things pretty\\nquickly.<00:00:20.160><c> But</c><00:00:20.320><c> for</c><00:00:20.560><c> most</c><00:00:20.880><c> people</c><00:00:21.199><c> out</c><00:00:21.439><c> there,</c>\\n\\n00:00:21.910 --> 00:00:21.920 align:start position:0%\\nquickly. But for most people out there,\\n \\n\\n00:00:21.920 --> 00:00:24.150 align:start position:0%\\nquickly. But for most people out there,\\nhaving<00:00:22.160><c> to</c><00:00:22.400><c> fix</c><00:00:22.640><c> your</c><00:00:22.880><c> OpenClaw</c><00:00:23.600><c> every</c><00:00:23.920><c> time</c>\\n\\n00:00:24.150 --> 00:00:24.160 align:start position:0%\\nhaving to fix your OpenClaw every time\\n \\n\\n00:00:24.160 --> 00:00:27.189 align:start position:0%\\nhaving to fix your OpenClaw every time\\nyou<00:00:24.400><c> update</c><00:00:24.800><c> it</c><00:00:25.039><c> has</c><00:00:25.199><c> become</c><00:00:25.680><c> a</c><00:00:26.000><c> major</c><00:00:26.560><c> pain</c><00:00:27.039><c> in</c>\\n\\n00:00:27.189 --> 00:00:27.199 align:start position:0%\\nyou update it has become a major pain in\\n \\n\\n00:00:27.199 --> 00:00:29.509 align:start position:0%\\nyou update it has become a major pain in\\nthe<00:00:27.359><c> wazoo.</c><00:00:28.000><c> If</c><00:00:28.240><c> you</c><00:00:28.320><c> were</c><00:00:28.480><c> to</c><00:00:28.640><c> learn</c><00:00:28.880><c> just</c><00:00:29.199><c> one</c>\\n\\n00:00:29.509 --> 00:00:29.519 align:start position:0%\\nthe wazoo. If you were to learn just one\\n \\n\\n00:00:29.519 --> 00:00:31.509 align:start position:0%\\nthe wazoo. If you were to learn just one\\nAI<00:00:29.920><c> agent</c><00:00:30.240><c> at</c><00:00:30.480><c> the</c><00:00:30.640><c> moment,</c><00:00:30.880><c> it's</c><00:00:31.119><c> got</c><00:00:31.279><c> to</c><00:00:31.359><c> be</c>\\n\\n00:00:31.509 --> 00:00:31.519 align:start position:0%\\nAI agent at the moment, it's got to be\\n \\n\\n00:00:31.519 --> 00:00:34.150 align:start position:0%\\nAI agent at the moment, it's got to be\\nHermes<00:00:32.079><c> agent.</c><00:00:32.480><c> In</c><00:00:32.719><c> this</c><00:00:33.120><c> video,</c><00:00:33.680><c> I'm</c><00:00:34.000><c> going</c>\\n\\n00:00:34.150 --> 00:00:34.160 align:start position:0%\\nHermes agent. In this video, I'm going\\n \\n\\n00:00:34.160 --> 00:00:37.910 align:start position:0%\\nHermes agent. In this video, I'm going\\nto<00:00:34.399><c> show</c><00:00:34.559><c> you</c><00:00:34.719><c> how</c><00:00:34.960><c> to</c><00:00:35.120><c> set</c><00:00:35.360><c> up</c><00:00:35.520><c> your</c><00:00:35.760><c> own</c><00:00:36.320><c> 247</c>\\n\\n00:00:37.910 --> 00:00:37.920 align:start position:0%\\nto show you how to set up your own 247\\n \\n\\n00:00:37.920 --> 00:00:41.110 align:start position:0%\\nto show you how to set up your own 247\\nHermes<00:00:38.719><c> AI</c><00:00:39.200><c> employee.</c><00:00:39.920><c> An</c><00:00:40.160><c> AI</c><00:00:40.480><c> employee</c><00:00:40.879><c> that</c>\\n\\n00:00:41.110 --> 00:00:41.120 align:start position:0%\\nHermes AI employee. An AI employee that\\n \\n\\n00:00:41.120 --> 00:00:43.190 align:start position:0%\\nHermes AI employee. An AI employee that\\nwill<00:00:41.360><c> literally</c><00:00:41.760><c> do</c><00:00:42.000><c> work</c><00:00:42.160><c> for</c><00:00:42.399><c> you</c><00:00:42.640><c> at</c><00:00:42.960><c> all</c>\\n\\n00:00:43.190 --> 00:00:43.200 align:start position:0%\\nwill literally do work for you at all\\n \\n\\n00:00:43.200 --> 00:00:45.350 align:start position:0%\\nwill literally do work for you at all\\ntimes<00:00:43.520><c> of</c><00:00:43.760><c> day</c><00:00:43.920><c> and</c><00:00:44.160><c> night,</c><00:00:44.480><c> saving</c><00:00:44.879><c> you</c><00:00:45.120><c> tons</c>\\n\\n00:00:45.350 --> 00:00:45.360 align:start position:0%\\ntimes of day and night, saving you tons\\n \\n\\n00:00:45.360 --> 00:00:47.990 align:start position:0%\\ntimes of day and night, saving you tons\\nof<00:00:45.600><c> time</c><00:00:45.920><c> and</c><00:00:46.239><c> creating</c><00:00:46.719><c> tons</c><00:00:47.039><c> of</c><00:00:47.200><c> value.</c><00:00:47.760><c> I'll</c>\\n\\n00:00:47.990 --> 00:00:48.000 align:start position:0%\\nof time and creating tons of value. I'll\\n \\n\\n00:00:48.000 --> 00:00:49.510 align:start position:0%\\nof time and creating tons of value. I'll\\ngo<00:00:48.079><c> over</c><00:00:48.320><c> all</c><00:00:48.480><c> the</c><00:00:48.719><c> differences</c><00:00:49.200><c> with</c>\\n\\n00:00:49.510 --> 00:00:49.520 align:start position:0%\\ngo over all the differences with\\n \\n\\n00:00:49.520 --> 00:00:51.830 align:start position:0%\\ngo over all the differences with\\nOpenClaw,<00:00:50.399><c> show</c><00:00:50.559><c> you</c><00:00:50.800><c> how</c><00:00:50.960><c> to</c><00:00:51.120><c> set</c><00:00:51.280><c> it</c><00:00:51.440><c> up,</c><00:00:51.600><c> and</c>\\n\\n00:00:51.830 --> 00:00:51.840 align:start position:0%\\nOpenClaw, show you how to set it up, and\\n \\n\\n00:00:51.840 --> 00:00:54.150 align:start position:0%\\nOpenClaw, show you how to set it up, and\\nthen<00:00:52.079><c> show</c><00:00:52.239><c> you</c><00:00:52.559><c> three</c><00:00:52.960><c> use</c><00:00:53.280><c> cases</c><00:00:53.680><c> that</c><00:00:53.920><c> I</c>\\n\\n00:00:54.150 --> 00:00:54.160 align:start position:0%\\nthen show you three use cases that I\\n \\n\\n00:00:54.160 --> 00:00:56.069 align:start position:0%\\nthen show you three use cases that I\\npromise<00:00:54.559><c> will</c><00:00:54.879><c> change</c><00:00:55.120><c> your</c><00:00:55.360><c> life.</c><00:00:55.680><c> By</c><00:00:55.920><c> the</c>\\n\\n00:00:56.069 --> 00:00:56.079 align:start position:0%\\npromise will change your life. By the\\n \\n\\n00:00:56.079 --> 00:00:57.990 align:start position:0%\\npromise will change your life. By the\\nend<00:00:56.160><c> of</c><00:00:56.320><c> this</c><00:00:56.559><c> video,</c><00:00:57.039><c> you're</c><00:00:57.280><c> going</c><00:00:57.440><c> to</c><00:00:57.680><c> walk</c>\\n\\n00:00:57.990 --> 00:00:58.000 align:start position:0%\\nend of this video, you're going to walk\\n \\n\\n00:00:58.000 --> 00:01:01.349 align:start position:0%\\nend of this video, you're going to walk\\naway<00:00:58.239><c> with</c><00:00:58.559><c> your</c><00:00:58.879><c> own</c><00:00:59.440><c> personal</c><00:01:00.239><c> AI</c><00:01:00.640><c> employee.</c>\\n\\n00:01:01.349 --> 00:01:01.359 align:start position:0%\\naway with your own personal AI employee.\\n \\n\\n00:01:01.359 --> 00:01:03.189 align:start position:0%\\naway with your own personal AI employee.\\nNow,<00:01:01.600><c> let's</c><00:01:01.840><c> lock</c><00:01:02.079><c> in</c><00:01:02.320><c> and</c><00:01:02.559><c> get</c><00:01:02.719><c> into</c><00:01:02.879><c> it.</c><00:01:03.199><c> All</c>\\n\\n00:01:03.189 --> 00:01:03.199 align:start position:0%\\nNow, let's lock in and get into it. All\\n \\n\\n00:01:03.199 --> 00:01:05.270 align:start position:0%\\nNow, let's lock in and get into it. All\\nright,<00:01:03.440><c> so</c><00:01:03.600><c> here's</c><00:01:03.840><c> the</c><00:01:04.080><c> story</c><00:01:04.320><c> on</c><00:01:04.640><c> Hermes</c>\\n\\n00:01:05.270 --> 00:01:05.280 align:start position:0%\\nright, so here's the story on Hermes\\n \\n\\n00:01:05.280 --> 00:01:07.190 align:start position:0%\\nright, so here's the story on Hermes\\nagent<00:01:05.600><c> and</c><00:01:05.840><c> why</c><00:01:06.000><c> it's</c><00:01:06.320><c> taken</c><00:01:06.560><c> the</c><00:01:06.799><c> world</c><00:01:06.960><c> by</c>\\n\\n00:01:07.190 --> 00:01:07.200 align:start position:0%\\nagent and why it's taken the world by\\n \\n\\n00:01:07.200 --> 00:01:09.830 align:start position:0%\\nagent and why it's taken the world by\\nstorm<00:01:07.520><c> and</c><00:01:07.760><c> why</c><00:01:07.920><c> I'm</c><00:01:08.159><c> now</c><00:01:08.479><c> recommending</c><00:01:09.119><c> it</c>\\n\\n00:01:09.830 --> 00:01:09.840 align:start position:0%\\nstorm and why I'm now recommending it\\n \\n\\n00:01:09.840 --> 00:01:12.310 align:start position:0%\\nstorm and why I'm now recommending it\\nfor<00:01:10.080><c> the</c><00:01:10.240><c> time</c><00:01:10.479><c> being</c><00:01:11.040><c> over</c><00:01:11.439><c> openclaw,</c><00:01:12.080><c> things</c>\\n\\n00:01:12.310 --> 00:01:12.320 align:start position:0%\\nfor the time being over openclaw, things\\n \\n\\n00:01:12.320 --> 00:01:13.910 align:start position:0%\\nfor the time being over openclaw, things\\nchange<00:01:12.640><c> quick.</c><00:01:12.960><c> But</c><00:01:13.119><c> number</c><00:01:13.360><c> one,</c><00:01:13.520><c> and</c><00:01:13.760><c> this</c>\\n\\n00:01:13.910 --> 00:01:13.920 align:start position:0%\\nchange quick. But number one, and this\\n \\n\\n00:01:13.920 --> 00:01:16.070 align:start position:0%\\nchange quick. But number one, and this\\nis<00:01:14.000><c> the</c><00:01:14.240><c> most</c><00:01:14.479><c> important</c><00:01:14.880><c> thing,</c><00:01:15.439><c> it's</c><00:01:15.760><c> just</c>\\n\\n00:01:16.070 --> 00:01:16.080 align:start position:0%\\nis the most important thing, it's just\\n \\n\\n00:01:16.080 --> 00:01:19.510 align:start position:0%\\nis the most important thing, it's just\\nplain<00:01:16.560><c> reliable.</c><00:01:17.520><c> Open</c><00:01:18.000><c> Claw</c><00:01:18.640><c> with</c><00:01:19.040><c> every</c>\\n\\n00:01:19.510 --> 00:01:19.520 align:start position:0%\\nplain reliable. Open Claw with every\\n \\n\\n00:01:19.520 --> 00:01:21.510 align:start position:0%\\nplain reliable. Open Claw with every\\nsingle<00:01:20.000><c> update,</c><00:01:20.560><c> basically</c><00:01:21.040><c> every</c><00:01:21.280><c> single</c>\\n\\n00:01:21.510 --> 00:01:21.520 align:start position:0%\\nsingle update, basically every single\\n \\n\\n00:01:21.520 --> 00:01:24.310 align:start position:0%\\nsingle update, basically every single\\nupdate<00:01:22.000><c> breaks.</c><00:01:22.799><c> I</c><00:01:23.040><c> update</c><00:01:23.439><c> Open</c><00:01:23.680><c> Claw,</c><00:01:24.080><c> it</c>\\n\\n00:01:24.310 --> 00:01:24.320 align:start position:0%\\nupdate breaks. I update Open Claw, it\\n \\n\\n00:01:24.320 --> 00:01:25.830 align:start position:0%\\nupdate breaks. I update Open Claw, it\\nbreaks.<00:01:24.560><c> I</c><00:01:24.799><c> have</c><00:01:24.880><c> to</c><00:01:25.040><c> spend</c><00:01:25.280><c> 20</c><00:01:25.600><c> minutes</c>\\n\\n00:01:25.830 --> 00:01:25.840 align:start position:0%\\nbreaks. I have to spend 20 minutes\\n \\n\\n00:01:25.840 --> 00:01:29.030 align:start position:0%\\nbreaks. I have to spend 20 minutes\\nfixing<00:01:26.159><c> it.</c><00:01:26.560><c> It's</c><00:01:26.799><c> a</c><00:01:27.040><c> pain</c><00:01:27.680><c> in</c><00:01:28.080><c> the</c><00:01:28.400><c> butt.</c><00:01:28.799><c> They</c>\\n\\n00:01:29.030 --> 00:01:29.040 align:start position:0%\\nfixing it. It's a pain in the butt. They\\n \\n\\n00:01:29.040 --> 00:01:30.710 align:start position:0%\\nfixing it. It's a pain in the butt. They\\nrelease<00:01:29.439><c> tons</c><00:01:29.680><c> of</c><00:01:29.840><c> updates.</c><00:01:30.240><c> To</c><00:01:30.479><c> their</c>\\n\\n00:01:30.710 --> 00:01:30.720 align:start position:0%\\nrelease tons of updates. To their\\n \\n\\n00:01:30.720 --> 00:01:32.230 align:start position:0%\\nrelease tons of updates. To their\\ncredit,<00:01:31.040><c> they</c><00:01:31.200><c> are</c><00:01:31.360><c> constantly</c><00:01:31.840><c> shipping.</c>\\n\\n00:01:32.230 --> 00:01:32.240 align:start position:0%\\ncredit, they are constantly shipping.\\n \\n\\n00:01:32.240 --> 00:01:34.149 align:start position:0%\\ncredit, they are constantly shipping.\\nThey're<00:01:32.560><c> constantly</c><00:01:32.960><c> updating,</c><00:01:33.680><c> but</c><00:01:33.920><c> I</c><00:01:34.079><c> don't</c>\\n\\n00:01:34.149 --> 00:01:34.159 align:start position:0%\\nThey're constantly updating, but I don't\\n \\n\\n00:01:34.159 --> 00:01:35.190 align:start position:0%\\nThey're constantly updating, but I don't\\nknow<00:01:34.240><c> what's</c><00:01:34.479><c> going</c><00:01:34.560><c> on</c><00:01:34.640><c> over</c><00:01:34.799><c> there.</c><00:01:35.040><c> Are</c>\\n\\n00:01:35.190 --> 00:01:35.200 align:start position:0%\\nknow what's going on over there. Are\\n \\n\\n00:01:35.200 --> 00:01:36.630 align:start position:0%\\nknow what's going on over there. Are\\nthey<00:01:35.360><c> not</c><00:01:35.520><c> doing</c><00:01:35.680><c> testing?</c><00:01:36.079><c> Are</c><00:01:36.240><c> they</c><00:01:36.400><c> not</c>\\n\\n00:01:36.630 --> 00:01:36.640 align:start position:0%\\nthey not doing testing? Are they not\\n \\n\\n00:01:36.640 --> 00:01:38.469 align:start position:0%\\nthey not doing testing? Are they not\\ntesting<00:01:36.880><c> out</c><00:01:37.119><c> their</c><00:01:37.360><c> own</c><00:01:37.520><c> tool</c><00:01:38.000><c> because</c><00:01:38.240><c> the</c>\\n\\n00:01:38.469 --> 00:01:38.479 align:start position:0%\\ntesting out their own tool because the\\n \\n\\n00:01:38.479 --> 00:01:40.390 align:start position:0%\\ntesting out their own tool because the\\nthing's<00:01:38.799><c> constantly</c><00:01:39.280><c> breaking?</c><00:01:39.920><c> Hermes</c>\\n\\n00:01:40.390 --> 00:01:40.400 align:start position:0%\\nthing's constantly breaking? Hermes\\n \\n\\n00:01:40.400 --> 00:01:42.870 align:start position:0%\\nthing's constantly breaking? Hermes\\nAgent,<00:01:41.040><c> while</c><00:01:41.280><c> they</c><00:01:41.520><c> do</c><00:01:41.680><c> less</c><00:01:42.079><c> updates</c><00:01:42.560><c> and</c>\\n\\n00:01:42.870 --> 00:01:42.880 align:start position:0%\\nAgent, while they do less updates and\\n \\n\\n00:01:42.880 --> 00:01:45.190 align:start position:0%\\nAgent, while they do less updates and\\nship<00:01:43.200><c> a</c><00:01:43.439><c> little</c><00:01:43.600><c> bit</c><00:01:43.759><c> less,</c><00:01:44.479><c> they're</c><00:01:44.799><c> more</c>\\n\\n00:01:45.190 --> 00:01:45.200 align:start position:0%\\nship a little bit less, they're more\\n \\n\\n00:01:45.200 --> 00:01:47.670 align:start position:0%\\nship a little bit less, they're more\\nreliable.<00:01:45.920><c> And</c><00:01:46.079><c> I</c><00:01:46.320><c> would</c><00:01:46.560><c> much</c><00:01:46.880><c> much</c><00:01:46.960><c> much</c>\\n\\n00:01:47.670 --> 00:01:47.680 align:start position:0%\\nreliable. And I would much much much\\n \\n\\n00:01:47.680 --> 00:01:50.389 align:start position:0%\\nreliable. And I would much much much\\nrather<00:01:48.159><c> have</c><00:01:48.880><c> less</c><00:01:49.200><c> updates,</c><00:01:49.840><c> but</c><00:01:50.079><c> they</c><00:01:50.240><c> don't</c>\\n\\n00:01:50.389 --> 00:01:50.399 align:start position:0%\\nrather have less updates, but they don't\\n \\n\\n00:01:50.399 --> 00:01:51.830 align:start position:0%\\nrather have less updates, but they don't\\nbreak<00:01:50.560><c> and</c><00:01:50.799><c> I</c><00:01:50.960><c> don't</c><00:01:51.040><c> spend</c><00:01:51.280><c> tons</c><00:01:51.520><c> of</c><00:01:51.600><c> time</c>\\n\\n00:01:51.830 --> 00:01:51.840 align:start position:0%\\nbreak and I don't spend tons of time\\n \\n\\n00:01:51.840 --> 00:01:54.149 align:start position:0%\\nbreak and I don't spend tons of time\\nfixing<00:01:52.159><c> the</c><00:01:52.399><c> gosh</c><00:01:52.720><c> darn</c><00:01:53.040><c> agent.</c><00:01:53.439><c> The</c><00:01:53.680><c> updates</c>\\n\\n00:01:54.149 --> 00:01:54.159 align:start position:0%\\nfixing the gosh darn agent. The updates\\n \\n\\n00:01:54.159 --> 00:01:56.469 align:start position:0%\\nfixing the gosh darn agent. The updates\\nare<00:01:54.479><c> better.</c><00:01:54.880><c> It</c><00:01:55.119><c> seems</c><00:01:55.439><c> with</c><00:01:55.680><c> every</c><00:01:56.159><c> open</c>\\n\\n00:01:56.469 --> 00:01:56.479 align:start position:0%\\nare better. It seems with every open\\n \\n\\n00:01:56.479 --> 00:01:58.389 align:start position:0%\\nare better. It seems with every open\\nclaw<00:01:56.880><c> update,</c><00:01:57.360><c> it's</c><00:01:57.600><c> just</c><00:01:57.759><c> shipping</c><00:01:58.159><c> the</c>\\n\\n00:01:58.389 --> 00:01:58.399 align:start position:0%\\nclaw update, it's just shipping the\\n \\n\\n00:01:58.399 --> 00:02:00.149 align:start position:0%\\nclaw update, it's just shipping the\\nentire<00:01:58.880><c> kitchen</c><00:01:59.280><c> sink,</c><00:01:59.680><c> right?</c><00:01:59.840><c> It's</c><00:02:00.000><c> a</c>\\n\\n00:02:00.149 --> 00:02:00.159 align:start position:0%\\nentire kitchen sink, right? It's a\\n \\n\\n00:02:00.159 --> 00:02:01.350 align:start position:0%\\nentire kitchen sink, right? It's a\\nhundred<00:02:00.479><c> different</c><00:02:00.719><c> things.</c><00:02:01.040><c> They</c><00:02:01.200><c> don't</c>\\n\\n00:02:01.350 --> 00:02:01.360 align:start position:0%\\nhundred different things. They don't\\n \\n\\n00:02:01.360 --> 00:02:03.109 align:start position:0%\\nhundred different things. They don't\\nreally<00:02:01.520><c> tie</c><00:02:01.840><c> together.</c><00:02:02.479><c> It's</c><00:02:02.640><c> just</c><00:02:02.799><c> a</c><00:02:02.960><c> whole</c>\\n\\n00:02:03.109 --> 00:02:03.119 align:start position:0%\\nreally tie together. It's just a whole\\n \\n\\n00:02:03.119 --> 00:02:04.870 align:start position:0%\\nreally tie together. It's just a whole\\nbunch<00:02:03.280><c> of</c><00:02:03.439><c> th\\n\\n... [OUTPUT TRUNCATED - 144178 chars omitted out of 194178 total] ...\\n\\nn:start position:0%\\nmany different reasons you'd want to\\n \\n\\n00:16:09.519 --> 00:16:12.949 align:start position:0%\\nmany different reasons you'd want to\\nmake<00:16:09.759><c> AI</c><00:16:10.240><c> generated</c><00:16:10.959><c> motion</c><00:16:11.440><c> videos.</c><00:16:12.399><c> For</c><00:16:12.639><c> me,</c>\\n\\n00:16:12.949 --> 00:16:12.959 align:start position:0%\\nmake AI generated motion videos. For me,\\n \\n\\n00:16:12.959 --> 00:16:15.350 align:start position:0%\\nmake AI generated motion videos. For me,\\nI'm<00:16:13.279><c> doing</c><00:16:13.440><c> it</c><00:16:13.600><c> so</c><00:16:13.839><c> I</c><00:16:14.079><c> can</c><00:16:14.240><c> make</c><00:16:14.639><c> more</c><00:16:14.959><c> content</c>\\n\\n00:16:15.350 --> 00:16:15.360 align:start position:0%\\nI'm doing it so I can make more content\\n \\n\\n00:16:15.360 --> 00:16:17.430 align:start position:0%\\nI'm doing it so I can make more content\\nso<00:16:15.519><c> I</c><00:16:15.759><c> can</c><00:16:15.839><c> put</c><00:16:16.000><c> out</c><00:16:16.320><c> more</c><00:16:16.639><c> helpful</c>\\n\\n00:16:17.430 --> 00:16:17.440 align:start position:0%\\nso I can put out more helpful\\n \\n\\n00:16:17.440 --> 00:16:20.230 align:start position:0%\\nso I can put out more helpful\\neducational<00:16:18.240><c> graphics</c><00:16:18.720><c> on</c><00:16:19.040><c> my</c><00:16:19.279><c> social</c><00:16:19.600><c> media.</c>\\n\\n00:16:20.230 --> 00:16:20.240 align:start position:0%\\neducational graphics on my social media.\\n \\n\\n00:16:20.240 --> 00:16:21.590 align:start position:0%\\neducational graphics on my social media.\\nBut<00:16:20.399><c> for</c><00:16:20.560><c> you,</c><00:16:20.800><c> these</c><00:16:21.040><c> could</c><00:16:21.199><c> be</c><00:16:21.279><c> many</c>\\n\\n00:16:21.590 --> 00:16:21.600 align:start position:0%\\nBut for you, these could be many\\n \\n\\n00:16:21.600 --> 00:16:23.030 align:start position:0%\\nBut for you, these could be many\\ndifferent<00:16:21.839><c> reasons</c><00:16:22.160><c> you</c><00:16:22.399><c> do</c><00:16:22.480><c> this.</c><00:16:22.800><c> Whether</c>\\n\\n00:16:23.030 --> 00:16:23.040 align:start position:0%\\ndifferent reasons you do this. Whether\\n \\n\\n00:16:23.040 --> 00:16:24.870 align:start position:0%\\ndifferent reasons you do this. Whether\\nyou're<00:16:23.199><c> getting</c><00:16:23.360><c> into</c><00:16:23.759><c> content,</c><00:16:24.480><c> whether</c><00:16:24.720><c> you</c>\\n\\n00:16:24.870 --> 00:16:24.880 align:start position:0%\\nyou're getting into content, whether you\\n \\n\\n00:16:24.880 --> 00:16:26.790 align:start position:0%\\nyou're getting into content, whether you\\njust<00:16:25.040><c> want</c><00:16:25.120><c> to</c><00:16:25.279><c> help</c><00:16:25.519><c> people</c><00:16:25.759><c> out,</c><00:16:26.480><c> you</c><00:16:26.720><c> want</c>\\n\\n00:16:26.790 --> 00:16:26.800 align:start position:0%\\njust want to help people out, you want\\n \\n\\n00:16:26.800 --> 00:16:28.470 align:start position:0%\\njust want to help people out, you want\\nto<00:16:26.959><c> use</c><00:16:27.120><c> hype</c><00:16:27.519><c> frames.</c><00:16:27.839><c> The</c><00:16:28.000><c> other</c><00:16:28.079><c> big</c><00:16:28.320><c> one's</c>\\n\\n00:16:28.470 --> 00:16:28.480 align:start position:0%\\nto use hype frames. The other big one's\\n \\n\\n00:16:28.480 --> 00:16:30.230 align:start position:0%\\nto use hype frames. The other big one's\\nRemotion.<00:16:29.040><c> I</c><00:16:29.120><c> think</c><00:16:29.279><c> Hype</c><00:16:29.519><c> Frames</c><00:16:29.839><c> is</c><00:16:30.000><c> pretty</c>\\n\\n00:16:30.230 --> 00:16:30.240 align:start position:0%\\nRemotion. I think Hype Frames is pretty\\n \\n\\n00:16:30.240 --> 00:16:32.389 align:start position:0%\\nRemotion. I think Hype Frames is pretty\\ncool.<00:16:30.880><c> And</c><00:16:31.040><c> what</c><00:16:31.279><c> this</c><00:16:31.440><c> will</c><00:16:31.600><c> do</c><00:16:31.759><c> is</c><00:16:31.920><c> it</c><00:16:32.160><c> will</c>\\n\\n00:16:32.389 --> 00:16:32.399 align:start position:0%\\ncool. And what this will do is it will\\n \\n\\n00:16:32.399 --> 00:16:34.870 align:start position:0%\\ncool. And what this will do is it will\\nhave<00:16:32.560><c> your</c><00:16:32.800><c> agent</c><00:16:33.279><c> build</c><00:16:33.600><c> you</c><00:16:33.839><c> out</c><00:16:34.399><c> motion</c>\\n\\n00:16:34.870 --> 00:16:34.880 align:start position:0%\\nhave your agent build you out motion\\n \\n\\n00:16:34.880 --> 00:16:36.710 align:start position:0%\\nhave your agent build you out motion\\ngraphic<00:16:35.360><c> videos</c><00:16:35.680><c> that</c><00:16:35.920><c> you</c><00:16:36.079><c> can</c><00:16:36.160><c> use</c><00:16:36.320><c> for</c><00:16:36.480><c> any</c>\\n\\n00:16:36.710 --> 00:16:36.720 align:start position:0%\\ngraphic videos that you can use for any\\n \\n\\n00:16:36.720 --> 00:16:38.949 align:start position:0%\\ngraphic videos that you can use for any\\nreason.<00:16:37.279><c> So,</c><00:16:37.600><c> use</c><00:16:37.759><c> the</c><00:16:37.920><c> hype</c><00:16:38.240><c> frame</c><00:16:38.480><c> skill</c><00:16:38.800><c> to</c>\\n\\n00:16:38.949 --> 00:16:38.959 align:start position:0%\\nreason. So, use the hype frame skill to\\n \\n\\n00:16:38.959 --> 00:16:41.509 align:start position:0%\\nreason. So, use the hype frame skill to\\nbuild<00:16:39.120><c> me</c><00:16:39.279><c> a</c><00:16:39.440><c> 60-second</c><00:16:40.079><c> short</c><00:16:40.399><c> on</c><00:16:40.639><c> why</c><00:16:40.959><c> people</c>\\n\\n00:16:41.509 --> 00:16:41.519 align:start position:0%\\nbuild me a 60-second short on why people\\n \\n\\n00:16:41.519 --> 00:16:43.269 align:start position:0%\\nbuild me a 60-second short on why people\\nshould<00:16:41.759><c> be</c><00:16:41.920><c> using</c><00:16:42.079><c> the</c><00:16:42.240><c> Hermes</c><00:16:42.720><c> agent.</c><00:16:43.120><c> Make</c>\\n\\n00:16:43.269 --> 00:16:43.279 align:start position:0%\\nshould be using the Hermes agent. Make\\n \\n\\n00:16:43.279 --> 00:16:44.870 align:start position:0%\\nshould be using the Hermes agent. Make\\nthe<00:16:43.440><c> screen</c><00:16:43.759><c> changes</c><00:16:44.160><c> quick,</c><00:16:44.480><c> visually</c>\\n\\n00:16:44.870 --> 00:16:44.880 align:start position:0%\\nthe screen changes quick, visually\\n \\n\\n00:16:44.880 --> 00:16:46.150 align:start position:0%\\nthe screen changes quick, visually\\nbeautiful,<00:16:45.199><c> and</c><00:16:45.360><c> eye-catching.</c><00:16:46.000><c> Actually,</c>\\n\\n00:16:46.150 --> 00:16:46.160 align:start position:0%\\nbeautiful, and eye-catching. Actually,\\n \\n\\n00:16:46.160 --> 00:16:47.829 align:start position:0%\\nbeautiful, and eye-catching. Actually,\\nI'm<00:16:46.320><c> going</c><00:16:46.320><c> to</c><00:16:46.399><c> make</c><00:16:46.560><c> this</c><00:16:46.639><c> one</c><00:16:46.959><c> 30</c><00:16:47.199><c> seconds.</c>\\n\\n00:16:47.829 --> 00:16:47.839 align:start position:0%\\nI'm going to make this one 30 seconds.\\n \\n\\n00:16:47.839 --> 00:16:49.110 align:start position:0%\\nI'm going to make this one 30 seconds.\\nMake<00:16:48.000><c> it</c><00:16:48.079><c> a</c><00:16:48.240><c> little</c><00:16:48.320><c> bit</c><00:16:48.480><c> quicker.</c><00:16:48.880><c> I'm</c><00:16:49.120><c> going</c>\\n\\n00:16:49.110 --> 00:16:49.120 align:start position:0%\\nMake it a little bit quicker. I'm going\\n \\n\\n00:16:49.120 --> 00:16:50.389 align:start position:0%\\nMake it a little bit quicker. I'm going\\nto<00:16:49.199><c> hit</c><00:16:49.360><c> enter.</c><00:16:49.680><c> We're</c><00:16:49.839><c> going</c><00:16:49.920><c> to</c><00:16:50.079><c> see</c><00:16:50.160><c> what</c>\\n\\n00:16:50.389 --> 00:16:50.399 align:start position:0%\\nto hit enter. We're going to see what\\n \\n\\n00:16:50.399 --> 00:16:52.069 align:start position:0%\\nto hit enter. We're going to see what\\nthis<00:16:50.639><c> video</c><00:16:50.959><c> looks</c><00:16:51.199><c> like.</c><00:16:51.440><c> I</c><00:16:51.680><c> promise</c><00:16:51.920><c> you,</c>\\n\\n00:16:52.069 --> 00:16:52.079 align:start position:0%\\nthis video looks like. I promise you,\\n \\n\\n00:16:52.079 --> 00:16:53.590 align:start position:0%\\nthis video looks like. I promise you,\\nit's<00:16:52.240><c> going</c><00:16:52.320><c> to</c><00:16:52.399><c> look</c><00:16:52.560><c> cool.</c><00:16:52.959><c> But</c><00:16:53.120><c> there's</c><00:16:53.360><c> so</c>\\n\\n00:16:53.590 --> 00:16:53.600 align:start position:0%\\nit's going to look cool. But there's so\\n \\n\\n00:16:53.600 --> 00:16:55.189 align:start position:0%\\nit's going to look cool. But there's so\\nmany<00:16:53.839><c> things</c><00:16:54.079><c> you</c><00:16:54.320><c> can</c><00:16:54.480><c> be</c><00:16:54.639><c> doing</c><00:16:54.880><c> here</c><00:16:55.040><c> with</c>\\n\\n00:16:55.189 --> 00:16:55.199 align:start position:0%\\nmany things you can be doing here with\\n \\n\\n00:16:55.199 --> 00:16:56.870 align:start position:0%\\nmany things you can be doing here with\\nthese<00:16:55.519><c> new</c><00:16:55.680><c> skills.</c><00:16:56.079><c> You</c><00:16:56.240><c> want</c><00:16:56.399><c> to</c><00:16:56.480><c> stay</c><00:16:56.639><c> on</c>\\n\\n00:16:56.870 --> 00:16:56.880 align:start position:0%\\nthese new skills. You want to stay on\\n \\n\\n00:16:56.880 --> 00:16:58.629 align:start position:0%\\nthese new skills. You want to stay on\\ntop<00:16:56.959><c> of</c><00:16:57.120><c> the</c><00:16:57.279><c> new</c><00:16:57.440><c> skills.</c><00:16:58.079><c> That</c><00:16:58.320><c> could</c><00:16:58.480><c> be</c>\\n\\n00:16:58.629 --> 00:16:58.639 align:start position:0%\\ntop of the new skills. That could be\\n \\n\\n00:16:58.639 --> 00:17:00.389 align:start position:0%\\ntop of the new skills. That could be\\nanother<00:16:58.959><c> kind</c><00:16:59.120><c> of</c><00:16:59.279><c> proactive</c><00:16:59.839><c> thing</c><00:17:00.000><c> you</c><00:17:00.240><c> have</c>\\n\\n00:17:00.389 --> 00:17:00.399 align:start position:0%\\nanother kind of proactive thing you have\\n \\n\\n00:17:00.399 --> 00:17:02.629 align:start position:0%\\nanother kind of proactive thing you have\\nit<00:17:00.560><c> do</c><00:17:00.800><c> every</c><00:17:01.120><c> morning</c><00:17:01.680><c> is</c><00:17:01.920><c> have</c><00:17:02.160><c> it</c><00:17:02.399><c> search</c>\\n\\n00:17:02.629 --> 00:17:02.639 align:start position:0%\\nit do every morning is have it search\\n \\n\\n00:17:02.639 --> 00:17:05.110 align:start position:0%\\nit do every morning is have it search\\nfor<00:17:02.959><c> other</c><00:17:03.360><c> skills</c><00:17:04.000><c> other</c><00:17:04.240><c> Hermes</c><00:17:04.720><c> agents</c>\\n\\n00:17:05.110 --> 00:17:05.120 align:start position:0%\\nfor other skills other Hermes agents\\n \\n\\n00:17:05.120 --> 00:17:07.429 align:start position:0%\\nfor other skills other Hermes agents\\nhave<00:17:05.520><c> and</c><00:17:05.839><c> recommend</c><00:17:06.160><c> it</c><00:17:06.319><c> to</c><00:17:06.480><c> you</c><00:17:06.640><c> for</c><00:17:06.959><c> how</c><00:17:07.280><c> to</c>\\n\\n00:17:07.429 --> 00:17:07.439 align:start position:0%\\nhave and recommend it to you for how to\\n \\n\\n00:17:07.439 --> 00:17:09.429 align:start position:0%\\nhave and recommend it to you for how to\\nlearn.<00:17:07.919><c> See</c><00:17:08.160><c> this</c><00:17:08.319><c> is</c><00:17:08.480><c> amazing.</c><00:17:08.959><c> It</c><00:17:09.199><c> didn't</c>\\n\\n00:17:09.429 --> 00:17:09.439 align:start position:0%\\nlearn. See this is amazing. It didn't\\n \\n\\n00:17:09.439 --> 00:17:11.189 align:start position:0%\\nlearn. See this is amazing. It didn't\\nhave<00:17:09.520><c> the</c><00:17:09.679><c> hype</c><00:17:09.919><c> frame</c><00:17:10.240><c> skill</c><00:17:10.480><c> installed.</c><00:17:11.039><c> So</c>\\n\\n00:17:11.189 --> 00:17:11.199 align:start position:0%\\nhave the hype frame skill installed. So\\n \\n\\n00:17:11.199 --> 00:17:12.789 align:start position:0%\\nhave the hype frame skill installed. So\\nit<00:17:11.360><c> went</c><00:17:11.679><c> searched</c><00:17:12.000><c> for</c><00:17:12.079><c> the</c><00:17:12.240><c> hype</c><00:17:12.559><c> frame</c>\\n\\n00:17:12.789 --> 00:17:12.799 align:start position:0%\\nit went searched for the hype frame\\n \\n\\n00:17:12.799 --> 00:17:14.710 align:start position:0%\\nit went searched for the hype frame\\nskill,<00:17:13.199><c> found</c><00:17:13.439><c> it.</c><00:17:13.679><c> Now</c><00:17:13.839><c> it's</c><00:17:14.079><c> installing</c><00:17:14.480><c> it.</c>\\n\\n00:17:14.710 --> 00:17:14.720 align:start position:0%\\nskill, found it. Now it's installing it.\\n \\n\\n00:17:14.720 --> 00:17:16.309 align:start position:0%\\nskill, found it. Now it's installing it.\\nIt's<00:17:14.959><c> hyperframes.</c><00:17:15.839><c> Apologies.</c>\\n\\n00:17:16.309 --> 00:17:16.319 align:start position:0%\\nIt's hyperframes. Apologies.\\n \\n\\n00:17:16.319 --> 00:17:18.630 align:start position:0%\\nIt's hyperframes. Apologies.\\nHyperframes.<00:17:17.039><c> I</c><00:17:17.199><c> had</c><00:17:17.280><c> a</c><00:17:17.439><c> typo</c><00:17:17.760><c> in</c><00:17:17.919><c> there.</c><00:17:18.480><c> Now</c>\\n\\n00:17:18.630 --> 00:17:18.640 align:start position:0%\\nHyperframes. I had a typo in there. Now\\n \\n\\n00:17:18.640 --> 00:17:20.630 align:start position:0%\\nHyperframes. I had a typo in there. Now\\nit's<00:17:18.880><c> going</c><00:17:18.959><c> to</c><00:17:19.120><c> install</c><00:17:19.439><c> it</c><00:17:19.839><c> and</c><00:17:20.160><c> get</c><00:17:20.319><c> it</c><00:17:20.480><c> set</c>\\n\\n00:17:20.630 --> 00:17:20.640 align:start position:0%\\nit's going to install it and get it set\\n \\n\\n00:17:20.640 --> 00:17:21.829 align:start position:0%\\nit's going to install it and get it set\\nup<00:17:20.799><c> and</c><00:17:20.959><c> working.</c><00:17:21.280><c> And</c><00:17:21.360><c> now</c><00:17:21.520><c> we're</c><00:17:21.679><c> going</c><00:17:21.760><c> to</c>\\n\\n00:17:21.829 --> 00:17:21.839 align:start position:0%\\nup and working. And now we're going to\\n \\n\\n00:17:21.839 --> 00:17:23.909 align:start position:0%\\nup and working. And now we're going to\\nsee<00:17:22.000><c> a</c><00:17:22.319><c> really</c><00:17:22.720><c> cool</c><00:17:23.120><c> video</c><00:17:23.439><c> it's</c><00:17:23.760><c> going</c><00:17:23.839><c> to</c>\\n\\n00:17:23.909 --> 00:17:23.919 align:start position:0%\\nsee a really cool video it's going to\\n \\n\\n00:17:23.919 --> 00:17:25.750 align:start position:0%\\nsee a really cool video it's going to\\ngenerate<00:17:24.240><c> for</c><00:17:24.480><c> us.</c><00:17:24.799><c> All</c><00:17:24.880><c> right.</c><00:17:25.199><c> Boom.</c><00:17:25.600><c> Here</c>\\n\\n00:17:25.750 --> 00:17:25.760 align:start position:0%\\ngenerate for us. All right. Boom. Here\\n \\n\\n00:17:25.760 --> 00:17:27.590 align:start position:0%\\ngenerate for us. All right. Boom. Here\\nwe<00:17:25.919><c> go.</c><00:17:26.400><c> That</c><00:17:26.640><c> was</c><00:17:26.799><c> actually</c><00:17:27.039><c> pretty</c><00:17:27.280><c> quick.</c>\\n\\n00:17:27.590 --> 00:17:27.600 align:start position:0%\\nwe go. That was actually pretty quick.\\n \\n\\n00:17:27.600 --> 00:17:29.750 align:start position:0%\\nwe go. That was actually pretty quick.\\nThat<00:17:27.760><c> took</c><00:17:28.000><c> like</c><00:17:28.160><c> five</c><00:17:28.400><c> minutes.</c><00:17:29.120><c> Uh,</c><00:17:29.520><c> let's</c>\\n\\n00:17:29.750 --> 00:17:29.760 align:start position:0%\\nThat took like five minutes. Uh, let's\\n \\n\\n00:17:29.760 --> 00:17:31.190 align:start position:0%\\nThat took like five minutes. Uh, let's\\nsee<00:17:29.840><c> what</c><00:17:30.000><c> we</c><00:17:30.160><c> got</c><00:17:30.320><c> here.</c><00:17:30.559><c> So,</c><00:17:30.720><c> this</c><00:17:30.799><c> is</c><00:17:30.960><c> a</c>\\n\\n00:17:31.190 --> 00:17:31.200 align:start position:0%\\nsee what we got here. So, this is a\\n \\n\\n00:17:31.200 --> 00:17:34.230 align:start position:0%\\nsee what we got here. So, this is a\\nfully<00:17:31.760><c> generated</c><00:17:32.559><c> short.</c><00:17:33.280><c> I</c><00:17:33.520><c> can</c><00:17:33.679><c> put</c><00:17:33.840><c> this</c><00:17:34.000><c> on</c>\\n\\n00:17:34.230 --> 00:17:34.240 align:start position:0%\\nfully generated short. I can put this on\\n \\n\\n00:17:34.240 --> 00:17:35.669 align:start position:0%\\nfully generated short. I can put this on\\nYouTube<00:17:34.480><c> if</c><00:17:34.720><c> I</c><00:17:34.880><c> want.</c><00:17:35.120><c> Here</c><00:17:35.200><c> we</c><00:17:35.280><c> go.</c><00:17:35.520><c> This</c><00:17:35.600><c> is</c>\\n\\n00:17:35.669 --> 00:17:35.679 align:start position:0%\\nYouTube if I want. Here we go. This is\\n \\n\\n00:17:35.679 --> 00:17:36.950 align:start position:0%\\nYouTube if I want. Here we go. This is\\nthe<00:17:35.760><c> future.</c><00:17:36.080><c> This</c><00:17:36.160><c> is</c><00:17:36.240><c> your</c><00:17:36.320><c> AI.</c><00:17:36.640><c> It</c><00:17:36.799><c> runs</c>\\n\\n00:17:36.950 --> 00:17:36.960 align:start position:0%\\nthe future. This is your AI. It runs\\n \\n\\n00:17:36.960 --> 00:17:38.470 align:start position:0%\\nthe future. This is your AI. It runs\\nitself.<00:17:37.440><c> Look</c><00:17:37.520><c> at</c><00:17:37.679><c> this.</c><00:17:37.840><c> So,</c><00:17:38.000><c> it</c><00:17:38.160><c> gives</c><00:17:38.320><c> you</c>\\n\\n00:17:38.470 --> 00:17:38.480 align:start position:0%\\nitself. Look at this. So, it gives you\\n \\n\\n00:17:38.480 --> 00:17:40.390 align:start position:0%\\nitself. Look at this. So, it gives you\\nnice<00:17:38.799><c> motion</c><00:17:39.200><c> graphics,</c><00:17:39.760><c> really</c><00:17:40.080><c> nice</c>\\n\\n00:17:40.390 --> 00:17:40.400 align:start position:0%\\nnice motion graphics, really nice\\n \\n\\n00:17:40.400 --> 00:17:42.549 align:start position:0%\\nnice motion graphics, really nice\\ncolors.<00:17:40.960><c> I</c><00:17:41.200><c> like</c><00:17:41.280><c> the</c><00:17:41.520><c> way</c><00:17:41.679><c> things</c><00:17:41.919><c> go</c><00:17:42.080><c> in</c><00:17:42.320><c> and</c>\\n\\n00:17:42.549 --> 00:17:42.559 align:start position:0%\\ncolors. I like the way things go in and\\n \\n\\n00:17:42.559 --> 00:17:44.950 align:start position:0%\\ncolors. I like the way things go in and\\nout.<00:17:42.960><c> Now,</c><00:17:43.200><c> would</c><00:17:43.440><c> I</c><00:17:43.600><c> just</c><00:17:43.760><c> post</c><00:17:44.080><c> this</c><00:17:44.320><c> raw?</c>\\n\\n00:17:44.950 --> 00:17:44.960 align:start position:0%\\nout. Now, would I just post this raw?\\n \\n\\n00:17:44.960 --> 00:17:47.110 align:start position:0%\\nout. Now, would I just post this raw?\\nNo.<00:17:45.360><c> But</c><00:17:45.600><c> maybe</c><00:17:45.760><c> now</c><00:17:46.000><c> I</c><00:17:46.160><c> put</c><00:17:46.240><c> a</c><00:17:46.480><c> voice</c><00:17:46.720><c> over</c><00:17:46.960><c> on</c>\\n\\n00:17:47.110 --> 00:17:47.120 align:start position:0%\\nNo. But maybe now I put a voice over on\\n \\n\\n00:17:47.120 --> 00:17:48.710 align:start position:0%\\nNo. But maybe now I put a voice over on\\nit.<00:17:47.360><c> Maybe</c><00:17:47.440><c> I</c><00:17:47.600><c> put</c><00:17:47.760><c> my</c><00:17:47.919><c> face</c><00:17:48.080><c> in</c><00:17:48.320><c> the</c><00:17:48.480><c> bottom</c>\\n\\n00:17:48.710 --> 00:17:48.720 align:start position:0%\\nit. Maybe I put my face in the bottom\\n \\n\\n00:17:48.720 --> 00:17:50.549 align:start position:0%\\nit. Maybe I put my face in the bottom\\ncorner.<00:17:49.440><c> And</c><00:17:49.600><c> now,</c><00:17:49.919><c> instead</c><00:17:50.160><c> of</c><00:17:50.240><c> having</c><00:17:50.400><c> to</c>\\n\\n00:17:50.549 --> 00:17:50.559 align:start position:0%\\ncorner. And now, instead of having to\\n \\n\\n00:17:50.559 --> 00:17:52.310 align:start position:0%\\ncorner. And now, instead of having to\\nspend<00:17:50.799><c> thousands</c><00:17:51.120><c> of</c><00:17:51.280><c> dollars</c><00:17:51.600><c> on</c><00:17:51.760><c> an</c><00:17:52.000><c> editor</c>\\n\\n00:17:52.310 --> 00:17:52.320 align:start position:0%\\nspend thousands of dollars on an editor\\n \\n\\n00:17:52.320 --> 00:17:54.470 align:start position:0%\\nspend thousands of dollars on an editor\\nor<00:17:52.480><c> hire</c><00:17:52.720><c> a</c><00:17:52.960><c> team,</c><00:17:53.360><c> my</c><00:17:53.520><c> Hermes</c><00:17:53.919><c> agent</c><00:17:54.160><c> just</c><00:17:54.320><c> did</c>\\n\\n00:17:54.470 --> 00:17:54.480 align:start position:0%\\nor hire a team, my Hermes agent just did\\n \\n\\n00:17:54.480 --> 00:17:55.909 align:start position:0%\\nor hire a team, my Hermes agent just did\\nit<00:17:54.559><c> for</c><00:17:54.720><c> me</c><00:17:54.799><c> and</c><00:17:54.960><c> saved</c><00:17:55.200><c> me</c><00:17:55.360><c> thousands</c><00:17:55.760><c> of</c>\\n\\n00:17:55.909 --> 00:17:55.919 align:start position:0%\\nit for me and saved me thousands of\\n \\n\\n00:17:55.919 --> 00:17:58.310 align:start position:0%\\nit for me and saved me thousands of\\ndollars.<00:17:56.320><c> You</c><00:17:56.559><c> now</c><00:17:56.880><c> have</c><00:17:57.200><c> unlimited</c><00:17:58.000><c> control</c>\\n\\n00:17:58.310 --> 00:17:58.320 align:start position:0%\\ndollars. You now have unlimited control\\n \\n\\n00:17:58.320 --> 00:18:00.310 align:start position:0%\\ndollars. You now have unlimited control\\nto<00:17:58.559><c> build</c><00:17:58.799><c> any</c><00:17:59.039><c> sort</c><00:17:59.280><c> of</c><00:17:59.440><c> videos</c><00:17:59.760><c> or</c><00:18:00.000><c> motion</c>\\n\\n00:18:00.310 --> 00:18:00.320 align:start position:0%\\nto build any sort of videos or motion\\n \\n\\n00:18:00.320 --> 00:18:01.750 align:start position:0%\\nto build any sort of videos or motion\\ngraphics<00:18:00.720><c> you</c><00:18:00.880><c> want.</c><00:18:01.120><c> You</c><00:18:01.280><c> don't</c><00:18:01.440><c> need</c><00:18:01.520><c> to</c><00:18:01.679><c> be</c>\\n\\n00:18:01.750 --> 00:18:01.760 align:start position:0%\\ngraphics you want. You don't need to be\\n \\n\\n00:18:01.760 --> 00:18:03.669 align:start position:0%\\ngraphics you want. You don't need to be\\na<00:18:01.919><c> professional</c><00:18:02.320><c> anymore.</c><00:18:02.720><c> The</c><00:18:02.960><c> gatekeeping</c>\\n\\n00:18:03.669 --> 00:18:03.679 align:start position:0%\\na professional anymore. The gatekeeping\\n \\n\\n00:18:03.679 --> 00:18:05.830 align:start position:0%\\na professional anymore. The gatekeeping\\nhas<00:18:03.919><c> been</c><00:18:04.160><c> taken</c><00:18:04.480><c> away,</c><00:18:05.120><c> which</c><00:18:05.360><c> is</c><00:18:05.520><c> really</c>\\n\\n00:18:05.830 --> 00:18:05.840 align:start position:0%\\nhas been taken away, which is really\\n \\n\\n00:18:05.840 --> 00:18:08.390 align:start position:0%\\nhas been taken away, which is really\\namazing.<00:18:06.880><c> That</c><00:18:07.120><c> was</c><00:18:07.280><c> the</c><00:18:07.440><c> more</c><00:18:07.679><c> advanced</c><00:18:08.160><c> use</c>\\n\\n00:18:08.390 --> 00:18:08.400 align:start position:0%\\namazing. That was the more advanced use\\n \\n\\n00:18:08.400 --> 00:18:10.070 align:start position:0%\\namazing. That was the more advanced use\\ncase.<00:18:08.720><c> What</c><00:18:08.960><c> I'm</c><00:18:09.120><c> thinking</c><00:18:09.360><c> about</c><00:18:09.600><c> doing</c><00:18:09.840><c> in</c>\\n\\n00:18:10.070 --> 00:18:10.080 align:start position:0%\\ncase. What I'm thinking about doing in\\n \\n\\n00:18:10.080 --> 00:18:11.830 align:start position:0%\\ncase. What I'm thinking about doing in\\nthe<00:18:10.240><c> next</c><00:18:10.400><c> few</c><00:18:10.559><c> days</c><00:18:10.720><c> is</c><00:18:11.039><c> doing</c><00:18:11.280><c> like</c><00:18:11.440><c> a</c><00:18:11.679><c> video</c>\\n\\n00:18:11.830 --> 00:18:11.840 align:start position:0%\\nthe next few days is doing like a video\\n \\n\\n00:18:11.840 --> 00:18:14.710 align:start position:0%\\nthe next few days is doing like a video\\nwhere<00:18:12.080><c> it's</c><00:18:12.320><c> like</c><00:18:12.640><c> 10</c><00:18:13.039><c> use</c><00:18:13.360><c> cases</c><00:18:13.679><c> on</c><00:18:14.000><c> Hermes,</c>\\n\\n00:18:14.710 --> 00:18:14.720 align:start position:0%\\nwhere it's like 10 use cases on Hermes,\\n \\n\\n00:18:14.720 --> 00:18:17.830 align:start position:0%\\nwhere it's like 10 use cases on Hermes,\\njust<00:18:14.960><c> give</c><00:18:15.120><c> you</c><00:18:15.280><c> a</c><00:18:15.520><c> whole</c><00:18:15.840><c> gamut</c><00:18:17.120><c> use</c><00:18:17.360><c> case</c>\\n\\n00:18:17.830 --> 00:18:17.840 align:start position:0%\\njust give you a whole gamut use case\\n \\n\\n00:18:17.840 --> 00:18:19.990 align:start position:0%\\njust give you a whole gamut use case\\nfocused<00:18:18.320><c> video.</c><00:18:19.120><c> I</c><00:18:19.360><c> think</c><00:18:19.440><c> that</c><00:18:19.679><c> would</c><00:18:19.840><c> go</c>\\n\\n00:18:19.990 --> 00:18:20.000 align:start position:0%\\nfocused video. I think that would go\\n \\n\\n00:18:20.000 --> 00:18:21.590 align:start position:0%\\nfocused video. I think that would go\\nhard.<00:18:20.320><c> Let</c><00:18:20.480><c> me</c><00:18:20.559><c> know</c><00:18:20.640><c> if</c><00:18:20.799><c> you</c><00:18:20.960><c> want</c><00:18:21.120><c> that</c><00:18:21.360><c> down</c>\\n\\n00:18:21.590 --> 00:18:21.600 align:start position:0%\\nhard. Let me know if you want that down\\n \\n\\n00:18:21.600 --> 00:18:23.350 align:start position:0%\\nhard. Let me know if you want that down\\nbelow<00:18:21.919><c> as</c><00:18:22.160><c> well.</c><00:18:22.559><c> Again,</c><00:18:22.960><c> if</c><00:18:23.120><c> you</c><00:18:23.200><c> learned</c>\\n\\n00:18:23.350 --> 00:18:23.360 align:start position:0%\\nbelow as well. Again, if you learned\\n \\n\\n00:18:23.360 --> 00:18:25.029 align:start position:0%\\nbelow as well. Again, if you learned\\nanything,<00:18:23.679><c> leave</c><00:18:23.840><c> a</c><00:18:24.000><c> like,</c><00:18:24.320><c> subscribe,</c><00:18:24.880><c> turn</c>\\n\\n00:18:25.029 --> 00:18:25.039 align:start position:0%\\nanything, leave a like, subscribe, turn\\n \\n\\n00:18:25.039 --> 00:18:27.270 align:start position:0%\\nanything, leave a like, subscribe, turn\\non<00:18:25.280><c> notifications.</c><00:18:26.160><c> Super,</c><00:18:26.400><c> super</c><00:18:26.799><c> critical.</c>\\n\\n00:18:27.270 --> 00:18:27.280 align:start position:0%\\non notifications. Super, super critical.\\n \\n\\n00:18:27.280 --> 00:18:29.510 align:start position:0%\\non notifications. Super, super critical.\\nVibe<00:18:27.679><c> Coding</c><00:18:28.000><c> Academy</c><00:18:28.480><c> doing</c><00:18:28.720><c> another</c><00:18:29.120><c> live</c>\\n\\n00:18:29.510 --> 00:18:29.520 align:start position:0%\\nVibe Coding Academy doing another live\\n \\n\\n00:18:29.520 --> 00:18:31.830 align:start position:0%\\nVibe Coding Academy doing another live\\nboot<00:18:29.760><c> camp</c><00:18:30.080><c> on</c><00:18:30.320><c> Friday</c><00:18:30.720><c> on</c><00:18:30.960><c> Hermes</c><00:18:31.440><c> Agent.</c>\\n\\n00:18:31.830 --> 00:18:31.840 align:start position:0%\\nboot camp on Friday on Hermes Agent.\\n \\n\\n00:18:31.840 --> 00:18:33.750 align:start position:0%\\nboot camp on Friday on Hermes Agent.\\nFeel<00:18:32.000><c> free</c><00:18:32.160><c> to</c><00:18:32.400><c> join,</c><00:18:32.799><c> ask</c><00:18:33.039><c> me</c><00:18:33.280><c> questions,</c>\\n\\n00:18:33.750 --> 00:18:33.760 align:start position:0%\\nFeel free to join, ask me questions,\\n \\n\\n00:18:33.760 --> 00:18:35.510 align:start position:0%\\nFeel free to join, ask me questions,\\nchat<00:18:34.000><c> with</c><00:18:34.160><c> me,</c><00:18:34.640><c> whatever</c><00:18:34.960><c> you</c><00:18:35.039><c> want.</c><00:18:35.360><c> Link</c>\\n\\n00:18:35.510 --> 00:18:35.520 align:start position:0%\\nchat with me, whatever you want. Link\\n \\n\\n00:18:35.520 --> 00:18:37.830 align:start position:0%\\nchat with me, whatever you want. Link\\nfor<00:18:35.679><c> that</c><00:18:35.840><c> is</c><00:18:36.080><c> down</c><00:18:36.240><c> below</c><00:18:36.559><c> as</c><00:18:36.799><c> well.</c><00:18:37.520><c> Hope</c>\\n\\n00:18:37.830 --> 00:18:37.840 align:start position:0%\\nfor that is down below as well. Hope\\n \\n\\n00:18:37.840 --> 00:18:39.990 align:start position:0%\\nfor that is down below as well. Hope\\nthis<00:18:38.080><c> was</c><00:18:38.240><c> helpful.</c><00:18:38.640><c> I</c><00:18:38.960><c> absolutely</c><00:18:39.600><c> love</c>\\n\\n00:18:39.990 --> 00:18:40.000 align:start position:0%\\nthis was helpful. I absolutely love\\n \\n\\n00:18:40.000 --> 00:18:42.390 align:start position:0%\\nthis was helpful. I absolutely love\\nmaking<00:18:40.240><c> these</c><00:18:40.640><c> videos</c><00:18:40.960><c> for</c><00:18:41.200><c> you</c><00:18:41.440><c> guys.</c><00:18:42.080><c> It</c><00:18:42.240><c> is</c>\\n\\n00:18:42.390 --> 00:18:42.400 align:start position:0%\\nmaking these videos for you guys. It is\\n \\n\\n00:18:42.400 --> 00:18:44.390 align:start position:0%\\nmaking these videos for you guys. It is\\nan<00:18:42.559><c> honor</c><00:18:42.880><c> you</c><00:18:43.039><c> would</c><00:18:43.280><c> even</c><00:18:43.440><c> spend</c><00:18:43.760><c> 30</c><00:18:44.080><c> seconds</c>\\n\\n00:18:44.390 --> 00:18:44.400 align:start position:0%\\nan honor you would even spend 30 seconds\\n \\n\\n00:18:44.400 --> 00:18:46.470 align:start position:0%\\nan honor you would even spend 30 seconds\\nwatching<00:18:44.720><c> my</c><00:18:44.960><c> videos</c><00:18:45.200><c> with</c><00:18:45.440><c> me.</c><00:18:45.840><c> I</c><00:18:46.080><c> do</c><00:18:46.240><c> this</c>\\n\\n00:18:46.470 --> 00:18:46.480 align:start position:0%\\nwatching my videos with me. I do this\\n \\n\\n00:18:46.480 --> 00:18:48.230 align:start position:0%\\nwatching my videos with me. I do this\\nout<00:18:46.640><c> of</c><00:18:46.799><c> love.</c><00:18:47.120><c> So,</c><00:18:47.360><c> thank</c><00:18:47.520><c> you</c><00:18:47.679><c> so</c><00:18:47.840><c> much</c><00:18:48.000><c> for</c>\\n\\n00:18:48.230 --> 00:18:48.240 align:start position:0%\\nout of love. So, thank you so much for\\n \\n\\n00:18:48.240 --> 00:18:49.830 align:start position:0%\\nout of love. So, thank you so much for\\nwatching<00:18:48.480><c> these.</c><00:18:49.039><c> Hope</c><00:18:49.200><c> it</c><00:18:49.360><c> was</c><00:18:49.440><c> helpful</c><00:18:49.679><c> and</c>\\n\\n00:18:49.830 --> 00:18:49.840 align:start position:0%\\nwatching these. Hope it was helpful and\\n \\n\\n00:18:49.840 --> 00:18:52.799 align:start position:0%\\nwatching these. Hope it was helpful and\\nI<00:18:50.000><c> will</c><00:18:50.160><c> see</c><00:18:50.240><c> you</c><00:18:50.320><c> in</c><00:18:50.480><c> the</c><00:18:50.640><c> next</c>\", \"exit_code\": 0, \"error\": null}",
+      "tool_call_id": "call_function_4twy8yzm2jnk_1"
+    },
+    {
+      "role": "assistant",
+      "content": "",
+      "reasoning": "Good, I have the transcript. Now I need to extract key information:\n\n1. GitHub repos mentioned\n2. Setup tips\n3. Features shown\n\nLet me parse through the transcript and search for GitHub URLs or mentions. Let me also save this transcript to a more readable format and extract the key information.\n\nFrom the transcript I can see:\n- Video is about Hermes Agent (a 24/7 AI employee)\n- Compared to OpenClaw (OpenClaw has been breaking with updates)\n- Setup involves installing Hermes Agent\n- There are skills that can be installed (like hypeframes/Hyperframes)\n- Three use cases are promised\n\nLet me search for GitHub mentions and save a cleaned transcript.",
+      "finish_reason": "tool_calls",
+      "reasoning_content": "Good, I have the transcript. Now I need to extract key information:\n\n1. GitHub repos mentioned\n2. Setup tips\n3. Features shown\n\nLet me parse through the transcript and search for GitHub URLs or mentions. Let me also save this transcript to a more readable format and extract the key information.\n\nFrom the transcript I can see:\n- Video is about Hermes Agent (a 24/7 AI employee)\n- Compared to OpenClaw (OpenClaw has been breaking with updates)\n- Setup involves installing Hermes Agent\n- There are skills that can be installed (like hypeframes/Hyperframes)\n- Three use cases are promised\n\nLet me search for GitHub mentions and save a cleaned transcript.",
+      "reasoning_details": [
+        {
+          "signature": "85afdce67bf707827ee454f56548985aa2c98752752dbe64d73e8e328522857e",
+          "thinking": "Good, I have the transcript. Now I need to extract key information:\n\n1. GitHub repos mentioned\n2. Setup tips\n3. Features shown\n\nLet me parse through the transcript and search for GitHub URLs or mentions. Let me also save this transcript to a more readable format and extract the key information.\n\nFrom the transcript I can see:\n- Video is about Hermes Agent (a 24/7 AI employee)\n- Compared to OpenClaw (OpenClaw has been breaking with updates)\n- Setup involves installing Hermes Agent\n- There are skills that can be installed (like hypeframes/Hyperframes)\n- Three use cases are promised\n\nLet me search for GitHub mentions and save a cleaned transcript.",
+          "type": "thinking"
+        }
+      ],
+      "tool_calls": [
+        {
+          "id": "call_function_esgu6f72ax01_1",
+          "call_id": "call_function_esgu6f72ax01_1",
+          "response_item_id": "fc_function_esgu6f72ax01_1",
+          "type": "function",
+          "function": {
+            "name": "terminal",
+            "arguments": "{\"command\": \"grep -i \\\"github\\\\|hermes\\\\|Nous\\\\|repo\\\\|repository\\\" /home/marco/video2_transcript.en.vtt | head -50\", \"timeout\": 10}"
+          }
+        }
+      ]
+    },
+    {
+      "role": "tool",
+      "name": "terminal",
+      "content": "{\"output\": \"Hermes<00:00:02.480><c> agent</c><00:00:02.800><c> is</c><00:00:02.960><c> now</c><00:00:03.200><c> better</c><00:00:03.439><c> than</c>\\nHermes agent is now better than\\nHermes agent is now better than\\nHermes<00:00:32.079><c> agent.</c><00:00:32.480><c> In</c><00:00:32.719><c> this</c><00:00:33.120><c> video,</c><00:00:33.680><c> I'm</c><00:00:34.000><c> going</c>\\nHermes agent. In this video, I'm going\\nHermes agent. In this video, I'm going\\nHermes<00:00:38.719><c> AI</c><00:00:39.200><c> employee.</c><00:00:39.920><c> An</c><00:00:40.160><c> AI</c><00:00:40.480><c> employee</c><00:00:40.879><c> that</c>\\nHermes AI employee. An AI employee that\\nHermes AI employee. An AI employee that\\nright,<00:01:03.440><c> so</c><00:01:03.600><c> here's</c><00:01:03.840><c> the</c><00:01:04.080><c> story</c><00:01:04.320><c> on</c><00:01:04.640><c> Hermes</c>\\nright, so here's the story on Hermes\\nright, so here's the story on Hermes\\nthing's<00:01:38.799><c> constantly</c><00:01:39.280><c> breaking?</c><00:01:39.920><c> Hermes</c>\\nthing's constantly breaking? Hermes\\nthing's constantly breaking? Hermes\\npodge<00:02:05.280><c> style.</c><00:02:05.840><c> With</c><00:02:06.079><c> Hermes</c><00:02:06.640><c> Agent,</c><00:02:07.200><c> every</c>\\npodge style. With Hermes Agent, every\\npodge style. With Hermes Agent, every\\nbeautiful.<00:02:54.720><c> You</c><00:02:54.959><c> send</c><00:02:55.200><c> a</c><00:02:55.519><c> message</c><00:02:55.920><c> to</c><00:02:56.239><c> Hermes</c>\\nbeautiful. You send a message to Hermes\\nbeautiful. You send a message to Hermes\\nthe<00:03:17.599><c> Hermes</c><00:03:18.159><c> agent</c><00:03:18.640><c> better,</c><00:03:19.120><c> improves</c><00:03:19.680><c> the</c>\\nthe Hermes agent better, improves the\\nthe Hermes agent better, improves the\\nHermes<00:03:20.480><c> agent.</c><00:03:21.360><c> So</c><00:03:21.519><c> the</c><00:03:21.760><c> more</c><00:03:22.000><c> you</c><00:03:22.239><c> use</c><00:03:22.400><c> it,</c>\\nHermes agent. So the more you use it,\\nHermes agent. So the more you use it,\\nsay<00:04:43.040><c> is</c><00:04:43.360><c> build</c><00:04:43.520><c> a</c><00:04:43.680><c> new</c><00:04:43.759><c> Hermes</c><00:04:44.320><c> profile</c><00:04:44.639><c> and</c>\\nsay is build a new Hermes profile and\\nsay is build a new Hermes profile and\\nbeing<00:04:57.280><c> said,</c><00:04:58.080><c> this</c><00:04:58.320><c> is</c><00:04:58.479><c> why</c><00:04:58.800><c> Hermes</c><00:04:59.360><c> has</c><00:04:59.520><c> kind</c>\\nbeing said, this is why Hermes has kind\\nbeing said, this is why Hermes has kind\\nOpenClaw<00:06:10.240><c> in</c><00:06:10.479><c> Hermes</c><00:06:10.960><c> agent.</c><00:06:11.440><c> It</c><00:06:11.600><c> just</c><00:06:11.840><c> does</c>\\nOpenClaw in Hermes agent. It just does\\nOpenClaw in Hermes agent. It just does\\nUsing<00:06:31.919><c> Hermes</c><00:06:32.479><c> agent</c><00:06:32.880><c> is</c><00:06:33.199><c> going</c><00:06:33.360><c> to</c><00:06:33.600><c> improve</c>\\nUsing Hermes agent is going to improve\\nUsing Hermes agent is going to improve\\nyour<00:07:56.000><c> Hermes</c><00:07:56.479><c> agent.</c><00:07:56.879><c> I'm</c><00:07:57.120><c> not</c><00:07:57.280><c> taking</c><00:07:57.520><c> you</c>\\nyour Hermes agent. I'm not taking you\\nyour Hermes agent. I'm not taking you\\npower<00:08:25.840><c> your</c><00:08:26.080><c> Hermes</c><00:08:26.560><c> agent</c><00:08:26.879><c> with</c><00:08:27.120><c> it.</c><00:08:27.599><c> They</c>\\npower your Hermes agent with it. They\\npower your Hermes agent with it. They\\nHermes<00:08:32.159><c> agent</c><00:08:32.560><c> powered</c><00:08:32.880><c> by</c><00:08:33.120><c> Quen</c><00:08:33.680><c> 36,</c><00:08:34.320><c> which</c>\\nHermes agent powered by Quen 36, which\\nHermes agent powered by Quen 36, which\\ndoing<00:09:09.600><c> after</c><00:09:09.920><c> you</c><00:09:10.240><c> set</c><00:09:10.399><c> up</c><00:09:10.480><c> your</c><00:09:10.720><c> Hermes</c>\\ndoing after you set up your Hermes\", \"exit_code\": 0, \"error\": null}",
+      "tool_call_id": "call_function_esgu6f72ax01_1"
+    },
+    {
+      "role": "assistant",
+      "content": "",
+      "reasoning": "The transcript doesn't have explicit GitHub URLs mentioned. Let me search for more specific information and also look up the Hermes Agent GitHub repo directly.",
+      "finish_reason": "tool_calls",
+      "reasoning_content": "The transcript doesn't have explicit GitHub URLs mentioned. Let me search for more specific information and also look up the Hermes Agent GitHub repo directly.",
+      "reasoning_details": [
+        {
+          "signature": "7b921d9e1799186a81b02d7efb8058f84066cbd952456c88da1a0ebab14907aa",
+          "thinking": "The transcript doesn't have explicit GitHub URLs mentioned. Let me search for more specific information and also look up the Hermes Agent GitHub repo directly.",
+          "type": "thinking"
+        }
+      ],
+      "tool_calls": [
+        {
+          "id": "call_function_5xo0rfw3xc2n_1",
+          "call_id": "call_function_5xo0rfw3xc2n_1",
+          "response_item_id": "fc_function_5xo0rfw3xc2n_1",
+          "type": "function",
+          "function": {
+            "name": "terminal",
+            "arguments": "{\"command\": \"grep -oP '(https?://)?[a-zA-Z0-9.-]+\\\\.[a-z]{2,}[^\\\\s]*' /home/marco/video2_transcript.en.vtt | grep -i github 2>/dev/null || echo \\\"No github URLs found in transcript\\\"\", \"timeout\": 10}"
+          }
+        },
+        {
+          "id": "call_function_5xo0rfw3xc2n_2",
+          "call_id": "call_function_5xo0rfw3xc2n_2",
+          "response_item_id": "fc_function_5xo0rfw3xc2n_2",
+          "type": "function",
+          "function": {
+            "name": "terminal",
+            "arguments": "{\"command\": \"curl -s \\\"https://api.github.com/search/repositories?q=Hermes+agent+NousResearch\\\" 2>/dev/null | python3 -c \\\"import sys,json; d=json.load(sys.stdin); [print(f'{r[\\\\\\\"full_name\\\\\\\"]}: {r[\\\\\\\"html_url\\\\\\\"]}') for r in d.get('items',[])[:10]]\\\" 2>/dev/null || echo \\\"GitHub search failed\\\"\", \"timeout\": 30}"
+          }
+        }
+      ]
+    },
+    {
+      "role": "tool",
+      "name": "terminal",
+      "content": "{\"output\": \"No github URLs found in transcript\", \"exit_code\": 0, \"error\": null}",
+      "tool_call_id": "call_function_5xo0rfw3xc2n_1"
+    },
+    {
+      "role": "tool",
+      "name": "terminal",
+      "content": "{\"output\": \"\", \"exit_code\": 0, \"error\": null}",
+      "tool_call_id": "call_function_5xo0rfw3xc2n_2"
+    },
+    {
+      "role": "assistant",
+      "content": "",
+      "reasoning": "The GitHub search didn't return output. Let me try a more specific search for Hermes Agent and also check the transcript more carefully for any URLs or references to setup.\n\nLet me also search the Invidious instance for more info.",
+      "finish_reason": "tool_calls",
+      "reasoning_content": "The GitHub search didn't return output. Let me try a more specific search for Hermes Agent and also check the transcript more carefully for any URLs or references to setup.\n\nLet me also search the Invidious instance for more info.",
+      "reasoning_details": [
+        {
+          "signature": "4cb9519e9bb7c8c4572565f62eecb45e7b3dc3135200dc2f7d0055dba32c7fd5",
+          "thinking": "The GitHub search didn't return output. Let me try a more specific search for Hermes Agent and also check the transcript more carefully for any URLs or references to setup.\n\nLet me also search the Invidious instance for more info.",
+          "type": "thinking"
+        }
+      ],
+      "tool_calls": [
+        {
+          "id": "call_function_d6rmunpirmyb_1",
+          "call_id": "call_function_d6rmunpirmyb_1",
+          "response_item_id": "fc_function_d6rmunpirmyb_1",
+          "type": "function",
+          "function": {
+            "name": "terminal",
+            "arguments": "{\"command\": \"curl -s \\\"https://invidious.snopyta.org/api/v1/videos/cEo95olh2j4\\\" 2>/dev/null | python3 -c \\\"import sys,json; d=json.load(sys.stdin); print('Title:', d.get('title','')); print('Description:', d.get('description','')[:2000])\\\" 2>/dev/null || echo \\\"Invidious failed\\\"\", \"timeout\": 30}"
+          }
+        },
+        {
+          "id": "call_function_d6rmunpirmyb_2",
+          "call_id": "call_function_d6rmunpirmyb_2",
+          "response_item_id": "fc_function_d6rmunpirmyb_2",
+          "type": "function",
+          "function": {
+            "name": "terminal",
+            "arguments": "{\"command\": \"curl -s \\\"https://api.github.com/search/repositories?q=hermes+agent+ nous+research&per_page=10\\\" 2>/dev/null | python3 -m json.tool 2>/dev/null | head -60\", \"timeout\": 30}"
+          }
+        }
+      ]
+    },
+    {
+      "role": "tool",
+      "name": "terminal",
+      "content": "{\"output\": \"Invidious failed\", \"exit_code\": 0, \"error\": null}",
+      "tool_call_id": "call_function_d6rmunpirmyb_1"
+    },
+    {
+      "role": "tool",
+      "name": "terminal",
+      "content": "{\"output\": \"\", \"exit_code\": 0, \"error\": null, \"approval\": \"Command required approval (Security scan — [MEDIUM] Schemeless URL in sink context: URL without explicit scheme passed to a command that downloads/executes content; [HIGH] Pipe to interpreter: curl | python3: Command pipes output from 'curl' directly to interpreter 'python3'. Downloaded content will be executed without inspection.\\n  Safer: tirith run https://api.github.com/search/repositories?q=hermes+agent+ nous+research&per_page=10  — or: vet https://api.github.com/search/repositories?q=hermes+agent+ nous+research&per_page=10  (https://getvet.sh)) and was approved by the user.\"}",
+      "tool_call_id": "call_function_d6rmunpirmyb_2"
+    },
+    {
+      "role": "assistant",
+      "content": "",
+      "reasoning": "Let me try searching for the Hermes Agent GitHub repo directly using web search or a different approach.",
+      "finish_reason": "tool_calls",
+      "reasoning_content": "Let me try searching for the Hermes Agent GitHub repo directly using web search or a different approach.",
+      "reasoning_details": [
+        {
+          "signature": "fbfdd8b88a1428abe6bfefba5e5a0199d48e6fda8958dea63b342f9f2f6f641a",
+          "thinking": "Let me try searching for the Hermes Agent GitHub repo directly using web search or a different approach.",
+          "type": "thinking"
+        }
+      ],
+      "tool_calls": [
+        {
+          "id": "call_function_ma14kc7q5ndr_1",
+          "call_id": "call_function_ma14kc7q5ndr_1",
+          "response_item_id": "fc_function_ma14kc7q5ndr_1",
+          "type": "function",
+          "function": {
+            "name": "terminal",
+            "arguments": "{\"command\": \"curl -s \\\"https://api.github.com/search/repositories?q=hermes-agent&per_page=10\\\" | python3 -m json.tool 2>/dev/null | grep -A5 '\\\"full_name\\\"' | head -50\", \"timeout\": 30}"
+          }
+        }
+      ]
+    },
+    {
+      "role": "tool",
+      "name": "terminal",
+      "content": "{\"output\": \"\", \"exit_code\": 0, \"error\": null}",
+      "tool_call_id": "call_function_ma14kc7q5ndr_1"
+    },
+    {
+      "role": "assistant",
+      "content": "",
+      "reasoning": "Let me try a different approach to search GitHub.",
+      "finish_reason": "tool_calls",
+      "reasoning_content": "Let me try a different approach to search GitHub.",
+      "reasoning_details": [
+        {
+          "signature": "f44282fef7456d4eac6d223048f3e6f6330a007db42741568a71292aec0ba667",
+          "thinking": "Let me try a different approach to search GitHub.",
+          "type": "thinking"
+        }
+      ],
+      "tool_calls": [
+        {
+          "id": "call_function_iuidion2dl8g_1",
+          "call_id": "call_function_iuidion2dl8g_1",
+          "response_item_id": "fc_function_iuidion2dl8g_1",
+          "type": "function",
+          "function": {
+            "name": "terminal",
+            "arguments": "{\"command\": \"curl -s \\\"https://api.github.com/search/repositories?q=hermes+agent&sort=stars&order=desc&per_page=5\\\" 2>&1 | head -100\", \"timeout\": 30}"
+          }
+        }
+      ]
+    },
+    {
+      "role": "tool",
+      "name": "terminal",
+      "content": "{\"output\": \"{\\\"message\\\":\\\"API rate limit exceeded for 83.225.96.105. (But here's the good news: Authenticated requests get a higher rate limit. Check out the documentation for more details.)\\\",\\\"documentation_url\\\":\\\"https://docs.github.com/rest/overview/resources-in-the-rest-api#rate-limiting\\\"}\", \"exit_code\": 0, \"error\": null}",
+      "tool_call_id": "call_function_iuidion2dl8g_1"
+    },
+    {
+      "role": "assistant",
+      "content": "",
+      "reasoning": "GitHub API is rate limited. Let me try to get the info another way. Let me try searching the transcript more carefully for any links or references to the Hermes agent website or documentation.",
+      "finish_reason": "tool_calls",
+      "reasoning_content": "GitHub API is rate limited. Let me try to get the info another way. Let me try searching the transcript more carefully for any links or references to the Hermes agent website or documentation.",
+      "reasoning_details": [
+        {
+          "signature": "76043c2429d0b593a94293ee2de64cb73bdf59062bd02733b667c13948016241",
+          "thinking": "GitHub API is rate limited. Let me try to get the info another way. Let me try searching the transcript more carefully for any links or references to the Hermes agent website or documentation.",
+          "type": "thinking"
+        }
+      ],
+      "tool_calls": [
+        {
+          "id": "call_function_39x6xho3q75v_1",
+          "call_id": "call_function_39x6xho3q75v_1",
+          "response_item_id": "fc_function_39x6xho3q75v_1",
+          "type": "function",
+          "function": {
+            "name": "terminal",
+            "arguments": "{\"command\": \"grep -oP '(http|www)[^\\\\s<>\\\"{}|\\\\\\\\^\\\\[\\\\]`]+' /home/marco/video2_transcript.en.vtt | sort -u 2>/dev/null | head -30\", \"timeout\": 10}"
+          }
+        },
+        {
+          "id": "call_function_39x6xho3q75v_2",
+          "call_id": "call_function_39x6xho3q75v_2",
+          "response_item_id": "fc_function_39x6xho3q75v_2",
+          "type": "function",
+          "function": {
+            "name": "terminal",
+            "arguments": "{\"command\": \"grep -i \\\"nos\\\\|research\\\\|docs\\\\|hermes-agent\\\\|install\\\\|setup\\\\|npm\\\\|pip\\\\|python\\\\|node\\\" /home/marco/video2_transcript.en.vtt | head -50\", \"timeout\": 10}"
+          }
+        }
+      ]
+    },
+    {
+      "role": "tool",
+      "name": "terminal",
+      "content": "{\"output\": \"\", \"exit_code\": 0, \"error\": null}",
+      "tool_call_id": "call_function_39x6xho3q75v_1"
+    },
+    {
+      "role": "tool",
+      "name": "terminal",
+      "content": "{\"output\": \"These<00:03:57.280><c> people</c><00:03:57.519><c> at</c><00:03:57.920><c> New</c><00:03:58.239><c> Research,</c><00:03:58.799><c> it</c><00:03:59.040><c> seems</c>\\nThese people at New Research, it seems\\nThese people at New Research, it seems\\nadd<00:04:27.600><c> before</c><00:04:27.840><c> we</c><00:04:28.000><c> get</c><00:04:28.080><c> into</c><00:04:28.320><c> installation</c><00:04:28.880><c> and</c>\\nadd before we get into installation and\\nadd before we get into installation and\\ninstallation.<00:05:06.960><c> I</c><00:05:07.120><c> won't</c><00:05:07.280><c> spend</c><00:05:07.520><c> too</c><00:05:07.680><c> much</c>\\ninstallation. I won't spend too much\\ninstallation. I won't spend too much\\ninstalled,<00:05:09.759><c> feel</c><00:05:09.840><c> free</c><00:05:10.000><c> to</c><00:05:10.160><c> skip</c><00:05:10.479><c> between</c><00:05:10.800><c> the</c>\\ninstalled, feel free to skip between the\\ninstalled, feel free to skip between the\\ninstalls.<00:05:25.680><c> It</c><00:05:25.919><c> gives</c><00:05:26.160><c> you</c><00:05:26.320><c> some</c><00:05:26.720><c> options</c><00:05:27.360><c> on</c>\\ninstalls. It gives you some options on\\ninstalls. It gives you some options on\\nhow<00:05:27.919><c> to</c><00:05:28.160><c> install.</c><00:05:28.960><c> So,</c><00:05:29.520><c> it's</c><00:05:29.759><c> going</c><00:05:29.840><c> to</c><00:05:30.000><c> give</c>\\nhow to install. So, it's going to give\\nhow to install. So, it's going to give\\nhave<00:17:09.520><c> the</c><00:17:09.679><c> hype</c><00:17:09.919><c> frame</c><00:17:10.240><c> skill</c><00:17:10.480><c> installed.</c><00:17:11.039><c> So</c>\\nhave the hype frame skill installed. So\\nhave the hype frame skill installed. So\\nskill,<00:17:13.199><c> found</c><00:17:13.439><c> it.</c><00:17:13.679><c> Now</c><00:17:13.839><c> it's</c><00:17:14.079><c> installing</c><00:17:14.480><c> it.</c>\\nskill, found it. Now it's installing it.\\nskill, found it. Now it's installing it.\\nit's<00:17:18.880><c> going</c><00:17:18.959><c> to</c><00:17:19.120><c> install</c><00:17:19.439><c> it</c><00:17:19.839><c> and</c><00:17:20.160><c> get</c><00:17:20.319><c> it</c><00:17:20.480><c> set</c>\\nit's going to install it and get it set\\nit's going to install it and get it set\", \"exit_code\": 0, \"error\": null}",
+      "tool_call_id": "call_function_39x6xho3q75v_2"
+    },
+    {
+      "role": "assistant",
+      "content": "",
+      "reasoning": "Let me search for the Hermes Agent GitHub repo directly.",
+      "finish_reason": "tool_calls",
+      "reasoning_content": "Let me search for the Hermes Agent GitHub repo directly.",
+      "reasoning_details": [
+        {
+          "signature": "96be522d2400419687208b87a1b42743ac522e6d8f33399dcf5bc40c37cabc3b",
+          "thinking": "Let me search for the Hermes Agent GitHub repo directly.",
+          "type": "thinking"
+        }
+      ],
+      "tool_calls": [
+        {
+          "id": "call_function_4bpht4i05kuv_1",
+          "call_id": "call_function_4bpht4i05kuv_1",
+          "response_item_id": "fc_function_4bpht4i05kuv_1",
+          "type": "function",
+          "function": {
+            "name": "terminal",
+            "arguments": "{\"command\": \"curl -sL \\\"https://github.com/NousResearch/hermes-agent\\\" 2>/dev/null | grep -oP 'title>[^<]+' | head -5 || echo \\\"Direct fetch failed\\\"\", \"timeout\": 30}"
+          }
+        },
+        {
+          "id": "call_function_4bpht4i05kuv_2",
+          "call_id": "call_function_4bpht4i05kuv_2",
+          "response_item_id": "fc_function_4bpht4i05kuv_2",
+          "type": "function",
+          "function": {
+            "name": "terminal",
+            "arguments": "{\"command\": \"curl -sL \\\"https://github.com/NousResearch\\\" 2>/dev/null | grep -oP 'href=\\\"[^\\\"]*hermes[^\\\"]*\\\"' | head -10\", \"timeout\": 30}"
+          }
+        }
+      ]
+    },
+    {
+      "role": "tool",
+      "name": "terminal",
+      "content": "{\"output\": \"title>GitHub - NousResearch/hermes-agent: The agent that grows with you · GitHub\", \"exit_code\": 0, \"error\": null}",
+      "tool_call_id": "call_function_4bpht4i05kuv_1"
+    },
+    {
+      "role": "tool",
+      "name": "terminal",
+      "content": "{\"output\": \"href=\\\"/NousResearch/hermes-agent\\\"\\nhref=\\\"/NousResearch/hermes-agent/stargazers\\\"\\nhref=\\\"/NousResearch/hermes-agent/forks\\\"\\nhref=\\\"/NousResearch/hermes-agent-self-evolution\\\"\\nhref=\\\"/NousResearch/hermes-agent-self-evolution/stargazers\\\"\\nhref=\\\"/NousResearch/hermes-agent-self-evolution/forks\\\"\\nhref=\\\"/NousResearch/hermes-paperclip-adapter\\\"\\nhref=\\\"/NousResearch/hermes-paperclip-adapter/stargazers\\\"\\nhref=\\\"/NousResearch/hermes-paperclip-adapter/forks\\\"\\nhref=\\\"/NousResearch/hermes-agent\\\"\", \"exit_code\": 0, \"error\": null}",
+      "tool_call_id": "call_function_4bpht4i05kuv_2"
+    },
+    {
+      "role": "assistant",
+      "content": "",
+      "reasoning": "Found it! The main repo is `NousResearch/hermes-agent`. Now let me get more info from the repo page and also look at the transcript for setup/feature details.",
+      "finish_reason": "tool_calls",
+      "reasoning_content": "Found it! The main repo is `NousResearch/hermes-agent`. Now let me get more info from the repo page and also look at the transcript for setup/feature details.",
+      "reasoning_details": [
+        {
+          "signature": "6167c1456dbebcc8c8b5bceb3fc0d69857e36bc439db5e136378e7361984e9a8",
+          "thinking": "Found it! The main repo is `NousResearch/hermes-agent`. Now let me get more info from the repo page and also look at the transcript for setup/feature details.",
+          "type": "thinking"
+        }
+      ],
+      "tool_calls": [
+        {
+          "id": "call_function_xqm0whzib3vu_1",
+          "call_id": "call_function_xqm0whzib3vu_1",
+          "response_item_id": "fc_function_xqm0whzib3vu_1",
+          "type": "function",
+          "function": {
+            "name": "terminal",
+            "arguments": "{\"command\": \"curl -sL \\\"https://raw.githubusercontent.com/NousResearch/hermes-agent/main/README.md\\\" 2>/dev/null | head -200\", \"timeout\": 30}"
+          }
+        },
+        {
+          "id": "call_function_xqm0whzib3vu_2",
+          "call_id": "call_function_xqm0whzib3vu_2",
+          "response_item_id": "fc_function_xqm0whzib3vu_2",
+          "type": "function",
+          "function": {
+            "name": "terminal",
+            "arguments": "{\"command\": \"grep -i \\\"skill\\\\|tool\\\\|feature\\\\|capability\\\\|use case\\\\|profile\\\\|model\\\\|provider\\\\|openai\\\\|anthropic\\\\|claude\\\\|qu.en\\\\|qwen\\\" /home/marco/video2_transcript.en.vtt | head -80\", \"timeout\": 10}"
+          }
+        }
+      ]
+    },
+    {
+      "role": "tool",
+      "name": "terminal",
+      "content": "{\"output\": \"<p align=\\\"center\\\">\\n  <img src=\\\"assets/banner.png\\\" alt=\\\"Hermes Agent\\\" width=\\\"100%\\\">\\n</p>\\n\\n# Hermes Agent ☤\\n\\n<p align=\\\"center\\\">\\n  <a href=\\\"https://hermes-agent.nousresearch.com/docs/\\\"><img src=\\\"https://img.shields.io/badge/Docs-hermes--agent.nousresearch.com-FFD700?style=for-the-badge\\\" alt=\\\"Documentation\\\"></a>\\n  <a href=\\\"https://discord.gg/NousResearch\\\"><img src=\\\"https://img.shields.io/badge/Discord-5865F2?style=for-the-badge&logo=discord&logoColor=white\\\" alt=\\\"Discord\\\"></a>\\n  <a href=\\\"https://github.com/NousResearch/hermes-agent/blob/main/LICENSE\\\"><img src=\\\"https://img.shields.io/badge/License-MIT-green?style=for-the-badge\\\" alt=\\\"License: MIT\\\"></a>\\n  <a href=\\\"https://nousresearch.com\\\"><img src=\\\"https://img.shields.io/badge/Built%20by-Nous%20Research-blueviolet?style=for-the-badge\\\" alt=\\\"Built by Nous Research\\\"></a>\\n  <a href=\\\"README.zh-CN.md\\\"><img src=\\\"https://img.shields.io/badge/Lang-中文-red?style=for-the-badge\\\" alt=\\\"中文\\\"></a>\\n</p>\\n\\n**The self-improving AI agent built by [Nous Research](https://nousresearch.com).** It's the only agent with a built-in learning loop — it creates skills from experience, improves them during use, nudges itself to persist knowledge, searches its own past conversations, and builds a deepening model of who you are across sessions. Run it on a $5 VPS, a GPU cluster, or serverless infrastructure that costs nearly nothing when idle. It's not tied to your laptop — talk to it from Telegram while it works on a cloud VM.\\n\\nUse any model you want — [Nous Portal](https://portal.nousresearch.com), [OpenRouter](https://openrouter.ai) (200+ models), [NVIDIA NIM](https://build.nvidia.com) (Nemotron), [Xiaomi MiMo](https://platform.xiaomimimo.com), [z.ai/GLM](https://z.ai), [Kimi/Moonshot](https://platform.moonshot.ai), [MiniMax](https://www.minimax.io), [Hugging Face](https://huggingface.co), OpenAI, or your own endpoint. Switch with `hermes model` — no code changes, no lock-in.\\n\\n<table>\\n<tr><td><b>A real terminal interface</b></td><td>Full TUI with multiline editing, slash-command autocomplete, conversation history, interrupt-and-redirect, and streaming tool output.</td></tr>\\n<tr><td><b>Lives where you do</b></td><td>Telegram, Discord, Slack, WhatsApp, Signal, and CLI — all from a single gateway process. Voice memo transcription, cross-platform conversation continuity.</td></tr>\\n<tr><td><b>A closed learning loop</b></td><td>Agent-curated memory with periodic nudges. Autonomous skill creation after complex tasks. Skills self-improve during use. FTS5 session search with LLM summarization for cross-session recall. <a href=\\\"https://github.com/plastic-labs/honcho\\\">Honcho</a> dialectic user modeling. Compatible with the <a href=\\\"https://agentskills.io\\\">agentskills.io</a> open standard.</td></tr>\\n<tr><td><b>Scheduled automations</b></td><td>Built-in cron scheduler with delivery to any platform. Daily reports, nightly backups, weekly audits — all in natural language, running unattended.</td></tr>\\n<tr><td><b>Delegates and parallelizes</b></td><td>Spawn isolated subagents for parallel workstreams. Write Python scripts that call tools via RPC, collapsing multi-step pipelines into zero-context-cost turns.</td></tr>\\n<tr><td><b>Runs anywhere, not just your laptop</b></td><td>Seven terminal backends — local, Docker, SSH, Singularity, Modal, Daytona, and Vercel Sandbox. Daytona and Modal offer serverless persistence — your agent's environment hibernates when idle and wakes on demand, costing nearly nothing between sessions. Run it on a $5 VPS or a GPU cluster.</td></tr>\\n<tr><td><b>Research-ready</b></td><td>Batch trajectory generation, Atropos RL environments, trajectory compression for training the next generation of tool-calling models.</td></tr>\\n</table>\\n\\n---\\n\\n## Quick Install\\n\\n### Linux, macOS, WSL2, Termux\\n\\n```bash\\ncurl -fsSL https://raw.githubusercontent.com/NousResearch/hermes-agent/main/scripts/install.sh | bash\\n```\\n\\n### Windows (native, PowerShell) — Early Beta\\n\\n> **Heads up:** Native Windows support is **early beta**. It installs and runs, but hasn't been road-tested as broadly as our Linux/macOS/WSL2 paths. Please [file issues](https://github.com/NousResearch/hermes-agent/issues) when you hit rough edges. For the most battle-tested Windows setup today, run the Linux/macOS one-liner above inside **WSL2**.\\n\\nRun this in PowerShell:\\n\\n```powershell\\nirm https://raw.githubusercontent.com/NousResearch/hermes-agent/main/scripts/install.ps1 | iex\\n```\\n\\nThe installer handles everything: uv, Python 3.11, Node.js, ripgrep, ffmpeg, **and a portable Git Bash** (MinGit, unpacked to `%LOCALAPPDATA%\\\\hermes\\\\git` — no admin required, completely isolated from any system Git install).  Hermes uses this bundled Git Bash to run shell commands.\\n\\nIf you already have Git installed, the installer detects it and uses that instead.  Otherwise a ~45MB MinGit download is all you need — it won't touch or interfere with any system Git.\\n\\n> **Android / Termux:** The tested manual path is documented in the [Termux guide](https://hermes-agent.nousresearch.com/docs/getting-started/termux). On Termux, Hermes installs a curated `.[termux]` extra because the full `.[all]` extra currently pulls Android-incompatible voice dependencies.\\n>\\n> **Windows:** Native Windows is supported as an **early beta** — the PowerShell one-liner above installs everything, but expect rough edges and please file issues when you hit them. If you'd rather use WSL2 (our most battle-tested Windows path), the Linux command works there too. Native Windows install lives under `%LOCALAPPDATA%\\\\hermes`; WSL2 installs under `~/.hermes` as on Linux.  The only Hermes feature that currently needs WSL2 specifically is the browser-based dashboard chat pane (it uses a POSIX PTY — classic CLI and gateway both run natively).\\n\\nAfter installation:\\n\\n```bash\\nsource ~/.bashrc    # reload shell (or: source ~/.zshrc)\\nhermes              # start chatting!\\n```\\n\\n---\\n\\n## Getting Started\\n\\n```bash\\nhermes              # Interactive CLI — start a conversation\\nhermes model        # Choose your LLM provider and model\\nhermes tools        # Configure which tools are enabled\\nhermes config set   # Set individual config values\\nhermes gateway      # Start the messaging gateway (Telegram, Discord, etc.)\\nhermes setup        # Run the full setup wizard (configures everything at once)\\nhermes claw migrate # Migrate from OpenClaw (if coming from OpenClaw)\\nhermes update       # Update to the latest version\\nhermes doctor       # Diagnose any issues\\n```\\n\\n📖 **[Full documentation →](https://hermes-agent.nousresearch.com/docs/)**\\n\\n## CLI vs Messaging Quick Reference\\n\\nHermes has two entry points: start the terminal UI with `hermes`, or run the gateway and talk to it from Telegram, Discord, Slack, WhatsApp, Signal, or Email. Once you're in a conversation, many slash commands are shared across both interfaces.\\n\\n| Action | CLI | Messaging platforms |\\n|---------|-----|---------------------|\\n| Start chatting | `hermes` | Run `hermes gateway setup` + `hermes gateway start`, then send the bot a message |\\n| Start fresh conversation | `/new` or `/reset` | `/new` or `/reset` |\\n| Change model | `/model [provider:model]` | `/model [provider:model]` |\\n| Set a personality | `/personality [name]` | `/personality [name]` |\\n| Retry or undo the last turn | `/retry`, `/undo` | `/retry`, `/undo` |\\n| Compress context / check usage | `/compress`, `/usage`, `/insights [--days N]` | `/compress`, `/usage`, `/insights [days]` |\\n| Browse skills | `/skills` or `/<skill-name>` | `/<skill-name>` |\\n| Interrupt current work | `Ctrl+C` or send a new message | `/stop` or send a new message |\\n| Platform-specific status | `/platforms` | `/status`, `/sethome` |\\n\\nFor the full command lists, see the [CLI guide](https://hermes-agent.nousresearch.com/docs/user-guide/cli) and the [Messaging Gateway guide](https://hermes-agent.nousresearch.com/docs/user-guide/messaging).\\n\\n---\\n\\n## Documentation\\n\\nAll documentation lives at **[hermes-agent.nousresearch.com/docs](https://hermes-agent.nousresearch.com/docs/)**:\\n\\n| Section | What's Covered |\\n|---------|---------------|\\n| [Quickstart](https://hermes-agent.nousresearch.com/docs/getting-started/quickstart) | Install → setup → first conversation in 2 minutes |\\n| [CLI Usage](https://hermes-agent.nousresearch.com/docs/user-guide/cli) | Commands, keybindings, personalities, sessions |\\n| [Configuration](https://hermes-agent.nousresearch.com/docs/user-guide/configuration) | Config file, providers, models, all options |\\n| [Messaging Gateway](https://hermes-agent.nousresearch.com/docs/user-guide/messaging) | Telegram, Discord, Slack, WhatsApp, Signal, Home Assistant |\\n| [Security](https://hermes-agent.nousresearch.com/docs/user-guide/security) | Command approval, DM pairing, container isolation |\\n| [Tools & Toolsets](https://hermes-agent.nousresearch.com/docs/user-guide/features/tools) | 40+ tools, toolset system, terminal backends |\\n| [Skills System](https://hermes-agent.nousresearch.com/docs/user-guide/features/skills) | Procedural memory, Skills Hub, creating skills |\\n| [Memory](https://hermes-agent.nousresearch.com/docs/user-guide/features/memory) | Persistent memory, user profiles, best practices |\\n| [MCP Integration](https://hermes-agent.nousresearch.com/docs/user-guide/features/mcp) | Connect any MCP server for extended capabilities |\\n| [Cron Scheduling](https://hermes-agent.nousresearch.com/docs/user-guide/features/cron) | Scheduled tasks with platform delivery |\\n| [Context Files](https://hermes-agent.nousresearch.com/docs/user-guide/features/context-files) | Project context that shapes every conversation |\\n| [Architecture](https://hermes-agent.nousresearch.com/docs/developer-guide/architecture) | Project structure, agent loop, key classes |\\n| [Contributing](https://hermes-agent.nousresearch.com/docs/developer-guide/contributing) | Development setup, PR process, code style |\\n| [CLI Reference](https://hermes-agent.nousresearch.com/docs/reference/cli-commands) | All commands and flags |\\n| [Environment Variables](https://hermes-agent.nousresearch.com/docs/reference/environment-variables) | Complete env var reference |\\n\\n---\\n\\n## Migrating from OpenClaw\\n\\nIf you're coming from OpenClaw, Hermes can automatically import your settings, memories, skills, and API keys.\\n\\n**During first-time setup:** The setup wizard (`hermes setup`) automatically detects `~/.openclaw` and offers to migrate before configuration begins.\\n\\n**Anytime after install:**\\n\\n```bash\\nhermes claw migrate              # Interactive migration (full preset)\\nhermes claw migrate --dry-run    # Preview what would be migrated\\nhermes claw migrate --preset user-data   # Migrate without secrets\\nhermes claw migrate --overwrite  # Overwrite existing conflicts\\n```\\n\\nWhat gets imported:\\n- **SOUL.md** — persona file\\n- **Memories** — MEMORY.md and USER.md entries\\n- **Skills** — user-created skills → `~/.hermes/skills/openclaw-imports/`\\n- **Command allowlist** — approval patterns\\n- **Messaging settings** — platform configs, allowed users, working directory\\n- **API keys** — allowlisted secrets (Telegram, OpenRouter, OpenAI, Anthropic, ElevenLabs)\\n- **TTS assets** — workspace audio files\\n- **Workspace instructions** — AGENTS.md (with `--workspace-target`)\\n\\nSee `hermes claw migrate --help` for all options, or use the `openclaw-migration` skill for an interactive agent-guided migration with dry-run previews.\\n\\n---\\n\\n## Contributing\\n\\nWe welcome contributions! See the [Contributing Guide](https://hermes-agent.nousresearch.com/docs/developer-guide/contributing) for development setup, code style, and PR process.\\n\\nQuick start for contributors — clone and go with `setup-hermes.sh`:\\n\\n```bash\\ngit clone https://github.com/NousResearch/hermes-agent.git\\ncd hermes-agent\\n./setup-hermes.sh     # installs uv, creates venv, installs .[all], symlinks ~/.local/bin/hermes\\n./hermes              # auto-detects the venv, no need to `source` first\\n```\\n\\nManual path (equivalent to the above):\\n\\n```bash\\ncurl -LsSf https://astral.sh/uv/install.sh | sh\\nuv venv .venv --python 3.11\\nsource .venv/bin/activate\\nuv pip install -e \\\".[all,dev]\\\"\\nscripts/run_tests.sh\\n```\\n\\n> **RL Training (optional):** The RL/Atropos integration (`environments/`) — see [`CONTRIBUTING.md`](https://github.com/NousResearch/hermes-agent/blob/main/CONTRIBUTING.md#development-setup) for the full setup.\\n\\n---\\n\\n## Community\\n\\n- 💬 [Discord](https://discord.gg/NousResearch)\\n- 📚 [Skills Hub](https://agentskills.io)\\n- 🐛 [Issues](https://github.com/NousResearch/hermes-agent/issues)\\n- 🔌 [HermesClaw](https://github.com/AaronWong1999/hermesclaw) — Community WeChat bridge: Run Hermes Agent and OpenClaw on the same WeChat account.\\n\\n---\\n\\n## License\\n\\nMIT — see [LICENSE](LICENSE).\\n\\nBuilt by [Nous Research](https://nousresearch.com).\", \"exit_code\": 0, \"error\": null}",
+      "tool_call_id": "call_function_xqm0whzib3vu_1"
+    },
+    {
+      "role": "tool",
+      "name": "terminal",
+      "content": "{\"output\": \"then show you three use cases that I\\nthen show you three use cases that I\\ntesting<00:01:36.880><c> out</c><00:01:37.119><c> their</c><00:01:37.360><c> own</c><00:01:37.520><c> tool</c><00:01:38.000><c> because</c><00:01:38.240><c> the</c>\\ntesting out their own tool because the\\ntesting out their own tool because the\\nthe<00:02:10.319><c> features</c><00:02:10.640><c> tie</c><00:02:10.959><c> together.</c><00:02:11.440><c> As</c><00:02:11.599><c> you</c><00:02:11.760><c> can</c>\\nthe features tie together. As you can\\nthe features tie together. As you can\\nrelease.<00:02:17.040><c> And</c><00:02:17.200><c> all</c><00:02:17.440><c> the</c><00:02:17.599><c> features</c><00:02:17.920><c> in</c><00:02:18.080><c> that</c>\\nrelease. And all the features in that\\nrelease. And all the features in that\\ntriggers<00:03:01.920><c> a</c><00:03:02.319><c> skill.</c><00:03:03.200><c> So,</c><00:03:03.599><c> everything</c><00:03:04.000><c> you</c><00:03:04.319><c> do</c>\\ntriggers a skill. So, everything you do\\ntriggers a skill. So, everything you do\\ncomes<00:03:05.360><c> from</c><00:03:05.680><c> your</c><00:03:06.000><c> skills</c><00:03:06.640><c> and</c><00:03:06.879><c> then</c><00:03:07.120><c> if</c><00:03:07.280><c> that</c>\\ncomes from your skills and then if that\\ncomes from your skills and then if that\\nskill<00:03:08.000><c> doesn't</c><00:03:08.400><c> exist</c><00:03:08.800><c> or</c><00:03:09.120><c> you</c><00:03:09.280><c> ask</c><00:03:09.519><c> it</c><00:03:09.680><c> to</c><00:03:09.840><c> do</c>\\nskill doesn't exist or you ask it to do\\nskill doesn't exist or you ask it to do\\nskill.<00:03:15.040><c> So</c><00:03:15.519><c> everything</c><00:03:16.080><c> you're</c><00:03:16.560><c> doing</c><00:03:17.040><c> makes</c>\\nskill. So everything you're doing makes\\nskill. So everything you're doing makes\\nand<00:03:33.040><c> you</c><00:03:33.200><c> can</c><00:03:33.280><c> see</c><00:03:33.440><c> it</c><00:03:33.680><c> goes</c><00:03:34.000><c> gets</c><00:03:34.239><c> the</c><00:03:34.480><c> skill,</c>\\nand you can see it goes gets the skill,\\nand you can see it goes gets the skill,\\nthen<00:03:34.959><c> it</c><00:03:35.120><c> takes</c><00:03:35.360><c> the</c><00:03:35.519><c> skill,</c><00:03:36.000><c> improves</c><00:03:36.400><c> it,</c>\\nthen it takes the skill, improves it,\\nthen it takes the skill, improves it,\\ntransparency<00:03:47.040><c> behind</c><00:03:47.280><c> all</c><00:03:47.440><c> the</c><00:03:47.599><c> tool</c><00:03:47.920><c> calls</c>\\ntransparency behind all the tool calls\\ntransparency behind all the tool calls\\ntools<00:04:04.080><c> around</c><00:04:04.480><c> using</c><00:04:04.959><c> local</c><00:04:05.360><c> models</c><00:04:06.080><c> and</c>\\ntools around using local models and\\ntools around using local models and\\nthings<00:04:06.560><c> like</c><00:04:06.720><c> that.</c><00:04:07.040><c> It's</c><00:04:07.360><c> training</c><00:04:07.920><c> models,</c>\\nthings like that. It's training models,\\nthings like that. It's training models,\\nLauras,<00:04:09.599><c> tons</c><00:04:10.000><c> of</c><00:04:10.159><c> tools</c><00:04:10.720><c> around</c><00:04:11.280><c> machine</c>\\nLauras, tons of tools around machine\\nLauras, tons of tools around machine\\nwith<00:04:23.040><c> here.</c><00:04:23.600><c> They</c><00:04:23.759><c> are</c><00:04:23.919><c> very</c><00:04:24.320><c> pro</c><00:04:24.800><c> local</c><00:04:25.280><c> model</c>\\nwith here. They are very pro local model\\nwith here. They are very pro local model\\nall the really cool use cases I promise\\nall the really cool use cases I promise\\nsay<00:04:43.040><c> is</c><00:04:43.360><c> build</c><00:04:43.520><c> a</c><00:04:43.680><c> new</c><00:04:43.759><c> Hermes</c><00:04:44.320><c> profile</c><00:04:44.639><c> and</c>\\nsay is build a new Hermes profile and\\nsay is build a new Hermes profile and\\nnice.<00:05:45.440><c> You</c><00:05:45.600><c> can</c><00:05:45.759><c> see</c><00:05:46.000><c> every</c><00:05:46.400><c> tool</c><00:05:46.720><c> call</c><00:05:47.039><c> they</c>\\nnice. You can see every tool call they\\nnice. You can see every tool call they\\nreally,<00:05:55.360><c> really</c><00:05:55.600><c> nicely.</c><00:05:56.240><c> As</c><00:05:56.479><c> for</c><00:05:56.720><c> models,</c>\\nreally, really nicely. As for models,\\nreally, really nicely. As for models,\\nsaying<00:06:05.280><c> Opus</c><00:06:05.840><c> is</c><00:06:06.080><c> the</c><00:06:06.319><c> best</c><00:06:06.560><c> model</c><00:06:06.880><c> for</c><00:06:07.120><c> AI</c>\\nsaying Opus is the best model for AI\\nsaying Opus is the best model for AI\\nagents.<00:06:07.919><c> It</c><00:06:08.160><c> is</c><00:06:08.319><c> still</c><00:06:08.479><c> the</c><00:06:08.720><c> best</c><00:06:08.880><c> model</c><00:06:09.120><c> for</c>\\nagents. It is still the best model for\\nagents. It is still the best model for\\nmodels<00:08:08.160><c> and</c><00:08:08.400><c> how</c><00:08:08.560><c> to</c><00:08:08.720><c> talk</c><00:08:08.879><c> to</c><00:08:09.039><c> it.</c><00:08:09.280><c> But,</c>\\nmodels and how to talk to it. But,\\nmodels and how to talk to it. But,\\nmodels<00:08:15.840><c> uh</c><00:08:15.919><c> to</c><00:08:16.160><c> do</c><00:08:16.479><c> local</c><00:08:16.960><c> models.</c><00:08:17.520><c> It's</c><00:08:17.840><c> built</c>\\nmodels uh to do local models. It's built\\nmodels uh to do local models. It's built\\nfor<00:08:18.240><c> local</c><00:08:18.639><c> models,</c><00:08:19.120><c> too.</c><00:08:19.680><c> I</c><00:08:20.000><c> have</c><00:08:20.080><c> a</c><00:08:20.240><c> video</c>\\nfor local models, too. I have a video\\nfor local models, too. I have a video\\nshows<00:08:22.879><c> you</c><00:08:23.039><c> how</c><00:08:23.280><c> to</c><00:08:23.520><c> set</c><00:08:23.759><c> up</c><00:08:24.080><c> local</c><00:08:24.479><c> models</c><00:08:25.280><c> and</c>\\nshows you how to set up local models and\\nshows you how to set up local models and\\nactual execution and the use case.\\nactual execution and the use case.\\na video on next. Hermes use cases, vibe\\na video on next. Hermes use cases, vibe\\ncoding<00:09:32.399><c> stuff</c><00:09:32.560><c> with</c><00:09:32.880><c> Claude</c><00:09:33.279><c> Code.</c><00:09:33.600><c> Super</c>\\ncoding stuff with Claude Code. Super\\ncoding stuff with Claude Code. Super\", \"exit_code\": 0, \"error\": null}",
+      "tool_call_id": "call_function_xqm0whzib3vu_2"
+    },
+    {
+      "role": "assistant",
+      "content": "",
+      "reasoning": "Now I have the transcript, README, and a good understanding of the video. Let me compile the findings.\n\nKey findings from the transcript:\n1. Alex Finn prefers Hermes Agent over OpenClaw due to reliability\n2. Setup instructions shown in the video\n3. Three use cases promised (research, video generation with HyperFrames/Remotion, and others)\n4. GitHub repo: NousResearch/hermes-agent\n5. Skills system, self-improvement, memory features\n6. HyperFrames and Remotion for video generation\n7. Model flexibility - supports many providers\n\nLet me create a summary file.",
+      "finish_reason": "tool_calls",
+      "reasoning_content": "Now I have the transcript, README, and a good understanding of the video. Let me compile the findings.\n\nKey findings from the transcript:\n1. Alex Finn prefers Hermes Agent over OpenClaw due to reliability\n2. Setup instructions shown in the video\n3. Three use cases promised (research, video generation with HyperFrames/Remotion, and others)\n4. GitHub repo: NousResearch/hermes-agent\n5. Skills system, self-improvement, memory features\n6. HyperFrames and Remotion for video generation\n7. Model flexibility - supports many providers\n\nLet me create a summary file.",
+      "reasoning_details": [
+        {
+          "signature": "2d1d4e91982a02a79a9a27eecb023c588b7bc5bdb52e6f6cbdf9c979fd7801cd",
+          "thinking": "Now I have the transcript, README, and a good understanding of the video. Let me compile the findings.\n\nKey findings from the transcript:\n1. Alex Finn prefers Hermes Agent over OpenClaw due to reliability\n2. Setup instructions shown in the video\n3. Three use cases promised (research, video generation with HyperFrames/Remotion, and others)\n4. GitHub repo: NousResearch/hermes-agent\n5. Skills system, self-improvement, memory features\n6. HyperFrames and Remotion for video generation\n7. Model flexibility - supports many providers\n\nLet me create a summary file.",
+          "type": "thinking"
+        }
+      ],
+      "tool_calls": [
+        {
+          "id": "call_function_qgiwtyojsh3y_1",
+          "call_id": "call_function_qgiwtyojsh3y_1",
+          "response_item_id": "fc_function_qgiwtyojsh3y_1",
+          "type": "function",
+          "function": {
+            "name": "terminal",
+            "arguments": "{\"command\": \"cat > /home/marco/video2_research_summary.md << 'EOF'\\n# Research: Video cEo95olh2j4 - \\\"Hermes Agent is blowing me away...\\\" by Alex Finn\\n\\n## Video Details\\n- **Video ID:** cEo95olh2j4\\n- **Title:** Hermes Agent is blowing me away...\\n- **Channel:** Alex Finn\\n- **Transcript file:** /home/marco/video2_transcript.en.vtt\\n\\n## GitHub Repository\\n**Main repo:** https://github.com/NousResearch/hermes-agent\\n- Self-improving AI agent built by Nous Research\\n- MIT licensed\\n- Docs: https://hermes-agent.nousresearch.com/docs/\\n\\n**Related repos found:**\\n- NousResearch/hermes-agent-self-evolution\\n- NousResearch/hermes-paperclip-adapter\\n\\n## Key Setup Tips from Transcript\\n\\n1. **Quick Install (Linux/macOS/WSL2/Termux):**\\n   ```bash\\n   curl -fsSL https://raw.githubusercontent.com/NousResearch/hermes-agent/main/scripts/install.sh | bash\\n   ```\\n\\n2. **Windows (PowerShell):**\\n   ```powershell\\n   irm https://raw.githubusercontent.com/NousResearch/hermes-agent/main/scripts/install.ps1 | iex\\n   ```\\n\\n3. **First run:** `hermes` (starts CLI), `hermes setup` (full wizard), `hermes doctor` (diagnose issues)\\n\\n4. **OpenClaw migration:** `hermes claw migrate` (auto-detects ~/.openclaw)\\n\\n## Features Shown/Demonstrated in Video\\n\\n### Reliability vs OpenClaw\\n- OpenClaw breaks with every update; Hermes is \\\"plain reliable\\\"\\n- Fewer updates but stable and well-tested\\n- Features tie together cohesively\\n\\n### Core Features\\n- **Self-improving agent:** Learns and creates skills from experience\\n- **Skill system:** Agent-curated memory, autonomous skill creation after complex tasks\\n- **Model flexibility:** Works with OpenRouter (200+ models), OpenAI, Anthropic, Nous Portal, NVIDIA NIM, HuggingFace, local models, and more\\n- **Best model for agents:** Speaker claims Opus is still best for AI agents\\n- **Transparent tool calls:** Can see every tool call being made\\n- **Local model support:** Nous Research is \\\"very pro local model\\\"\\n\\n### Use Cases Demonstrated\\n1. **Research task:** Agent researching HyperFrames skill, finding it wasn't installed, auto-installing it\\n2. **Video generation:** Using HyperFrames/Remotion skills to generate AI motion graphics videos\\n3. **Scheduled automations:** Cron-based tasks running unattended\\n\\n### Skills System\\n- Skills trigger from user actions\\n- If skill doesn't exist, agent creates one\\n- Skills self-improve during use\\n- `/skills` to browse, `/<skill-name>` to use specific skill\\n- Proactive skill discovery and recommendation\\n\\n### Messaging Platforms\\n- Telegram, Discord, Slack, WhatsApp, Signal support\\n- `hermes gateway` commands for setup\\n\\n## Setup Flow Shown in Video\\n1. Run `hermes setup`\\n2. Choose model provider (e.g., OpenRouter with Opus)\\n3. Configure messaging platform (Telegram demo)\\n4. Create new Hermes profile\\n5. Agent auto-improves based on usage\\n\\n## Notable Quotes\\n- \\\"Hermes agent is now better than OpenClaw\\\"\\n- \\\"If you were to learn just one AI agent at the moment, it's got to be Hermes agent\\\"\\n- \\\"The more you use it, the better it gets\\\"\\n- \\\"This is the future. This is your AI. It runs itself.\\\"\\nEOF\\necho \\\"Summary created successfully\\\"\", \"timeout\": 10}"
+          }
+        }
+      ]
+    },
+    {
+      "role": "tool",
+      "name": "terminal",
+      "content": "{\"output\": \"Summary created successfully\", \"exit_code\": 0, \"error\": null}",
+      "tool_call_id": "call_function_qgiwtyojsh3y_1"
+    },
+    {
+      "role": "assistant",
+      "content": "",
+      "reasoning": "Let me verify the summary was created properly and then provide the final response.",
+      "finish_reason": "tool_calls",
+      "reasoning_content": "Let me verify the summary was created properly and then provide the final response.",
+      "reasoning_details": [
+        {
+          "signature": "24ee07125c071096e256cb01c290060ed38a0830a19bbe7ef3d43634a3a319a0",
+          "thinking": "Let me verify the summary was created properly and then provide the final response.",
+          "type": "thinking"
+        }
+      ],
+      "tool_calls": [
+        {
+          "id": "call_function_oaybt8wlftk2_1",
+          "call_id": "call_function_oaybt8wlftk2_1",
+          "response_item_id": "fc_function_oaybt8wlftk2_1",
+          "type": "function",
+          "function": {
+            "name": "terminal",
+            "arguments": "{\"command\": \"ls -la /home/marco/video2* 2>&1\", \"timeout\": 10}"
+          }
+        }
+      ]
+    },
+    {
+      "role": "tool",
+      "name": "terminal",
+      "content": "{\"output\": \"-rw-rw-r-- 1 marco marco     2975 mag 10 08:32 /home/marco/video2_research_summary.md\\n-rw-rw-r-- 1 marco marco 35217076 mag 10 08:31 /home/marco/video2_transcript\\n-rw-rw-r-- 1 marco marco   194178 mag 10 08:31 /home/marco/video2_transcript.en.vtt\", \"exit_code\": 0, \"error\": null}",
+      "tool_call_id": "call_function_oaybt8wlftk2_1"
+    },
+    {
+      "role": "assistant",
+      "content": "## Summary: Video Research — cEo95olh2j4\n\n### What I Did\n1. Downloaded the English transcript (VTT) via `yt-dlp`\n2. Parsed the full ~18-minute transcript\n3. Located the GitHub repo and README documentation\n\n### What I Found\n\n**GitHub Repository:**\n- `https://github.com/NousResearch/hermes-agent` — Main repo\n- `https://hermes-agent.nousresearch.com/docs/` — Documentation\n- Related: `hermes-agent-self-evolution`, `hermes-paperclip-adapter`\n\n**Setup Tips from the Video:**\n- Linux/macOS/WSL2: `curl -fsSL https://raw.githubusercontent.com/NousResearch/hermes-agent/main/scripts/install.sh | bash`\n- Windows (PowerShell): `irm .../install.ps1 | iex`\n- First run: `hermes` (CLI), `hermes setup` (full wizard), `hermes doctor` (diagnose)\n- OpenClaw migration: `hermes claw migrate`\n\n**Key Features Demonstrated:**\n- **Self-improving agent** — learns from interactions, creates/updates skills autonomously\n- **Skills system** — triggered by actions, agent auto-creates missing skills, self-improves during use\n- **Multi-model support** — OpenRouter (200+ models), OpenAI, Anthropic, HuggingFace, local models; speaker notes Opus is \"still the best model for AI agents\"\n- **Tool transparency** — can see every tool call\n- **Messaging platforms** — Telegram, Discord, Slack, WhatsApp, Signal via gateway\n- **Scheduled automations** — cron-based natural language tasks\n- **MCP integration** — connects to MCP servers\n\n**Three Use Cases Shown:**\n1. Research task — agent discovered missing skill, auto-installed HyperFrames\n2. Video generation — used HyperFrames/Remotion to create AI motion graphics (30-60 sec shorts)\n3. Scheduled/proactive tasks — agent monitoring for new skills to recommend\n\n### Files Created\n- `/home/marco/video2_transcript.en.vtt` — Full VTT transcript (194 KB)\n- `/home/marco/video2_transcript` — Downloaded video file (33.6 MB)\n- `/home/marco/video2_research_summary.md` — Research summary document",
+      "reasoning": "I now have all the information I need to provide a comprehensive summary. Let me compile the findings.",
+      "finish_reason": "stop",
+      "reasoning_content": "I now have all the information I need to provide a comprehensive summary. Let me compile the findings.",
+      "reasoning_details": [
+        {
+          "signature": "ca12d52ffc02c739c9e2a58f1bbd6e818c5332950f558e573891b8144f6d5eae",
+          "thinking": "I now have all the information I need to provide a comprehensive summary. Let me compile the findings.",
+          "type": "thinking"
+        }
+      ]
+    }
+  ]
+}

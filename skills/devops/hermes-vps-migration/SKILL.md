@@ -187,3 +187,66 @@ pm2 start pm2-gateway.config.js
 4. **Don't backup state.db** — The SQLite state database is not portable between installations. Hermes will recreate its state on first run.
 
 5. **Don't backup hermes-agent/** — This is the Hermes source code (~1.1GB). It gets reinstalled during Hermes setup and is not needed in the backup.
+
+6. **non-fast-forward push after mid-rebase** — If `git push` fails with `non-fast-forward` even after local commits, the local branch is behind remote (typically from a previous `git stash` + `git pull --rebase` that amplified a mid-rebase state). The `git reset --hard origin/master` step is destructive — it removes all unpushed local commits. Prevention: always `git status` before committing. If it says "rebase in progress", run `git rebase --abort` first. Recovery: `git rebase --abort 2>/dev/null || true && git fetch origin && git reset --hard origin/master`, then recommit. Alternative: force-push to a named branch: `git push origin master:refs/heads/backup-NAME-DATE`.
+
+## GitHub Push Issues (2026-05-16)
+
+### Issue 1: HTTP 401 — No Credentials (Push Times Out)
+
+**Symptom:**
+```
+HTTP/2 401
+git: cannot spawn git-remote-https
+# OR just times out with no error message
+```
+
+**Root cause:** GitHub requires authentication even for public repos when pushing. No credentials are configured.
+
+**Diagnosis:**
+```bash
+GIT_TRACE=1 GIT_CURL_VERBOSE=1 git push 2>&1 | grep "401\|credential"
+```
+
+**Fix:** Embed a GitHub PAT in the remote URL:
+```bash
+# Set token in remote URL (replace TOKEN with your GitHub PAT)
+git remote set-url origin https://TOKEN@github.com/OWNER/REPO.git
+
+# Then push works
+git push --force origin master
+```
+
+**Prevention:** Store token in `~/.netrc` or use `gh auth login` before pushing.
+
+---
+
+### Issue 2: Non-Fast-Forward Rejection
+
+**Symptom:**
+```
+! [rejected] master -> master (non-fast-forward)
+error: failed to push some refs
+hint: Updates were rejected because a pushed branch tip is behind its remote counterpart
+```
+
+**Root cause:** A detached HEAD state from a previous interactive rebase left the local branch behind the remote.
+
+**Fix sequence:**
+```
+# Check if mid-rebase FIRST
+git status  # if "rebase in progress", abort first
+
+# RIGHT: abort, then reset cleanly
+git rebase --abort 2>/dev/null || true
+git fetch origin
+git reset --hard origin/master
+# Now your local is clean, recommit any uncommitted changes
+
+# Alternative: force-push to a named branch instead
+git push origin master:refs/heads/backup-NAME-DATE
+```
+
+**What NOT to do:** `git stash` + `git pull --rebase` when already mid-rebase. This creates a compound failure that `git reset --hard` then destroys your new commits.
+
+**Prevention:** Always `git status` before committing. If you're mid-rebase, `git rebase --abort` first.

@@ -74,6 +74,16 @@ bw list items --search "name" --session 'hvmPvHrpJShs2jqof...'
 ### Option 2: Unlock with Master Password
 If session is expired and user can't unlock, they must run `bw unlock` in a terminal, then copy new session to `~/.bashrc`.
 
+### Important: `bw unlock --passwordenv` behavior
+
+```bash
+BW_MASTER_PASSWORD='...' bw unlock --passwordenv BW_MASTER_PASSWORD
+# May exit 1 ("You are not logged in") even with correct password
+# This is a known CLI bug — session may still be valid in ~/.bashrc
+```
+
+**When session extraction fails**: If `grep 'export BW_SESSION'` returns empty after unlock, fall back to the BW_SESSION already in `~/.bashrc` — do NOT keep retrying unlock. Use `bw sync --session "<session>"` to verify.
+
 ### Key lessons
 - `--session` flag bypasses `BW_SESSION` env variable — useful when env var is stale
 - Bitwarden CLI has a bug with `bw edit item` — item updates fail with TypeError on some items
@@ -82,6 +92,7 @@ If session is expired and user can't unlock, they must run `bw unlock` in a term
 - **Email per Marco**: `marco.info@zohomail.com.au` (non `marco.belladati@icloud.com`)
 - **Login flow**: `bw login <email> <password>` → output contiene `BW_SESSION="token..."` → `export BW_SESSION="..."`
 - **Entry "Surface Pro 3"** contiene la password sudo del Surface (password: `Coccobil-$1990`)
+- **`bw unlock --passwordenv` exits 1** even on success — don't trust exit code; trust the session token in ~/.bashrc
 
 
 

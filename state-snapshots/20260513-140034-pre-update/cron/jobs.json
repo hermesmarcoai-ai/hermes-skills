@@ -1,0 +1,430 @@
+{
+  "jobs": [
+    {
+      "id": "dc41f1d0b65b",
+      "name": "Morning Brief - Daily at 6AM (Discord)",
+      "prompt": "You are Hermes, an execution-focused AI agent acting as a daily research assistant and strategic operator.\nYour job is to deliver a high-signal daily brief that improves decision-making speed and drives real-world results.\n\nOBJECTIVE: Produce a daily briefing that:\n- Can be read in under 3 minutes\n- Surfaces only high-value information\n- Translates information into actionable opportunities\n\nEXECUTION RULES:\n- Be concise, structured, and direct\n- Prioritize signal over noise\n- Eliminate generic insights\n- Focus on leverage, scalability, and asymmetric upside\n- When in doubt, choose usefulness over completeness\n\nDAILY BRIEF STRUCTURE:\n1. WEATHER (AOSTA) \u2014 Short, relevant summary only\n2. TOP NEWS (AI, CRYPTO, TECH, WORLD) \u2014 Select top 3-5 developments total (not per category). For each: 2 concise sentences + source link + \"Why it matters\" (1 line, impact-focused)\n3. CURATED SIGNAL \u2014 Extract high-value insights from trends, social content, or emerging narratives. Focus on: AI, Developer tools, Indie hacking, Content creation, Online business\n4. BUSINESS IDEAS (HIGH LEVERAGE ONLY) \u2014 2-3 ideas that are Actionable, Scalable, Trend-aligned. Avoid generic ideas\n5. PRIORITY TASKS \u2014 Show only high-impact tasks from the user's task system\n6. HERMES RECOMMENDATIONS (CRITICAL) \u2014 2-4 tasks to execute today that: Increase income potential, Build long-term leverage, Are realistically executable today\n7. OPTIONAL: CONTENT / VIDEO IDEAS \u2014 Include only if strong signal exists. Focus on asymmetric upside topics\n\nOUTPUT STYLE:\n- No fluff, no repetition, no generic advice\n- Clear formatting for fast scanning\n- Take <3 min to read\n- Contains at least one actionable opportunity\n\nDELIVERY: Send the brief as a text message AND as a voice message (TTS) in Italian using ElevenLabs API directly. The ElevenLabs API key is sk_28d54e9acdd2adbaa8f270cffd4127767b88e2397bb8374c. Use voice_id \"pNInz6obpgDQGcFmaJgB\" and model \"eleven_multilingual_v2\". First send the text, then generate the audio with ElevenLabs and send it as a voice message.\n\nWeather: Use curl to fetch from wttr.in/Aosta?format=j1\nNews: Use curl to fetch from Google News RSS feed\n\nStart by getting the weather and news, then compose the brief. Generate the audio using ElevenLabs API and send both text and voice to the origin Telegram channel.",
+      "skills": [],
+      "skill": null,
+      "model": "MiniMax-M2.7-highspeed",
+      "provider": "minimax",
+      "base_url": null,
+      "script": null,
+      "schedule": {
+        "kind": "cron",
+        "expr": "0 6 * * *",
+        "display": "0 6 * * *"
+      },
+      "schedule_display": "0 6 * * *",
+      "repeat": {
+        "times": null,
+        "completed": 13
+      },
+      "enabled": true,
+      "state": "scheduled",
+      "paused_at": null,
+      "paused_reason": null,
+      "created_at": "2026-04-30T10:43:06.555381+02:00",
+      "next_run_at": "2026-05-14T06:00:00+02:00",
+      "last_run_at": "2026-05-13T06:09:09.323282+02:00",
+      "last_status": "ok",
+      "last_error": null,
+      "last_delivery_error": "delivery error: Telegram send failed: Unauthorized",
+      "deliver": "origin",
+      "origin": {
+        "platform": "telegram",
+        "chat_id": "-5213862707",
+        "chat_name": "Morning-Brief",
+        "thread_id": null
+      },
+      "enabled_toolsets": null
+    },
+    {
+      "id": "ca13a190a5fb",
+      "name": "Alpaca HyperPerfect Paper Trader",
+      "prompt": "Run the Alpaca paper trading SL/TP monitor and signal checker.\n\nExecute: python3 /home/Obsidian-Vault/Trading/alpaca_paper_trader.py --monitor\n\nRead the output. If it contains \"ACTION:\" or \"\u2705\" (new position opened, position closed, TP/SL hit), forward the relevant section to the user in Italian.\n\nIf it's just a routine check with no actions (\u23f8\ufe0f No signal, \u23f8\ufe0f Already in position with nothing hit), do NOT send any message \u2014 just stay silent.\n\nKeep notifications concise: what happened, current price, P/L if relevant.",
+      "skills": [],
+      "skill": null,
+      "model": null,
+      "provider": null,
+      "base_url": null,
+      "script": null,
+      "context_from": null,
+      "schedule": {
+        "kind": "cron",
+        "expr": "*/15 * * * *",
+        "display": "*/15 * * * *"
+      },
+      "schedule_display": "*/15 * * * *",
+      "repeat": {
+        "times": 999,
+        "completed": 845
+      },
+      "enabled": true,
+      "state": "scheduled",
+      "paused_at": null,
+      "paused_reason": null,
+      "created_at": "2026-05-04T12:49:58.530529+02:00",
+      "next_run_at": "2026-05-13T16:15:00+02:00",
+      "last_run_at": "2026-05-13T15:46:00.715988+02:00",
+      "last_status": "ok",
+      "last_error": null,
+      "last_delivery_error": null,
+      "deliver": "origin",
+      "origin": {
+        "platform": "telegram",
+        "chat_id": "-5005037525",
+        "chat_name": "Paper-Trading",
+        "thread_id": null
+      },
+      "enabled_toolsets": [
+        "terminal",
+        "file"
+      ],
+      "workdir": null
+    },
+    {
+      "id": "21acd7fbda9a",
+      "name": "Hermes auto-update check",
+      "prompt": "Check if Hermes Agent is up to date and silently update if new commits are available. \n\nSteps:\n1. cd ~/.hermes/hermes-agent && git fetch origin main\n2. Run: git rev-list HEAD..origin/main --count\n3. If count > 0: git pull origin main\n4. If update was performed, send a brief Telegram message to Marco (chat_id: 8177017832) saying \"Hermes updated to latest version\"\n5. If already up to date, do nothing (silent)\n\nSend the notification via curl to Telegram API:\nBOT_TOKEN should be read from ~/.hermes/.env (MINIMAX_BOT_TOKEN or check for a Telegram bot token)\nCHAT_ID=8177017832\nURL=\"https://api.telegram.org/bot${BOT_TOKEN}/sendMessage\"\ncurl -s -X POST $URL -d chat_id=$CHAT_ID -d text=\"\ud83e\udd16 Hermes auto-update: updated to latest version\"",
+      "skills": [
+        "autonomous-ai-agents/hermes-agent"
+      ],
+      "skill": "autonomous-ai-agents/hermes-agent",
+      "model": null,
+      "provider": null,
+      "base_url": null,
+      "script": null,
+      "context_from": null,
+      "schedule": {
+        "kind": "cron",
+        "expr": "30 5 * * *",
+        "display": "30 5 * * *"
+      },
+      "schedule_display": "30 5 * * *",
+      "repeat": {
+        "times": null,
+        "completed": 9
+      },
+      "enabled": true,
+      "state": "scheduled",
+      "paused_at": null,
+      "paused_reason": null,
+      "created_at": "2026-05-04T17:46:02.935758+02:00",
+      "next_run_at": "2026-05-14T05:30:00+02:00",
+      "last_run_at": "2026-05-13T05:32:00.324345+02:00",
+      "last_status": "ok",
+      "last_error": null,
+      "last_delivery_error": "delivery error: Telegram send failed: Unauthorized",
+      "deliver": "origin",
+      "origin": {
+        "platform": "telegram",
+        "chat_id": "8177017832",
+        "chat_name": "Marco Olivero",
+        "thread_id": null
+      },
+      "enabled_toolsets": null,
+      "workdir": null
+    },
+    {
+      "id": "274087e666ee",
+      "name": "Hermes Health Check",
+      "prompt": "Run /home/marco/hermes-commands/health_check.sh and deliver the last 20 lines of /tmp/hermes_health.log.",
+      "skills": [],
+      "skill": null,
+      "model": null,
+      "provider": null,
+      "base_url": null,
+      "script": null,
+      "context_from": null,
+      "schedule": {
+        "kind": "cron",
+        "expr": "0,30 * * * *",
+        "display": "0,30 * * * *"
+      },
+      "schedule_display": "0,30 * * * *",
+      "repeat": {
+        "times": null,
+        "completed": 380
+      },
+      "enabled": true,
+      "state": "scheduled",
+      "paused_at": null,
+      "paused_reason": null,
+      "created_at": "2026-05-05T10:06:03.592415+02:00",
+      "next_run_at": "2026-05-13T16:30:00+02:00",
+      "last_run_at": "2026-05-13T15:31:17.470428+02:00",
+      "last_status": "ok",
+      "last_error": null,
+      "last_delivery_error": null,
+      "deliver": "local",
+      "origin": null,
+      "enabled_toolsets": null,
+      "workdir": null
+    },
+    {
+      "id": "04b5c54a86f2",
+      "name": "Kanban Triage & Agent Supervisor",
+      "prompt": "You are Hermes Kanban Agent \u2014 your job is to maintain Marco's Kanban board every 10 minutes.\n\n## Your workflow (in order):\n\n### STEP 1 \u2014 Triage \u2192 Ready pipeline\nList all tasks in triage status:\n  hermes kanban list --status triage --json\n\nFor each triage task:\n1. Read the task: `hermes kanban show <task_id> --json`\n2. If the task body is empty or minimal (null/blank):\n   a. Search memory for context relevant to the task title \u2014 use session_search() with keywords from the title\n   b. Also search the Obsidian vault if relevant paths exist (~/.obsidian/Vault/ or ~/Obsidian-Vault/)\n   c. Synthesize what you found into a useful body description\n   d. Edit the task body in the DB directly:\n      python3 -c \"\nimport sqlite3, json\nconn = sqlite3.connect('/home/marco/.hermes/kanban.db')\nconn.execute('UPDATE tasks SET body=? WHERE id=?', (new_body, task_id))\nconn.commit()\n\"\n3. Once body is filled, assign a sensible assignee based on task type (researcher for research, writer for writing, backend-eng for code tasks) \u2014 use `hermes kanban assign <task_id> <profile>`\n4. The task is now in triage with an assignee and body \u2014 promote it to ready by running `hermes kanban dispatch` (the dispatcher will promote todo\u2192ready but NOT triage\u2192ready, so...) \n   Actually: triage\u2192ready requires direct DB update since the dispatcher only handles todo\u2192ready:\n   python3 -c \"\nimport sqlite3\nconn = sqlite3.connect('/home/marco/.hermes/kanban.db')\nconn.execute(\\\"UPDATE tasks SET status='ready' WHERE id=? AND status='triage'\\\", (task_id,))\nconn.commit()\n\"\n\n### STEP 2 \u2014 Handle Ready tasks assigned to agents\nList all tasks in ready status:\n  hermes kanban list --status ready --json\n\nFor each ready task with an assignee:\n1. Check if the assignee is a valid Hermes profile: look in ~/.hermes/profiles/ for a matching config dir\n2. If valid profile exists:\n   a. Dispatch the task: `hermes kanban dispatch --dry-run` first to see what would happen, then `hermes kanban dispatch`\n   b. Alternatively: spawn the worker directly if you know how\n3. If no valid profile: leave the task in ready and add a comment noting no agent available\n\n### STEP 3 \u2014 Report\nSummarize what you did:\n- Tasks promoted from triage to ready: (list titles)\n- Tasks that still need triage work: (list titles with brief note on why)\n- Ready tasks handled or pending\n\n## Important rules:\n- Always use --json flag for parseable output\n- Use terminal tool for all hermes kanban and python3 commands\n- Be concise \u2014 this runs every 10 minutes\n- If triage list is empty, just say \"No triage tasks\" and exit quickly\n- Database path: /home/marco/.hermes/kanban.db\n\n## Skills loaded:\n- kanban-orchestrator\n- kanban-worker\n- session_search (use this for memory search)\n- obsidian (for vault access)",
+      "skills": [
+        "devops/kanban-orchestrator",
+        "devops/kanban-worker",
+        "session_search",
+        "note-taking/obsidian"
+      ],
+      "skill": "devops/kanban-orchestrator",
+      "model": null,
+      "provider": null,
+      "base_url": null,
+      "script": null,
+      "no_agent": false,
+      "context_from": null,
+      "schedule": {
+        "kind": "cron",
+        "expr": "*/10 * * * *",
+        "display": "*/10 * * * *"
+      },
+      "schedule_display": "*/10 * * * *",
+      "repeat": {
+        "times": 999999,
+        "completed": 968
+      },
+      "enabled": true,
+      "state": "scheduled",
+      "paused_at": null,
+      "paused_reason": null,
+      "created_at": "2026-05-06T14:50:59.424105+02:00",
+      "next_run_at": "2026-05-13T16:10:00+02:00",
+      "last_run_at": "2026-05-13T15:50:20.350636+02:00",
+      "last_status": "ok",
+      "last_error": null,
+      "last_delivery_error": null,
+      "deliver": "local",
+      "origin": {
+        "platform": "telegram",
+        "chat_id": "8177017832",
+        "chat_name": "Marco Olivero",
+        "thread_id": null
+      },
+      "enabled_toolsets": null,
+      "workdir": null
+    },
+    {
+      "id": "bc61dbd9cc22",
+      "name": "automaton-daily-backup",
+      "prompt": "",
+      "skills": [],
+      "skill": null,
+      "model": null,
+      "provider": null,
+      "base_url": null,
+      "script": "backup-automaton.sh",
+      "no_agent": true,
+      "context_from": null,
+      "schedule": {
+        "kind": "cron",
+        "expr": "0 5 * * *",
+        "display": "0 5 * * *"
+      },
+      "schedule_display": "0 5 * * *",
+      "repeat": {
+        "times": null,
+        "completed": 6
+      },
+      "enabled": true,
+      "state": "scheduled",
+      "paused_at": null,
+      "paused_reason": null,
+      "created_at": "2026-05-07T10:20:33.202768+02:00",
+      "next_run_at": "2026-05-14T05:00:00+02:00",
+      "last_run_at": "2026-05-13T05:00:14.377238+02:00",
+      "last_status": "ok",
+      "last_error": null,
+      "last_delivery_error": null,
+      "deliver": "origin",
+      "origin": {
+        "platform": "telegram",
+        "chat_id": "-5266145738",
+        "chat_name": "Github",
+        "thread_id": null
+      },
+      "enabled_toolsets": null,
+      "workdir": null
+    },
+    {
+      "id": "18774ef5e792",
+      "name": "hermes-daily-backup",
+      "prompt": "",
+      "skills": [],
+      "skill": null,
+      "model": null,
+      "provider": null,
+      "base_url": null,
+      "script": "hermes-backup-sync.sh",
+      "no_agent": true,
+      "context_from": null,
+      "schedule": {
+        "kind": "cron",
+        "expr": "0 4 * * *",
+        "display": "0 4 * * *"
+      },
+      "schedule_display": "0 4 * * *",
+      "repeat": {
+        "times": null,
+        "completed": 6
+      },
+      "enabled": true,
+      "state": "scheduled",
+      "paused_at": null,
+      "paused_reason": null,
+      "created_at": "2026-05-07T10:26:02.964443+02:00",
+      "next_run_at": "2026-05-14T04:00:00+02:00",
+      "last_run_at": "2026-05-13T04:00:37.133898+02:00",
+      "last_status": "error",
+      "last_error": "Script exited with code 24\nstdout:\nsending incremental file list\nconfig.yaml\n\nsent 11.069 bytes  received 35 bytes  22.208,00 bytes/sec\ntotal size is 10.957  speedup is 0,99\nsending incremental file list\n\nsent 58 bytes  received 12 bytes  140,00 bytes/sec\ntotal size is 647  speedup is 9,24\nsending incremental file list\nauth.json\nchannel_directory.json\n\nsent 13.855 bytes  received 54 bytes  27.818,00 bytes/sec\ntotal size is 14.156  speedup is 1,02\nsending incremental file list\n.bundled_manifest\n.usage.json\n20260512_100923_05634d6e.jsonl\n20260512_104105_be049cef.jsonl\n20260512_205602_36210c92.jsonl\nrequest_dump_20260512_104105_be049cef_20260512_105935_290752.json\nrequest_dump_20260512_104105_be049cef_20260512_125500_799793.json\nrequest_dump_20260512_104105_be049cef_20260512_125659_747231.json\nrequest_dump_20260512_105911_262881_20260512_105932_454571.json\nrequest_dump_cron_04b5c54a86f2_20260512_110002_20260512_110028_800876.json\nrequest_dump_cron_04b5c54a86f2_20260512_111038_20260512_111105_539573.json\nrequest_dump_cron_04b5c54a86f2_20260512_112034_20260512_112101_553839.json\nrequest_dump_cron_04b5c54a86f2_20260512_113003_20260512_113031_718592.json\nrequest_dump_cron_04b5c54a86f2_20260512_114033_20260512_114100_023183.json\nrequest_dump_cron_04b5c54a86f2_20260512_115025_20260512_115055_383006.json\nrequest_dump_cron_04b5c54a86f2_20260512_120057_20260512_120127_444122.json\nrequest_dump_cron_04b5c54a86f2_20260512_121029_20260512_121102_058249.json\nrequest_dump_cron_04b5c54a86f2_20260512_122027_20260512_122059_926452.json\nrequest_dump_cron_04b5c54a86f2_20260512_123001_20260512_123026_791669.json\nrequest_dump_cron_04b5c54a86f2_20260512_124033_20260512_124103_819885.json\nrequest_dump_cron_04b5c54a86f2_20260512_125028_20260512_125058_476547.json\nrequest_dump_cron_04b5c54a86f2_20260512_130100_20260512_130132_872722.json\nrequest_dump_cron_04b5c54a86f2_20260512_131034_20260512_131102_963375.json\nrequest_dump_cron_04b5c54a86f2_20260512_132030_20260512_132100_449941.json\nrequest_dump_cron_04b5c54a86f2_20260512_133002_20260512_133031_017968.json\nrequest_dump_cron_04b5c54a86f2_20260512_134032_20260512_134103_213704.json\nrequest_dump_cron_04b5c54a86f2_20260512_135031_20260512_135100_218797.json\nrequest_dump_cron_04b5c54a86f2_20260512_140002_20260512_140029_922822.json\nrequest_dump_cron_04b5c54a86f2_20260512_141033_20260512_141104_347032.json\nrequest_dump_cron_04b5c54a86f2_20260512_142031_20260512_142058_589518.json\nrequest_dump_cron_04b5c54a86f2_20260512_143101_20260512_143127_067368.json\nrequest_dump_cron_04b5c54a86f2_20260512_144031_20260512_144102_668928.json\nrequest_dump_cron_04b5c54a86f2_20260512_145029_20260512_145058_532747.json\nrequest_dump_cron_04b5c54a86f2_20260512_150100_20260512_150128_253801.json\nrequest_dump_cron_04b5c54a86f2_20260512_151030_20260512_151100_307801.json\nrequest_dump_cron_04b5c54a86f2_20260512_152042_20260512_152110_046785.json\nrequest_dump_cron_04b5c54a86f2_20260512_153012_20260512_153040_406563.json\nrequest_dump_cron_04b5c54a86f2_20260512_154041_20260512_154112_813218.json\nrequest_dump_cron_04b5c54a86f2_20260512_155041_20260512_155107_172371.json\nrequest_dump_cron_04b5c54a86f2_20260512_160009_20260512_160038_591017.json\nrequest_dump_cron_04b5c54a86f2_20260512_161040_20260512_161111_214254.json\nrequest_dump_cron_04b5c54a86f2_20260512_162044_20260512_162114_690369.json\nrequest_dump_cron_04b5c54a86f2_20260512_163016_20260512_163045_038833.json\nrequest_dump_cron_04b5c54a86f2_20260512_164046_20260512_164116_846584.json\nrequest_dump_cron_04b5c54a86f2_20260512_165044_20260512_165113_420370.json\nrequest_dump_cron_04b5c54a86f2_20260512_170015_20260512_170044_643395.json\nrequest_dump_cron_04b5c54a86f2_20260512_171046_20260512_171117_776854.json\nrequest_dump_cron_04b5c54a86f2_20260512_172046_20260512_172116_619059.json\nrequest_dump_cron_04b5c54a86f2_20260512_173018_20260512_173052_403221.json\nrequest_dump_cron_04b5c54a86f2_20260512_174053_20260512_174121_848280.json\nrequest_dump_cron_04b5c54a86f2_20260512_175047_20260512_175116_368753.json\nrequest_dump_cron_04b5c54a86f2_20260512_180019_20260512_180048_176147.json\nrequest_dump_cron_04b5c54a86f2_20260512_181049_20260512_181126_815500.json\nrequest_dump_cron_04b5c54a86f2_20260512_182058_20260512_182136_731204.json\nrequest_dump_cron_04b5c54a86f2_20260512_183039_20260512_183110_604015.json\nrequest_dump_cron_04b5c54a86f2_20260512_184014_20260512_184045_382133.json\nrequest_dump_cron_04b5c54a86f2_20260512_185016_20260512_185045_655412.json\nrequest_dump_cron_04b5c54a86f2_20260512_190049_20260512_190119_177839.json\nrequest_dump_cron_04b5c54a86f2_20260512_191021_20260512_191050_700137.json\nrequest_dump_cron_04b5c54a86f2_20260512_192022_20260512_192051_529558.json\nrequest_dump_cron_04b5c54a86f2_20260512_193053_20260512_193123_183604.json\nrequest_dump_cron_04b5c54a86f2_20260512_194025_20260512_194102_218186.json\nrequest_dump_cron_04b5c54a86f2_20260512_195030_20260512_195106_226141.json\nrequest_dump_cron_04b5c54a86f2_20260512_200009_20260512_200040_709588.json\nrequest_dump_cron_04b5c54a86f2_20260512_201042_20260512_201111_713384.json\nrequest_dump_cron_04b5c54a86f2_20260512_202420_20260512_202503_086054.json\nrequest_dump_cron_04b5c54a86f2_20260512_203006_20260512_203045_104997.json\nrequest_dump_cron_274087e666ee_20260512_110001_20260512_110028_580967.json\nrequest_dump_cron_274087e666ee_20260512_113002_20260512_113028_553838.json\nrequest_dump_cron_274087e666ee_20260512_120056_20260512_120127_032824.json\nrequest_dump_cron_274087e666ee_20260512_123000_20260512_123027_188641.json\nrequest_dump_cron_274087e666ee_20260512_130059_20260512_130133_375707.json\nrequest_dump_cron_274087e666ee_20260512_133001_20260512_133031_029674.json\nrequest_dump_cron_274087e666ee_20260512_140000_20260512_140031_563851.json\nrequest_dump_cron_274087e666ee_20260512_143059_20260512_143126_588110.json\nrequest_dump_cron_274087e666ee_20260512_150059_20260512_150128_288527.json\nrequest_dump_cron_274087e666ee_20260512_153010_20260512_153037_307604.json\nrequest_dump_cron_274087e666ee_20260512_160007_20260512_160037_873581.json\nrequest_dump_cron_274087e666ee_20260512_163015_20260512_163042_880008.json\nrequest_dump_cron_274087e666ee_20260512_170014_20260512_170043_893558.json\nrequest_dump_cron_274087e666ee_20260512_173017_20260512_173049_478625.json\nrequest_dump_cron_274087e666ee_20260512_180017_20260512_180045_052514.json\nrequest_dump_cron_274087e666ee_20260512_183037_20260512_183112_613578.json\nrequest_dump_cron_274087e666ee_20260512_190046_20260512_190115_100924.json\nrequest_dump_cron_274087e666ee_20260512_193052_20260512_193123_092096.json\nrequest_dump_cron_274087e666ee_20260512_200007_20260512_200035_694928.json\nrequest_dump_cron_274087e666ee_20260512_203003_20260512_203037_545712.json\nrequest_dump_cron_ca13a190a5fb_20260512_110001_20260512_110023_310246.json\nrequest_dump_cron_ca13a190a5fb_20260512_111506_20260512_111533_245548.json\nrequest_dump_cron_ca13a190a5fb_20260512_113002_20260512_113024_469250.json\nrequest_dump_cron_ca13a190a5fb_20260512_114500_20260512_114523_855098.json\nrequest_dump_cron_ca13a190a5fb_20260512_120056_20260512_120125_817908.json\nrequest_dump_cron_ca13a190a5fb_20260512_121502_20260512_121526_037593.json\nrequest_dump_cron_ca13a190a5fb_20260512_123000_20260512_123025_773599.json\nrequest_dump_cron_ca13a190a5fb_20260512_124504_20260512_124527_046949.json\nrequest_dump_cron_ca13a190a5fb_20260512_130059_20260512_130130_402047.json\nrequest_dump_cron_ca13a190a5fb_20260512_131503_20260512_131528_895186.json\nrequest_dump_cron_ca13a190a5fb_20260512_133001_20260512_133025_685135.json\nrequest_dump_cron_ca13a190a5fb_20260512_134503_20260512_134528_224607.json\nrequest_dump_cron_ca13a190a5fb_20260512_140000_20260512_140026_792296.json\nrequest_dump_cron_ca13a190a5fb_20260512_141504_20260512_141529_132878.json\nrequest_dump_cron_ca13a190a5fb_20260512_143059_20260512_143124_304198.json\nrequest_dump_cron_ca13a190a5fb_20260512_144503_20260512_144527_350620.json\nrequest_dump_cron_ca13a190a5fb_20260512_150059_20260512_150125_813135.json\nrequest_dump_cron_ca13a190a5fb_20260512_151500_20260512_151535_580607.json\nrequest_dump_cron_ca13a190a5fb_20260512_153010_20260512_153035_334676.json\nrequest_dump_cron_ca13a190a5fb_20260512_154513_20260512_154538_811520.json\nrequest_dump_cron_ca13a190a5fb_20260512_160007_20260512_160032_854063.json\nrequest_dump_cron_ca13a190a5fb_20260512_161511_20260512_161541_893076.json\nrequest_dump_cron_ca13a190a5fb_20260512_163015_20260512_163041_046310.json\nrequest_dump_cron_ca13a190a5fb_20260512_164517_20260512_164543_050400.json\nrequest_dump_cron_ca13a190a5fb_20260512_170014_20260512_170037_114202.json\nrequest_dump_cron_ca13a190a5fb_20260512_171518_20260512_171542_715766.json\nrequest_dump_cron_ca13a190a5fb_20260512_173017_20260512_173046_865600.json\nrequest_dump_cron_ca13a190a5fb_20260512_174522_20260512_174546_119704.json\nrequest_dump_cron_ca13a190a5fb_20260512_180017_20260512_180044_387392.json\nrequest_dump_cron_ca13a190a5fb_20260512_181527_20260512_181555_854666.json\nrequest_dump_cron_ca13a190a5fb_20260512_183037_20260512_183110_181556.json\nrequest_dump_cron_ca13a190a5fb_20260512_184546_20260512_184613_988485.json\nrequest_dump_cron_ca13a190a5fb_20260512_190046_20260512_190113_913665.json\nrequest_dump_cron_ca13a190a5fb_20260512_191551_20260512_191619_908640.json\nrequest_dump_cron_ca13a190a5fb_20260512_193052_20260512_193119_086471.json\nrequest_dump_cron_ca13a190a5fb_20260512_194502_20260512_194527_067604.json\nrequest_dump_cron_ca13a190a5fb_20260512_200007_20260512_200031_176071.json\nrequest_dump_cron_ca13a190a5fb_20260512_201512_20260512_201539_902854.json\nrequest_dump_cron_ca13a190a5fb_20260512_203003_20260512_203033_348284.json\nsession_20260512_053209_326291.json\nsession_20260512_100923_05634d6e.json\nsession_20260512_104105_be049cef.json\nsession_20260512_105311_ad6201.json\nsession_20260512_105520_56fef4.json\nsession_20260512_105700_f6787a.json\nsession_20260512_105911_262881.json\nsession_20260512_205356_478400.json\nsession_20260512_205602_36210c92.json\nsession_api-54f7c02d424f39f6.json\nsession_cron_04b5c54a86f2_20260512_040022.json\nsession_cron_04b5c54a86f2_20260512_041047.json\nsession_cron_04b5c54a86f2_20260512_042026.json\nsession_cron_04b5c54a86f2_20260512_043050.json\nsession_cron_04b5c54a86f2_20260512_044011.json\nsession_cron_04b5c54a86f2_20260512_045059.json\nsession_cron_04b5c54a86f2_20260512_050026.json\nsession_cron_04b5c54a86f2_20260512_051058.json\nsession_cron_04b5c54a86f2_20260512_052036.json\nsession_cron_04b5c54a86f2_20260512_053100.json\nsession_cron_04b5c54a86f2_20260512_054010.json\nsession_cron_04b5c54a86f2_20260512_055054.json\nsession_cron_04b5c54a86f2_20260512_061100.json\nsession_cron_04b5c54a86f2_20260512_062017.json\nsession_cron_04b5c54a86f2_20260512_085004.json\nsession_cron_04b5c54a86f2_20260512_090024.json\nsession_cron_04b5c54a86f2_20260512_091048.json\nsession_cron_04b5c54a86f2_20260512_092028.json\nsession_cron_04b5c54a86f2_20260512_093051.json\nsession_cron_04b5c54a86f2_20260512_094013.json\nsession_cron_04b5c54a86f2_20260512_095053.json\nsession_cron_04b5c54a86f2_20260512_100015.json\nsession_cron_04b5c54a86f2_20260512_101037.json\nsession_cron_04b5c54a86f2_20260512_102021.json\nsession_cron_04b5c54a86f2_20260512_103046.json\nsession_cron_04b5c54a86f2_20260512_104012.json\nsession_cron_04b5c54a86f2_20260512_105006.json\nsession_cron_04b5c54a86f2_20260512_110002.json\nsession_cron_04b5c54a86f2_20260512_111038.json\nsession_cron_04b5c54a86f2_20260512_112034.json\nsession_cron_04b5c54a86f2_20260512_113003.json\nsession_cron_04b5c54a86f2_20260512_114033.json\nsession_cron_04b5c54a86f2_20260512_115025.json\nsession_cron_04b5c54a86f2_20260512_120057.json\nsession_cron_04b5c54a86f2_20260512_121029.json\nsession_cron_04b5c54a86f2_20260512_122027.json\nsession_cron_04b5c54a86f2_20260512_123001.json\nsession_cron_04b5c54a86f2_20260512_124033.json\nsession_cron_04b5c54a86f2_20260512_125028.json\nsession_cron_04b5c54a86f2_20260512_130100.json\nsession_cron_04b5c54a86f2_20260512_131034.json\nsession_cron_04b5c54a86f2_20260512_132030.json\nsession_cron_04b5c54a86f2_20260512_133002.json\nsession_cron_04b5c54a86f2_20260512_134032.json\nsession_cron_04b5c54a86f2_20260512_135031.json\nsession_cron_04b5c54a86f2_20260512_140002.json\nsession_cron_04b5c54a86f2_20260512_141033.json\nsession_cron_04b5c54a86f2_20260512_142031.json\nsession_cron_04b5c54a86f2_20260512_143101.json\nsession_cron_04b5c54a86f2_20260512_144031.json\nsession_cron_04b5c54a86f2_20260512_145029.json\nsession_cron_04b5c54a86f2_20260512_150100.json\nsession_cron_04b5c54a86f2_20260512_151030.json\nsession_cron_04b5c54a86f2_20260512_152042.json\nsession_cron_04b5c54a86f2_20260512_153012.json\nsession_cron_04b5c54a86f2_20260512_154041.json\nsession_cron_04b5c54a86f2_20260512_155041.json\nsession_cron_04b5c54a86f2_20260512_160009.json\nsession_cron_04b5c54a86f2_20260512_161040.json\nsession_cron_04b5c54a86f2_20260512_162044.json\nsession_cron_04b5c54a86f2_20260512_163016.json\nsession_cron_04b5c54a86f2_20260512_164046.json\nsession_cron_04b5c54a86f2_20260512_165044.json\nsession_cron_04b5c54a86f2_20260512_170015.json\nsession_cron_04b5c54a86f2_20260512_171046.json\nsession_cron_04b5c54a86f2_20260512_172046.json\nsession_cron_04b5c54a86f2_20260512_173018.json\nsession_cron_04b5c54a86f2_20260512_174053.json\nsession_cron_04b5c54a86f2_20260512_175047.json\nsession_cron_04b5c54a86f2_20260512_180019.json\nsession_cron_04b5c54a86f2_20260512_181049.json\nsession_cron_04b5c54a86f2_20260512_182058.json\nsession_cron_04b5c54a86f2_20260512_183039.json\nsession_cron_04b5c54a86f2_20260512_184014.json\nsession_cron_04b5c54a86f2_20260512_185016.json\nsession_cron_04b5c54a86f2_20260512_190049.json\nsession_cron_04b5c54a86f2_20260512_191021.json\nsession_cron_04b5c54a86f2_20260512_192022.json\nsession_cron_04b5c54a86f2_20260512_193053.json\nsession_cron_04b5c54a86f2_20260512_194025.json\nsession_cron_04b5c54a86f2_20260512_195030.json\nsession_cron_04b5c54a86f2_20260512_200009.json\nsession_cron_04b5c54a86f2_20260512_201042.json\nsession_cron_04b5c54a86f2_20260512_202420.json\nsession_cron_04b5c54a86f2_20260512_203006.json\nsession_cron_04b5c54a86f2_20260512_210055.json\nsession_cron_04b5c54a86f2_20260512_211025.json\nsession_cron_04b5c54a86f2_20260512_212012.json\nsession_cron_04b5c54a86f2_20260512_213034.json\nsession_cron_04b5c54a86f2_20260512_214001.json\nsession_cron_04b5c54a86f2_20260512_215054.json\nsession_cron_04b5c54a86f2_20260512_220017.json\nsession_cron_04b5c54a86f2_20260512_221044.json\nsession_cron_04b5c54a86f2_20260512_222029.json\nsession_cron_04b5c54a86f2_20260512_223053.json\nsession_cron_04b5c54a86f2_20260512_224016.json\nsession_cron_04b5c54a86f2_20260512_225004.json\nsession_cron_04b5c54a86f2_20260512_230025.json\nsession_cron_04b5c54a86f2_20260512_231048.json\nsession_cron_04b5c54a86f2_20260512_232024.json\nsession_cron_04b5c54a86f2_20260512_233044.json\nsession_cron_04b5c54a86f2_20260512_234007.json\nsession_cron_04b5c54a86f2_20260512_235046.json\nsession_cron_04b5c54a86f2_20260513_000008.json\nsession_cron_04b5c54a86f2_20260513_001033.json\nsession_cron_04b5c54a86f2_20260513_002015.json\nsession_cron_04b5c54a86f2_20260513_003035.json\nsession_cron_04b5c54a86f2_20260513_004057.json\nsession_cron_04b5c54a86f2_20260513_005032.json\nsession_cron_04b5c54a86f2_20260513_010053.json\nsession_cron_04b5c54a86f2_20260513_011012.json\nsession_cron_04b5c54a86f2_20260513_012052.json\nsession_cron_04b5c54a86f2_20260513_013016.json\nsession_cron_04b5c54a86f2_20260513_014038.json\nsession_cron_04b5c54a86f2_20260513_015017.json\nsession_cron_04b5c54a86f2_20260513_020037.json\nsession_cron_04b5c54a86f2_20260513_021000.json\nsession_cron_04b5c54a86f2_20260513_022039.json\nsession_cron_04b5c54a86f2_20260513_023058.json\nsession_cron_04b5c54a86f2_20260513_024021.json\nsession_cron_04b5c54a86f2_20260513_025000.json\nsession_cron_04b5c54a86f2_20260513_030025.json\nsession_cron_04b5c54a86f2_20260513_031054.json\nsession_cron_04b5c54a86f2_20260513_032041.json\nsession_cron_04b5c54a86f2_20260513_033003.json\nsession_cron_04b5c54a86f2_20260513_034025.json\nsession_cron_04b5c54a86f2_20260513_035009.json\nsession_cron_21acd7fbda9a_20260512_053059.json\nsession_cron_274087e666ee_20260512_040022.json\nsession_cron_274087e666ee_20260512_043049.json\nsession_cron_274087e666ee_20260512_050025.json\nsession_cron_274087e666ee_20260512_053059.json\nsession_cron_274087e666ee_20260512_061054.json\nsession_cron_274087e666ee_20260512_090023.json\nsession_cron_274087e666ee_20260512_093050.json\nsession_cron_274087e666ee_20260512_100015.json\nsession_cron_274087e666ee_20260512_103044.json\nsession_cron_274087e666ee_20260512_110001.json\nsession_cron_274087e666ee_20260512_113002.json\nsession_cron_274087e666ee_20260512_120056.json\nsession_cron_274087e666ee_20260512_123000.json\nsession_cron_274087e666ee_20260512_130059.json\nsession_cron_274087e666ee_20260512_133001.json\nsession_cron_274087e666ee_20260512_140000.json\nsession_cron_274087e666ee_20260512_143059.json\nsession_cron_274087e666ee_20260512_150059.json\nsession_cron_274087e666ee_20260512_153010.json\nsession_cron_274087e666ee_20260512_160007.json\nsession_cron_274087e666ee_20260512_163015.json\nsession_cron_274087e666ee_20260512_170014.json\nsession_cron_274087e666ee_20260512_173017.json\nsession_cron_274087e666ee_20260512_180017.json\nsession_cron_274087e666ee_20260512_183037.json\nsession_cron_274087e666ee_20260512_190046.json\nsession_cron_274087e666ee_20260512_193052.json\nsession_cron_274087e666ee_20260512_200007.json\nsession_cron_274087e666ee_20260512_203003.json\nsession_cron_274087e666ee_20260512_210054.json\nsession_cron_274087e666ee_20260512_213034.json\nsession_cron_274087e666ee_20260512_220017.json\nsession_cron_274087e666ee_20260512_223053.json\nsession_cron_274087e666ee_20260512_230025.json\nsession_cron_274087e666ee_20260512_233044.json\nsession_cron_274087e666ee_20260513_000008.json\nsession_cron_274087e666ee_20260513_003035.json\nsession_cron_274087e666ee_20260513_010053.json\nsession_cron_274087e666ee_20260513_013016.json\nsession_cron_274087e666ee_20260513_020037.json\nsession_cron_274087e666ee_20260513_023057.json\nsession_cron_274087e666ee_20260513_030025.json\nsession_cron_274087e666ee_20260513_033003.json\nsession_cron_45d212028420_20260512_050025.json\nsession_cron_ca13a190a5fb_20260512_040022.json\nsession_cron_ca13a190a5fb_20260512_041508.json\nsession_cron_ca13a190a5fb_20260512_043049.json\nsession_cron_ca13a190a5fb_20260512_044534.json\nsession_cron_ca13a190a5fb_20260512_050025.json\nsession_cron_ca13a190a5fb_20260512_051519.json\nsession_cron_ca13a190a5fb_20260512_053059.json\nsession_cron_ca13a190a5fb_20260512_054534.json\nsession_cron_ca13a190a5fb_20260512_061054.json\nsession_cron_ca13a190a5fb_20260512_061557.json\nsession_cron_ca13a190a5fb_20260512_084539.json\nsession_cron_ca13a190a5fb_20260512_090023.json\nsession_cron_ca13a190a5fb_20260512_091509.json\nsession_cron_ca13a190a5fb_20260512_093050.json\nsession_cron_ca13a190a5fb_20260512_094533.json\nsession_cron_ca13a190a5fb_20260512_100015.json\nsession_cron_ca13a190a5fb_20260512_101558.json\nsession_cron_ca13a190a5fb_20260512_103044.json\nsession_cron_ca13a190a5fb_20260512_104541.json\nsession_cron_ca13a190a5fb_20260512_110001.json\nsession_cron_ca13a190a5fb_20260512_111506.json\nsession_cron_ca13a190a5fb_20260512_113002.json\nsession_cron_ca13a190a5fb_20260512_114500.json\nsession_cron_ca13a190a5fb_20260512_120056.json\nsession_cron_ca13a190a5fb_20260512_121502.json\nsession_cron_ca13a190a5fb_20260512_123000.json\nsession_cron_ca13a190a5fb_20260512_124504.json\nsession_cron_ca13a190a5fb_20260512_130059.json\nsession_cron_ca13a190a5fb_20260512_131503.json\nsession_cron_ca13a190a5fb_20260512_133001.json\nsession_cron_ca13a190a5fb_20260512_134503.json\nsession_cron_ca13a190a5fb_20260512_140000.json\nsession_cron_ca13a190a5fb_20260512_141504.json\nsession_cron_ca13a190a5fb_20260512_143059.json\nsession_cron_ca13a190a5fb_20260512_144503.json\nsession_cron_ca13a190a5fb_20260512_150059.json\nsession_cron_ca13a190a5fb_20260512_151500.json\nsession_cron_ca13a190a5fb_20260512_153010.json\nsession_cron_ca13a190a5fb_20260512_154513.json\nsession_cron_ca13a190a5fb_20260512_160007.json\nsession_cron_ca13a190a5fb_20260512_161511.json\nsession_cron_ca13a190a5fb_20260512_163015.json\nsession_cron_ca13a190a5fb_20260512_164517.json\nsession_cron_ca13a190a5fb_20260512_170014.json\nsession_cron_ca13a190a5fb_20260512_171518.json\nsession_cron_ca13a190a5fb_20260512_173017.json\nsession_cron_ca13a190a5fb_20260512_174522.json\nsession_cron_ca13a190a5fb_20260512_180017.json\nsession_cron_ca13a190a5fb_20260512_181527.json\nsession_cron_ca13a190a5fb_20260512_183037.json\nsession_cron_ca13a190a5fb_20260512_184546.json\nsession_cron_ca13a190a5fb_20260512_190046.json\nsession_cron_ca13a190a5fb_20260512_191551.json\nsession_cron_ca13a190a5fb_20260512_193052.json\nsession_cron_ca13a190a5fb_20260512_194502.json\nsession_cron_ca13a190a5fb_20260512_200007.json\nsession_cron_ca13a190a5fb_20260512_201512.json\nsession_cron_ca13a190a5fb_20260512_203003.json\nsession_cron_ca13a190a5fb_20260512_210054.json\nsession_cron_ca13a190a5fb_20260512_211549.json\nsession_cron_ca13a190a5fb_20260512_213034.json\nsession_cron_ca13a190a5fb_20260512_214531.json\nsession_cron_ca13a190a5fb_20260512_220017.json\nsession_cron_ca13a190a5fb_20260512_221508.json\nsession_cron_ca13a190a5fb_20260512_223053.json\nsession_cron_ca13a190a5fb_20260512_224544.json\nsession_cron_ca13a190a5fb_20260512_230025.json\nsession_cron_ca13a190a5fb_20260512_231509.json\nsession_cron_ca13a190a5fb_20260512_233044.json\nsession_cron_ca13a190a5fb_20260512_234529.json\nsession_cron_ca13a190a5fb_20260513_000008.json\nsession_cron_ca13a190a5fb_20260513_001554.json\nsession_cron_ca13a190a5fb_20260513_003035.json\nsession_cron_ca13a190a5fb_20260513_004516.json\nsession_cron_ca13a190a5fb_20260513_010053.json\nsession_cron_ca13a190a5fb_20260513_011532.json\nsession_cron_ca13a190a5fb_20260513_013016.json\nsession_cron_ca13a190a5fb_20260513_014558.json\nsession_cron_ca13a190a5fb_20260513_020037.json\nsession_cron_ca13a190a5fb_20260513_021520.json\nsession_cron_ca13a190a5fb_20260513_023057.json\nsession_cron_ca13a190a5fb_20260513_024541.json\nsession_cron_ca13a190a5fb_20260513_030025.json\nsession_cron_ca13a190a5fb_20260513_031520.json\nsession_cron_ca13a190a5fb_20260513_033003.json\nsession_cron_ca13a190a5fb_20260513_034547.json\nsession_cron_dc41f1d0b65b_20260512_061054.json\nsessions.json\ndevops/hermes-auto-update-cron/references/\ndevops/hermes-auto-update-cron/references/telegram-token-debugging.md\nmedia/youtube-content/\nmedia/youtube-content/SKILL.md\nmedia/youtube-video-analysis/\nmedia/youtube-video-analysis/SKILL.md\nweb-search-plus/.git/\nweb-search-plus/.git/index\n\nsent 44.851.727 bytes  received 8.553 bytes  29.906.853,33 bytes/sec\ntotal size is 347.518.850  speedup is 7,75",
+      "last_delivery_error": "delivery error: Telegram send failed: Unauthorized",
+      "deliver": "origin",
+      "origin": {
+        "platform": "telegram",
+        "chat_id": "-5266145738",
+        "chat_name": "Github",
+        "thread_id": null
+      },
+      "enabled_toolsets": null,
+      "workdir": null
+    },
+    {
+      "id": "45d212028420",
+      "name": "Hermes Config Backup",
+      "prompt": "Run the backup script at ~/.hermes/scripts/backup-to-github.sh and deliver a brief summary of what was backed up.",
+      "skills": [],
+      "skill": null,
+      "model": null,
+      "provider": null,
+      "base_url": null,
+      "script": null,
+      "no_agent": false,
+      "context_from": null,
+      "schedule": {
+        "kind": "cron",
+        "expr": "0 5 * * *",
+        "display": "0 5 * * *"
+      },
+      "schedule_display": "0 5 * * *",
+      "repeat": {
+        "times": null,
+        "completed": 2
+      },
+      "enabled": true,
+      "state": "scheduled",
+      "paused_at": null,
+      "paused_reason": null,
+      "created_at": "2026-05-11T08:53:17.013105+02:00",
+      "next_run_at": "2026-05-14T05:00:00+02:00",
+      "last_run_at": "2026-05-13T05:00:49.807912+02:00",
+      "last_status": "ok",
+      "last_error": null,
+      "last_delivery_error": "delivery error: Telegram send failed: Unauthorized",
+      "deliver": "telegram",
+      "origin": {
+        "platform": "discord",
+        "chat_id": "1503285118918328440",
+        "chat_name": "Surfy / #youtube / Youtube",
+        "thread_id": "1503285118918328440"
+      },
+      "enabled_toolsets": null,
+      "workdir": null
+    },
+    {
+      "id": "35f45eea4cbd",
+      "name": "AI News Brief - Daily at 8AM",
+      "prompt": "You are Hermes, Marco's AI research assistant. Deliver a daily AI news briefing every morning.\n\n## Your Task\n1. Search for LATEST AI news from the past 24 hours \u2014 recent AI tools, model releases, industry news\n2. Focus on: NEW AI TOOLS Marco has NEVER used\n3. Recommend ONE specific new AI tool relevant to his workflows (crypto trading, automation, Python, productivity)\n4. Explain WHY it's relevant and how to access it\n\n## Marco's Context\n- Crypto trading (Alpaca paper trading, technical analysis)\n- Automation and scripting (Python, bash)\n- Uses Hermes Agent daily\n- Pays \u20ac40/month MiniMax (underutilized at ~2k requests/week)\n- Italian for voice content, English for research OK\n\n## Output Format\nFormat as:\n\n\ud83e\udd16 AI NEWS BRIEF \u2014 [DATE]\n\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\n\n\ud83d\uddde\ufe0f ULTIME NOTIZIE AI\n\u2022 [Tool/News 1] \u2014 1 sentence\n\u2022 [Tool/News 2] \u2014 1 sentence  \n\u2022 [Tool/News 3] \u2014 1 sentence\n\n\ud83c\udd95 TOOL DA PROVARE\n\ud83c\udfaf [Tool Name]\n\ud83d\udcdd Perch\u00e9: [2-3 sentences in Italian, specific to his workflows]\n\ud83d\udd17 Link or how to access\n\n\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\n\n## Delivery\n- Send text to: origin (back to this chat/channel)\n- No TTS needed\n\nIMPORTANT: Only recommend genuinely new/recent tools (last few weeks). Make the recommendation specific to his work \u2014 not generic.",
+      "skills": [
+        "deep-research",
+        "web-research"
+      ],
+      "skill": "deep-research",
+      "model": null,
+      "provider": null,
+      "base_url": null,
+      "script": null,
+      "no_agent": false,
+      "context_from": null,
+      "schedule": {
+        "kind": "cron",
+        "expr": "0 8 * * *",
+        "display": "0 8 * * *"
+      },
+      "schedule_display": "0 8 * * *",
+      "repeat": {
+        "times": null,
+        "completed": 0
+      },
+      "enabled": true,
+      "state": "scheduled",
+      "paused_at": null,
+      "paused_reason": null,
+      "created_at": "2026-05-13T08:57:57.733778+02:00",
+      "next_run_at": "2026-05-14T08:00:00+02:00",
+      "last_run_at": null,
+      "last_status": null,
+      "last_error": null,
+      "last_delivery_error": null,
+      "deliver": "origin",
+      "origin": {
+        "platform": "telegram",
+        "chat_id": "8177017832",
+        "chat_name": "Marco Olivero",
+        "thread_id": null
+      },
+      "enabled_toolsets": null,
+      "workdir": null
+    },
+    {
+      "id": "54a68e3897dc",
+      "name": "Morning Priority Check-in",
+      "prompt": "You are Hermes, Marco's proactive AI assistant. Send a morning check-in message.\n\n## Message to send:\nSend this exact message to Marco:\n\n\u2600\ufe0f **BUONGIORNO MARCO!**\n\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\nQual \u00e8 la tua **priorit\u00e0 #1** per oggi?\n\nRispondimi e ti dar\u00f2:\n\u2022 Come posso aiutarti con quella priorit\u00e0\n\u2022 Un insight su qualcosa che potresti fare meglio\n\u2022 Un consiglio personalizzato basato sui tuoi pattern\n\n\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\n\n## Important:\n- This cron job SENDS the check-in, Marco will respond in his own time\n- Do NOT try to analyze or respond to his answer in this cron run \u2014 just send the question\n- The check-in is meant to START a conversation, not finish it\n- Send as plain text message via the send_message tool to origin\n\n## Context about Marco:\n- Crypto trading (Alpaca paper trading), technical analysis\n- Automation and scripting (Python, bash)\n- Productivity and personal assistance  \n- Uses Hermes Agent daily\n- Pays \u20ac40/month MiniMax (underutilized at ~2k requests/week)\n- Italian language preferred for personal messages\n- He likes concise, actionable responses",
+      "skills": [
+        "note-taking/obsidian",
+        "hindsight-local"
+      ],
+      "skill": "note-taking/obsidian",
+      "model": null,
+      "provider": null,
+      "base_url": null,
+      "script": null,
+      "no_agent": false,
+      "context_from": null,
+      "schedule": {
+        "kind": "cron",
+        "expr": "30 7 * * 1-5",
+        "display": "30 7 * * 1-5"
+      },
+      "schedule_display": "30 7 * * 1-5",
+      "repeat": {
+        "times": null,
+        "completed": 0
+      },
+      "enabled": true,
+      "state": "scheduled",
+      "paused_at": null,
+      "paused_reason": null,
+      "created_at": "2026-05-13T08:59:24.787886+02:00",
+      "next_run_at": "2026-05-14T07:30:00+02:00",
+      "last_run_at": null,
+      "last_status": null,
+      "last_error": null,
+      "last_delivery_error": null,
+      "deliver": "origin",
+      "origin": {
+        "platform": "telegram",
+        "chat_id": "8177017832",
+        "chat_name": "Marco Olivero",
+        "thread_id": null
+      },
+      "enabled_toolsets": null,
+      "workdir": null
+    }
+  ],
+  "updated_at": "2026-05-13T16:00:20.519920+02:00"
+}

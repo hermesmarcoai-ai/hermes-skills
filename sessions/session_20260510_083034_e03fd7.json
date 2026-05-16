@@ -1,0 +1,597 @@
+{
+  "session_id": "20260510_083034_e03fd7",
+  "model": "MiniMax-M2.7-highspeed",
+  "base_url": "https://api.minimax.io/anthropic",
+  "platform": "telegram",
+  "session_start": "2026-05-10T08:30:34.863444",
+  "last_updated": "2026-05-10T08:32:14.741186",
+  "system_prompt": "You are Hermes Agent, an intelligent AI assistant created by Nous Research. You are helpful, knowledgeable, and direct. You assist users with a wide range of tasks including answering questions, writing and editing code, analyzing information, creative work, and executing actions via your tools. You communicate clearly, admit uncertainty when appropriate, and prioritize being genuinely useful over being verbose unless otherwise directed below. Be targeted and efficient in your exploration and investigations.\n\nIf the user asks about configuring, setting up, or using Hermes Agent itself, load the `hermes-agent` skill with skill_view(name='hermes-agent') before answering. Docs: https://hermes-agent.nousresearch.com/docs\n\nConversation started: Sunday, May 10, 2026 08:30 AM\nModel: MiniMax-M2.7-highspeed\nProvider: minimax\n\nHost: Linux (6.17.0-23-generic)\nUser home directory: /home/marco\nCurrent working directory: /home/marco/.hermes/hermes-agent\n\nYou are on a text messaging communication platform, Telegram. Standard markdown is automatically converted to Telegram format. Supported: **bold**, *italic*, ~~strikethrough~~, ||spoiler||, `inline code`, ```code blocks```, [links](url), and ## headers. Telegram has NO table syntax — prefer bullet lists or labeled key: value pairs over pipe tables (any tables you do emit are auto-rewritten into row-group bullets, which you can produce directly for cleaner output). You can send media files natively: to deliver a file to the user, include MEDIA:/absolute/path/to/file in your response. Images (.png, .jpg, .webp) appear as photos, audio (.ogg) sends as voice bubbles, and videos (.mp4) play inline. You can also include image URLs in markdown format ![alt](url) and they will be sent as native photos.",
+  "tools": [
+    {
+      "type": "function",
+      "function": {
+        "name": "process",
+        "description": "Manage background processes started with terminal(background=true). Actions: 'list' (show all), 'poll' (check status + new output), 'log' (full output with pagination), 'wait' (block until done or timeout), 'kill' (terminate), 'write' (send raw stdin data without newline), 'submit' (send data + Enter, for answering prompts), 'close' (close stdin/send EOF).",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "action": {
+              "type": "string",
+              "enum": [
+                "list",
+                "poll",
+                "log",
+                "wait",
+                "kill",
+                "write",
+                "submit",
+                "close"
+              ],
+              "description": "Action to perform on background processes"
+            },
+            "session_id": {
+              "type": "string",
+              "description": "Process session ID (from terminal background output). Required for all actions except 'list'."
+            },
+            "data": {
+              "type": "string",
+              "description": "Text to send to process stdin (for 'write' and 'submit' actions)"
+            },
+            "timeout": {
+              "type": "integer",
+              "description": "Max seconds to block for 'wait' action. Returns partial output on timeout.",
+              "minimum": 1
+            },
+            "offset": {
+              "type": "integer",
+              "description": "Line offset for 'log' action (default: last 200 lines)"
+            },
+            "limit": {
+              "type": "integer",
+              "description": "Max lines to return for 'log' action",
+              "minimum": 1
+            }
+          },
+          "required": [
+            "action"
+          ]
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "terminal",
+        "description": "Execute shell commands on a Linux environment. Filesystem usually persists between calls.\n\nDo NOT use cat/head/tail to read files — use read_file instead.\nDo NOT use grep/rg/find to search — use search_files instead.\nDo NOT use ls to list directories — use search_files(target='files') instead.\nDo NOT use sed/awk to edit files — use patch instead.\nDo NOT use echo/cat heredoc to create files — use write_file instead.\nReserve terminal for: builds, installs, git, processes, scripts, network, package managers, and anything that needs a shell.\n\nForeground (default): Commands return INSTANTLY when done, even if the timeout is high. Set timeout=300 for long builds/scripts — you'll still get the result in seconds if it's fast. Prefer foreground for short commands.\nBackground: Set background=true to get a session_id. Two patterns:\n  (1) Long-lived processes that never exit (servers, watchers).\n  (2) Long-running tasks with notify_on_complete=true — you can keep working on other things and the system auto-notifies you when the task finishes. Great for test suites, builds, deployments, or anything that takes more than a minute.\nFor servers/watchers, do NOT use shell-level background wrappers (nohup/disown/setsid/trailing '&') in foreground mode. Use background=true so Hermes can track lifecycle and output.\nAfter starting a server, verify readiness with a health check or log signal, then run tests in a separate terminal() call. Avoid blind sleep loops.\nUse process(action=\"poll\") for progress checks, process(action=\"wait\") to block until done.\nWorking directory: Use 'workdir' for per-command cwd.\nPTY mode: Set pty=true for interactive CLI tools (Codex, Claude Code, Python REPL).\n\nDo NOT use vim/nano/interactive tools without pty=true — they hang without a pseudo-terminal. Pipe git output to cat if it might page.\n",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "command": {
+              "type": "string",
+              "description": "The command to execute on the VM"
+            },
+            "background": {
+              "type": "boolean",
+              "description": "Run the command in the background. Two patterns: (1) Long-lived processes that never exit (servers, watchers). (2) Long-running tasks paired with notify_on_complete=true — you can keep working and get notified when the task finishes. For short commands, prefer foreground with a generous timeout instead.",
+              "default": false
+            },
+            "timeout": {
+              "type": "integer",
+              "description": "Max seconds to wait (default: 180, foreground max: 600). Returns INSTANTLY when command finishes — set high for long tasks, you won't wait unnecessarily. Foreground timeout above 600s is rejected; use background=true for longer commands.",
+              "minimum": 1
+            },
+            "workdir": {
+              "type": "string",
+              "description": "Working directory for this command (absolute path). Defaults to the session working directory."
+            },
+            "pty": {
+              "type": "boolean",
+              "description": "Run in pseudo-terminal (PTY) mode for interactive CLI tools like Codex, Claude Code, or Python REPL. Only works with local and SSH backends. Default: false.",
+              "default": false
+            },
+            "notify_on_complete": {
+              "type": "boolean",
+              "description": "When true (and background=true), you'll be automatically notified exactly once when the process finishes. **This is the right choice for almost every long-running task** — tests, builds, deployments, multi-item batch jobs, anything that takes over a minute and has a defined end. Use this and keep working on other things; the system notifies you on exit. MUTUALLY EXCLUSIVE with watch_patterns — when both are set, watch_patterns is dropped.",
+              "default": false
+            },
+            "watch_patterns": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              },
+              "description": "Strings to watch for in background process output. HARD RATE LIMIT: at most 1 notification per 15 seconds per process — matches arriving inside the cooldown are dropped. After 3 consecutive 15-second windows with dropped matches, watch_patterns is automatically disabled for that process and promoted to notify_on_complete behavior (one notification on exit, no more mid-process spam). USE ONLY for truly rare, one-shot mid-process signals on LONG-LIVED processes that will never exit on their own — e.g. ['Application startup complete'] on a server so you know when to hit its endpoint, or ['migration done'] on a daemon. DO NOT use for: (1) end-of-run markers like 'DONE'/'PASS' — use notify_on_complete instead; (2) error patterns like 'ERROR'/'Traceback' in loops or multi-item batch jobs — they fire on every iteration and you'll hit the strike limit fast; (3) anything you'd ever combine with notify_on_complete. When in doubt, choose notify_on_complete. MUTUALLY EXCLUSIVE with notify_on_complete — set one, not both."
+            }
+          },
+          "required": [
+            "command"
+          ]
+        }
+      }
+    }
+  ],
+  "message_count": 31,
+  "messages": [
+    {
+      "role": "user",
+      "content": "Research video 1: s4h2cgaV0pM - 'Hermes + Claude Agent Swarms AI SEO is INSANE!' by Julian Goldie SEO. Use yt-dlp or Invidious to get transcript, find GitHub repos, extract setup/config tips for Hermes + Claude Agent Swarms."
+    },
+    {
+      "role": "assistant",
+      "content": "",
+      "reasoning": "Let me research the YouTube video about Hermes + Claude Agent Swarms for SEO. I'll start by getting the video transcript and then search for related GitHub repos.",
+      "finish_reason": "tool_calls",
+      "reasoning_content": "Let me research the YouTube video about Hermes + Claude Agent Swarms for SEO. I'll start by getting the video transcript and then search for related GitHub repos.",
+      "reasoning_details": [
+        {
+          "signature": "981e71e0225b1e2690888f829bd9f76556c8eab7377fc5ca4582276af637743d",
+          "thinking": "Let me research the YouTube video about Hermes + Claude Agent Swarms for SEO. I'll start by getting the video transcript and then search for related GitHub repos.",
+          "type": "thinking"
+        }
+      ],
+      "tool_calls": [
+        {
+          "id": "call_function_yvijwammfs1b_1",
+          "call_id": "call_function_yvijwammfs1b_1",
+          "response_item_id": "fc_function_yvijwammfs1b_1",
+          "type": "function",
+          "function": {
+            "name": "terminal",
+            "arguments": "{\"command\": \"yt-dlp --write-auto-sub --sub-lang en --skip-download --convert-subs srt \\\"https://www.youtube.com/watch?v=s4h2cgaV0pM\\\" -o \\\"/tmp/video_%(id)s\\\" 2>&1\", \"timeout\": 60}"
+          }
+        },
+        {
+          "id": "call_function_yvijwammfs1b_2",
+          "call_id": "call_function_yvijwammfs1b_2",
+          "response_item_id": "fc_function_yvijwammfs1b_2",
+          "type": "function",
+          "function": {
+            "name": "terminal",
+            "arguments": "{\"command\": \"yt-dlp --get-title --get-description --get-channel \\\"https://www.youtube.com/watch?v=s4h2cgaV0pM\\\" 2>&1\", \"timeout\": 30}"
+          }
+        }
+      ]
+    },
+    {
+      "role": "tool",
+      "name": "terminal",
+      "content": "{\"output\": \"[youtube] Extracting URL: https://www.youtube.com/watch?v=s4h2cgaV0pM\\n[youtube] s4h2cgaV0pM: Downloading webpage\\nWARNING: [youtube] No supported JavaScript runtime could be found. Only deno is enabled by default; to use another runtime add  --js-runtimes RUNTIME[:PATH]  to your command/config. YouTube extraction without a JS runtime has been deprecated, and some formats may be missing. See  https://github.com/yt-dlp/yt-dlp/wiki/EJS  for details on installing one\\n[youtube] s4h2cgaV0pM: Downloading android vr player API JSON\\n[info] s4h2cgaV0pM: Downloading subtitles: en\\nWARNING: ffmpeg not found. The downloaded format may not be the best available. Installing ffmpeg is strongly recommended: https://github.com/yt-dlp/yt-dlp#dependencies\\n[info] s4h2cgaV0pM: Downloading 1 format(s): 18\\n[info] Writing video subtitles to: /tmp/video_s4h2cgaV0pM.en.vtt\\nWARNING: The extractor specified to use impersonation for this download, but no impersonate target is available. If you encounter errors, then see  https://github.com/yt-dlp/yt-dlp#impersonation  for information on installing the required dependencies\\n[download] Destination: /tmp/video_s4h2cgaV0pM.en.vtt\\n\\r[download]    1.00KiB at  Unknown B/s (00:00:00)\\r[download]    3.00KiB at  288.83KiB/s (00:00:00)\\r[download]    7.00KiB at  593.16KiB/s (00:00:00)\\r[download]   15.00KiB at    1.09MiB/s (00:00:00)\\r[download]   31.00KiB at    1.68MiB/s (00:00:00)\\r[download]   63.00KiB at  908.05KiB/s (00:00:00)\\r[download]  127.00KiB at  980.08KiB/s (00:00:00)\\r[download]  128.87KiB at  987.91KiB/s (00:00:00)\\r[download] 100% of  128.87KiB in 00:00:00 at 448.99KiB/s\\n[SubtitlesConvertor] Converting subtitles\\nERROR: Preprocessing: ffmpeg not found. Please install or provide the path using --ffmpeg-location\\nERROR: Preprocessing: ffmpeg not found. Please install or provide the path using --ffmpeg-location\", \"exit_code\": 1, \"error\": null}",
+      "tool_call_id": "call_function_yvijwammfs1b_1"
+    },
+    {
+      "role": "tool",
+      "name": "terminal",
+      "content": "{\"output\": \"Usage: yt-dlp [OPTIONS] URL [URL...]\\n\\nyt-dlp: error: no such option: --get-channel\", \"exit_code\": 2, \"error\": null}",
+      "tool_call_id": "call_function_yvijwammfs1b_2"
+    },
+    {
+      "role": "assistant",
+      "content": "",
+      "reasoning": "The subtitles were downloaded but ffmpeg isn't available to convert them. Let me get the video info and read the subtitle file that was created. Let me also search for the transcript/content using Invidious as backup.",
+      "finish_reason": "tool_calls",
+      "reasoning_content": "The subtitles were downloaded but ffmpeg isn't available to convert them. Let me get the video info and read the subtitle file that was created. Let me also search for the transcript/content using Invidious as backup.",
+      "reasoning_details": [
+        {
+          "signature": "c2b91d5a3ea7ec867bbd662886450303e27d6e61820114c620921de0e6a61131",
+          "thinking": "The subtitles were downloaded but ffmpeg isn't available to convert them. Let me get the video info and read the subtitle file that was created. Let me also search for the transcript/content using Invidious as backup.",
+          "type": "thinking"
+        }
+      ],
+      "tool_calls": [
+        {
+          "id": "call_function_ik022p5lhvv3_1",
+          "call_id": "call_function_ik022p5lhvv3_1",
+          "response_item_id": "fc_function_ik022p5lhvv3_1",
+          "type": "function",
+          "function": {
+            "name": "terminal",
+            "arguments": "{\"command\": \"yt-dlp --write-auto-sub --sub-lang en --skip-download \\\"https://www.youtube.com/watch?v=s4h2cgaV0pM\\\" -o \\\"/tmp/video_%(id)s\\\" 2>&1\", \"timeout\": 30}"
+          }
+        },
+        {
+          "id": "call_function_ik022p5lhvv3_2",
+          "call_id": "call_function_ik022p5lhvv3_2",
+          "response_item_id": "fc_function_ik022p5lhvv3_2",
+          "type": "function",
+          "function": {
+            "name": "terminal",
+            "arguments": "{\"command\": \"cat /tmp/video_s4h2cgaV0pM.en.vtt 2>&1 | head -200\", \"timeout\": 10}"
+          }
+        },
+        {
+          "id": "call_function_ik022p5lhvv3_3",
+          "call_id": "call_function_ik022p5lhvv3_3",
+          "response_item_id": "fc_function_ik022p5lhvv3_3",
+          "type": "function",
+          "function": {
+            "name": "terminal",
+            "arguments": "{\"command\": \"curl -s \\\"https://invidious.snopyta.org/api/v1/videos/s4h2cgaV0pM\\\" 2>&1 | python3 -c \\\"import sys,json; d=json.load(sys.stdin); print('Title:', d.get('title','')); print('Description:', d.get('description',''))\\\" 2>&1\", \"timeout\": 20}"
+          }
+        }
+      ]
+    },
+    {
+      "role": "tool",
+      "name": "terminal",
+      "content": "{\"output\": \"[youtube] Extracting URL: https://www.youtube.com/watch?v=s4h2cgaV0pM\\n[youtube] s4h2cgaV0pM: Downloading webpage\\nWARNING: [youtube] No supported JavaScript runtime could be found. Only deno is enabled by default; to use another runtime add  --js-runtimes RUNTIME[:PATH]  to your command/config. YouTube extraction without a JS runtime has been deprecated, and some formats may be missing. See  https://github.com/yt-dlp/yt-dlp/wiki/EJS  for details on installing one\\n[youtube] s4h2cgaV0pM: Downloading android vr player API JSON\\n[info] s4h2cgaV0pM: Downloading subtitles: en\\nWARNING: ffmpeg not found. The downloaded format may not be the best available. Installing ffmpeg is strongly recommended: https://github.com/yt-dlp/yt-dlp#dependencies\\n[info] s4h2cgaV0pM: Downloading 1 format(s): 18\\nDeleting existing file /tmp/video_s4h2cgaV0pM.en.vtt\\n[info] Writing video subtitles to: /tmp/video_s4h2cgaV0pM.en.vtt\\nWARNING: The extractor specified to use impersonation for this download, but no impersonate target is available. If you encounter errors, then see  https://github.com/yt-dlp/yt-dlp#impersonation  for information on installing the required dependencies\\n[download] Destination: /tmp/video_s4h2cgaV0pM.en.vtt\\n\\r[download]    1.00KiB at  Unknown B/s (00:00:00)\\r[download]    3.00KiB at    1.89MiB/s (00:00:00)\\r[download]    7.00KiB at  699.05KiB/s (00:00:00)\\r[download]   15.00KiB at    1.30MiB/s (00:00:00)\\r[download]   31.00KiB at  954.35KiB/s (00:00:00)\\r[download]   63.00KiB at    1.36MiB/s (00:00:00)\\r[download]  127.00KiB at    1.98MiB/s (00:00:00)\\r[download]  128.87KiB at    1.95MiB/s (00:00:00)\\r[download] 100% of  128.87KiB in 00:00:00 at 498.40KiB/s\", \"exit_code\": 0, \"error\": null}",
+      "tool_call_id": "call_function_ik022p5lhvv3_1"
+    },
+    {
+      "role": "tool",
+      "name": "terminal",
+      "content": "{\"output\": \"WEBVTT\\nKind: captions\\nLanguage: en\\n\\n00:00:00.000 --> 00:00:02.270 align:start position:0%\\n \\nWhat<00:00:00.200><c> if</c><00:00:00.320><c> you</c><00:00:00.440><c> could</c><00:00:00.640><c> run</c><00:00:01.000><c> 100</c><00:00:01.560><c> AI</c><00:00:01.800><c> agents</c><00:00:02.200><c> at</c>\\n\\n00:00:02.270 --> 00:00:02.280 align:start position:0%\\nWhat if you could run 100 AI agents at\\n \\n\\n00:00:02.280 --> 00:00:04.830 align:start position:0%\\nWhat if you could run 100 AI agents at\\nthe<00:00:02.360><c> same</c><00:00:02.600><c> time</c><00:00:02.920><c> all</c><00:00:03.120><c> working</c><00:00:03.560><c> on</c><00:00:03.760><c> your</c><00:00:04.000><c> SEO</c>\\n\\n00:00:04.830 --> 00:00:04.840 align:start position:0%\\nthe same time all working on your SEO\\n \\n\\n00:00:04.840 --> 00:00:07.630 align:start position:0%\\nthe same time all working on your SEO\\nall<00:00:05.240><c> for</c><00:00:05.440><c> free</c><00:00:05.800><c> as</c><00:00:06.000><c> an</c><00:00:06.240><c> agent</c><00:00:06.840><c> swarm?</c><00:00:07.280><c> That's</c>\\n\\n00:00:07.630 --> 00:00:07.640 align:start position:0%\\nall for free as an agent swarm? That's\\n \\n\\n00:00:07.640 --> 00:00:08.870 align:start position:0%\\nall for free as an agent swarm? That's\\nexactly<00:00:08.080><c> what</c><00:00:08.200><c> I'm</c><00:00:08.240><c> going</c><00:00:08.360><c> to</c><00:00:08.440><c> show</c><00:00:08.640><c> you</c>\\n\\n00:00:08.870 --> 00:00:08.880 align:start position:0%\\nexactly what I'm going to show you\\n \\n\\n00:00:08.880 --> 00:00:11.750 align:start position:0%\\nexactly what I'm going to show you\\ntoday.<00:00:09.720><c> Right</c><00:00:10.000><c> now,</c><00:00:10.200><c> most</c><00:00:10.520><c> people</c><00:00:11.080><c> are</c><00:00:11.240><c> using</c>\\n\\n00:00:11.750 --> 00:00:11.760 align:start position:0%\\ntoday. Right now, most people are using\\n \\n\\n00:00:11.760 --> 00:00:14.710 align:start position:0%\\ntoday. Right now, most people are using\\nAI<00:00:12.120><c> like</c><00:00:12.400><c> a</c><00:00:12.480><c> single</c><00:00:13.080><c> assistant.</c><00:00:13.840><c> One</c><00:00:14.080><c> agent,</c>\\n\\n00:00:14.710 --> 00:00:14.720 align:start position:0%\\nAI like a single assistant. One agent,\\n \\n\\n00:00:14.720 --> 00:00:17.670 align:start position:0%\\nAI like a single assistant. One agent,\\none<00:00:15.000><c> task,</c><00:00:15.720><c> one</c><00:00:15.960><c> result.</c><00:00:16.600><c> But</c><00:00:16.760><c> today,</c><00:00:17.400><c> I</c><00:00:17.480><c> want</c>\\n\\n00:00:17.670 --> 00:00:17.680 align:start position:0%\\none task, one result. But today, I want\\n \\n\\n00:00:17.680 --> 00:00:20.950 align:start position:0%\\none task, one result. But today, I want\\nto<00:00:17.760><c> show</c><00:00:17.920><c> you</c><00:00:18.080><c> how</c><00:00:18.280><c> to</c><00:00:18.440><c> run</c><00:00:18.760><c> a</c><00:00:18.960><c> full</c><00:00:19.760><c> swarm</c><00:00:20.640><c> of</c>\\n\\n00:00:20.950 --> 00:00:20.960 align:start position:0%\\nto show you how to run a full swarm of\\n \\n\\n00:00:20.960 --> 00:00:24.190 align:start position:0%\\nto show you how to run a full swarm of\\nAI<00:00:21.360><c> agents</c><00:00:22.240><c> working</c><00:00:22.760><c> together</c><00:00:23.280><c> as</c><00:00:23.480><c> a</c><00:00:23.560><c> team.</c>\\n\\n00:00:24.190 --> 00:00:24.200 align:start position:0%\\nAI agents working together as a team.\\n \\n\\n00:00:24.200 --> 00:00:26.190 align:start position:0%\\nAI agents working together as a team.\\nWe're<00:00:24.320><c> talking</c><00:00:24.840><c> a</c><00:00:24.960><c> researcher,</c><00:00:25.600><c> a</c><00:00:25.680><c> writer,</c><00:00:26.120><c> a</c>\\n\\n00:00:26.190 --> 00:00:26.200 align:start position:0%\\nWe're talking a researcher, a writer, a\\n \\n\\n00:00:26.200 --> 00:00:28.070 align:start position:0%\\nWe're talking a researcher, a writer, a\\nbuilder,<00:00:26.800><c> a</c><00:00:26.880><c> reviewer</c><00:00:27.440><c> all</c><00:00:27.640><c> running</c><00:00:27.920><c> at</c><00:00:28.000><c> the</c>\\n\\n00:00:28.070 --> 00:00:28.080 align:start position:0%\\nbuilder, a reviewer all running at the\\n \\n\\n00:00:28.080 --> 00:00:30.590 align:start position:0%\\nbuilder, a reviewer all running at the\\nsame<00:00:28.320><c> time</c><00:00:29.000><c> getting</c><00:00:29.480><c> stuff</c><00:00:29.840><c> done</c><00:00:30.400><c> in</c>\\n\\n00:00:30.590 --> 00:00:30.600 align:start position:0%\\nsame time getting stuff done in\\n \\n\\n00:00:30.600 --> 00:00:31.870 align:start position:0%\\nsame time getting stuff done in\\nparallel.<00:00:31.040><c> I'm</c><00:00:31.120><c> also</c><00:00:31.320><c> going</c><00:00:31.440><c> to</c><00:00:31.520><c> show</c><00:00:31.640><c> you</c><00:00:31.760><c> how</c>\\n\\n00:00:31.870 --> 00:00:31.880 align:start position:0%\\nparallel. I'm also going to show you how\\n \\n\\n00:00:31.880 --> 00:00:35.790 align:start position:0%\\nparallel. I'm also going to show you how\\nto<00:00:32.040><c> do</c><00:00:32.240><c> this</c><00:00:32.720><c> with</c><00:00:33.000><c> two</c><00:00:33.560><c> free</c><00:00:34.240><c> tools.</c><00:00:35.000><c> Rufflow</c>\\n\\n00:00:35.790 --> 00:00:35.800 align:start position:0%\\nto do this with two free tools. Rufflow\\n \\n\\n00:00:35.800 --> 00:00:38.550 align:start position:0%\\nto do this with two free tools. Rufflow\\ninside<00:00:36.240><c> Claude</c><00:00:36.520><c> Code</c><00:00:37.240><c> and</c><00:00:37.400><c> Hermes</c><00:00:37.920><c> Agent</c>\\n\\n00:00:38.550 --> 00:00:38.560 align:start position:0%\\ninside Claude Code and Hermes Agent\\n \\n\\n00:00:38.560 --> 00:00:40.470 align:start position:0%\\ninside Claude Code and Hermes Agent\\nWorkspace.<00:00:39.440><c> And</c><00:00:39.560><c> when</c><00:00:39.680><c> you</c><00:00:39.760><c> combine</c><00:00:40.280><c> these</c>\\n\\n00:00:40.470 --> 00:00:40.480 align:start position:0%\\nWorkspace. And when you combine these\\n \\n\\n00:00:40.480 --> 00:00:42.110 align:start position:0%\\nWorkspace. And when you combine these\\ntwo<00:00:40.680><c> together,</c><00:00:41.400><c> which</c><00:00:41.600><c> I'll</c><00:00:41.720><c> show</c><00:00:41.920><c> you</c><00:00:42.040><c> in</c>\\n\\n00:00:42.110 --> 00:00:42.120 align:start position:0%\\ntwo together, which I'll show you in\\n \\n\\n00:00:42.120 --> 00:00:44.430 align:start position:0%\\ntwo together, which I'll show you in\\njust<00:00:42.360><c> a</c><00:00:42.400><c> second,</c><00:00:43.080><c> you</c><00:00:43.320><c> get</c><00:00:43.600><c> something</c><00:00:44.240><c> that</c>\\n\\n00:00:44.430 --> 00:00:44.440 align:start position:0%\\njust a second, you get something that\\n \\n\\n00:00:44.440 --> 00:00:47.590 align:start position:0%\\njust a second, you get something that\\nfeels<00:00:45.200><c> like</c><00:00:45.480><c> having</c><00:00:45.800><c> a</c><00:00:45.920><c> whole</c><00:00:46.480><c> SEO</c><00:00:47.000><c> agency</c>\\n\\n00:00:47.590 --> 00:00:47.600 align:start position:0%\\nfeels like having a whole SEO agency\\n \\n\\n00:00:47.600 --> 00:00:51.030 align:start position:0%\\nfeels like having a whole SEO agency\\nworking<00:00:48.040><c> for</c><00:00:48.160><c> you</c><00:00:48.560><c> 24/7.</c><00:00:49.760><c> We're</c><00:00:49.920><c> talking</c><00:00:50.400><c> full</c>\\n\\n00:00:51.030 --> 00:00:51.040 align:start position:0%\\nworking for you 24/7. We're talking full\\n \\n\\n00:00:51.040 --> 00:00:53.110 align:start position:0%\\nworking for you 24/7. We're talking full\\nwebsites<00:00:51.640><c> built</c><00:00:51.880><c> for</c><00:00:52.000><c> you,</c><00:00:52.200><c> full</c><00:00:52.640><c> content</c>\\n\\n00:00:53.110 --> 00:00:53.120 align:start position:0%\\nwebsites built for you, full content\\n \\n\\n00:00:53.120 --> 00:00:55.470 align:start position:0%\\nwebsites built for you, full content\\nstrategies,<00:00:53.880><c> full</c><00:00:54.200><c> keyword</c><00:00:54.600><c> plans</c><00:00:55.200><c> all</c>\\n\\n00:00:55.470 --> 00:00:55.480 align:start position:0%\\nstrategies, full keyword plans all\\n \\n\\n00:00:55.480 --> 00:00:57.950 align:start position:0%\\nstrategies, full keyword plans all\\nhanded<00:00:55.880><c> to</c><00:00:56.000><c> you</c><00:00:56.400><c> automatically.</c><00:00:57.120><c> This</c><00:00:57.400><c> is</c><00:00:57.800><c> the</c>\\n\\n00:00:57.950 --> 00:00:57.960 align:start position:0%\\nhanded to you automatically. This is the\\n \\n\\n00:00:57.960 --> 00:01:01.830 align:start position:0%\\nhanded to you automatically. This is the\\nexact<00:00:58.760><c> same</c><00:00:59.320><c> setup</c><00:01:00.280><c> I've</c><00:01:00.440><c> been</c><00:01:00.720><c> using</c><00:01:01.440><c> to</c><00:01:01.560><c> grow</c>\\n\\n00:01:01.830 --> 00:01:01.840 align:start position:0%\\nexact same setup I've been using to grow\\n \\n\\n00:01:01.840 --> 00:01:03.950 align:start position:0%\\nexact same setup I've been using to grow\\nwebsites<00:01:02.480><c> at</c><00:01:02.680><c> the</c><00:01:02.760><c> same</c><00:01:03.080><c> time,</c><00:01:03.640><c> which</c><00:01:03.840><c> I'll</c>\", \"exit_code\": 0, \"error\": null}",
+      "tool_call_id": "call_function_ik022p5lhvv3_2"
+    },
+    {
+      "role": "tool",
+      "name": "terminal",
+      "content": "{\"output\": \"Traceback (most recent call last):\\n  File \\\"<string>\\\", line 1, in <module>\\n  File \\\"/home/marco/.local/share/uv/python/cpython-3.11.15-linux-x86_64-gnu/lib/python3.11/json/__init__.py\\\", line 293, in load\\n    return loads(fp.read(),\\n           ^^^^^^^^^^^^^^^^\\n  File \\\"/home/marco/.local/share/uv/python/cpython-3.11.15-linux-x86_64-gnu/lib/python3.11/json/__init__.py\\\", line 346, in loads\\n    return _default_decoder.decode(s)\\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^\\n  File \\\"/home/marco/.local/share/uv/python/cpython-3.11.15-linux-x86_64-gnu/lib/python3.11/json/decoder.py\\\", line 337, in decode\\n    obj, end = self.raw_decode(s, idx=_w(s, 0).end())\\n               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\\n  File \\\"/home/marco/.local/share/uv/python/cpython-3.11.15-linux-x86_64-gnu/lib/python3.11/json/decoder.py\\\", line 355, in raw_decode\\n    raise JSONDecodeError(\\\"Expecting value\\\", s, err.value) from None\\njson.decoder.JSONDecodeError: Expecting value: line 1 column 1 (char 0)\", \"exit_code\": 1, \"error\": null}",
+      "tool_call_id": "call_function_ik022p5lhvv3_3"
+    },
+    {
+      "role": "assistant",
+      "content": "",
+      "reasoning": "Good, I got the subtitle file. Let me read the full transcript and also search for the GitHub repos mentioned.",
+      "finish_reason": "tool_calls",
+      "reasoning_content": "Good, I got the subtitle file. Let me read the full transcript and also search for the GitHub repos mentioned.",
+      "reasoning_details": [
+        {
+          "signature": "e27c20688223a7a8017bb3972e077a81cab2c7dca91e619aca8fa3d1962624bf",
+          "thinking": "Good, I got the subtitle file. Let me read the full transcript and also search for the GitHub repos mentioned.",
+          "type": "thinking"
+        }
+      ],
+      "tool_calls": [
+        {
+          "id": "call_function_30m0t1zktaej_1",
+          "call_id": "call_function_30m0t1zktaej_1",
+          "response_item_id": "fc_function_30m0t1zktaej_1",
+          "type": "function",
+          "function": {
+            "name": "terminal",
+            "arguments": "{\"command\": \"python3 -c \\\"\\nimport re\\nwith open('/tmp/video_s4h2cgaV0pM.en.vtt') as f:\\n    content = f.read()\\n# Strip VTT tags\\ntext = re.sub(r'<[^>]+>', '', content)\\ntext = re.sub(r'WEBVTT.*?\\\\n\\\\n', '', text)\\ntext = re.sub(r'\\\\d{2}:\\\\d{2}:\\\\d{2}\\\\.\\\\d{3} --> .*\\\\n', '', text)\\n# Remove timestamps and clean up\\nlines = [l.strip() for l in text.split('\\\\n') if l.strip()]\\nprint('\\\\n'.join(lines))\\n\\\" 2>&1\", \"timeout\": 15}"
+          }
+        },
+        {
+          "id": "call_function_30m0t1zktaej_2",
+          "call_id": "call_function_30m0t1zktaej_2",
+          "response_item_id": "fc_function_30m0t1zktaej_2",
+          "type": "function",
+          "function": {
+            "name": "terminal",
+            "arguments": "{\"command\": \"python3 -c \\\"\\nimport re\\nwith open('/tmp/video_s4h2cgaV0pM.en.vtt') as f:\\n    content = f.read()\\n# Find GitHub URLs\\ngithub_pattern = r'https?://github\\\\.com/[a-zA-Z0-9_.-]+/[a-zA-Z0-9_.-]+'\\nurls = re.findall(github_pattern, content)\\nfor u in urls:\\n    print(u)\\n# Also search for mentions of repos\\ntext = re.sub(r'<[^>]+>', '', content)\\nfor line in text.split('\\\\n'):\\n    if 'github' in line.lower() or 'repo' in line.lower() or 'hermes' in line.lower() or 'claude' in line.lower():\\n        print(line.strip())\\n\\\" 2>&1\", \"timeout\": 15}"
+          }
+        }
+      ]
+    },
+    {
+      "role": "tool",
+      "name": "terminal",
+      "content": "{\"output\": \"WEBVTT\\nKind: captions\\nLanguage: en\\nWhat if you could run 100 AI agents at\\nWhat if you could run 100 AI agents at\\nWhat if you could run 100 AI agents at\\nthe same time all working on your SEO\\nthe same time all working on your SEO\\nthe same time all working on your SEO\\nall for free as an agent swarm? That's\\nall for free as an agent swarm? That's\\nall for free as an agent swarm? That's\\nexactly what I'm going to show you\\nexactly what I'm going to show you\\nexactly what I'm going to show you\\ntoday. Right now, most people are using\\ntoday. Right now, most people are using\\ntoday. Right now, most people are using\\nAI like a single assistant. One agent,\\nAI like a single assistant. One agent,\\nAI like a single assistant. One agent,\\none task, one result. But today, I want\\none task, one result. But today, I want\\none task, one result. But today, I want\\nto show you how to run a full swarm of\\nto show you how to run a full swarm of\\nto show you how to run a full swarm of\\nAI agents working together as a team.\\nAI agents working together as a team.\\nAI agents working together as a team.\\nWe're talking a researcher, a writer, a\\nWe're talking a researcher, a writer, a\\nWe're talking a researcher, a writer, a\\nbuilder, a reviewer all running at the\\nbuilder, a reviewer all running at the\\nbuilder, a reviewer all running at the\\nsame time getting stuff done in\\nsame time getting stuff done in\\nsame time getting stuff done in\\nparallel. I'm also going to show you how\\nparallel. I'm also going to show you how\\nparallel. I'm also going to show you how\\nto do this with two free tools. Rufflow\\nto do this with two free tools. Rufflow\\nto do this with two free tools. Rufflow\\ninside Claude Code and Hermes Agent\\ninside Claude Code and Hermes Agent\\ninside Claude Code and Hermes Agent\\nWorkspace. And when you combine these\\nWorkspace. And when you combine these\\nWorkspace. And when you combine these\\ntwo together, which I'll show you in\\ntwo together, which I'll show you in\\ntwo together, which I'll show you in\\njust a second, you get something that\\njust a second, you get something that\\njust a second, you get something that\\nfeels like having a whole SEO agency\\nfeels like having a whole SEO agency\\nfeels like having a whole SEO agency\\nworking for you 24/7. We're talking full\\nworking for you 24/7. We're talking full\\nworking for you 24/7. We're talking full\\nwebsites built for you, full content\\nwebsites built for you, full content\\nwebsites built for you, full content\\nstrategies, full keyword plans all\\nstrategies, full keyword plans all\\nstrategies, full keyword plans all\\nhanded to you automatically. This is the\\nhanded to you automatically. This is the\\nhanded to you automatically. This is the\\nexact same setup I've been using to grow\\nexact same setup I've been using to grow\\nexact same setup I've been using to grow\\nwebsites at the same time, which I'll\\nwebsites at the same time, which I'll\\nwebsites at the same time, which I'll\\nshow you the results of in this video.\\nshow you the results of in this video.\\nshow you the results of in this video.\\nIf you've ever felt like SEO is just too\\nIf you've ever felt like SEO is just too\\nIf you've ever felt like SEO is just too\\nslow or too complicated, this changes\\nslow or too complicated, this changes\\nslow or too complicated, this changes\\neverything. Let's get into it. So today,\\neverything. Let's get into it. So today,\\neverything. Let's get into it. So today,\\nwhat we're going to be focusing on is\\nwhat we're going to be focusing on is\\nwhat we're going to be focusing on is\\nagentic swarm AI SEO. And this is using\\nagentic swarm AI SEO. And this is using\\nagentic swarm AI SEO. And this is using\\ntwo different tools. So you can use\\ntwo different tools. So you can use\\ntwo different tools. So you can use\\nRufflow inside Claude Code. And this\\nRufflow inside Claude Code. And this\\nRufflow inside Claude Code. And this\\nbasically gives you the power of like\\nbasically gives you the power of like\\nbasically gives you the power of like\\n100 AI agents that you can orchestrate\\n100 AI agents that you can orchestrate\\n100 AI agents that you can orchestrate\\nand use as an SEO team to automate\\nand use as an SEO team to automate\\nand use as an SEO team to automate\\nwhatever you want to do in SEO. So that\\nwhatever you want to do in SEO. So that\\nwhatever you want to do in SEO. So that\\ncould be building a website. It could be\\ncould be building a website. It could be\\ncould be building a website. It could be\\ncoming up with content strategy. It\\ncoming up with content strategy. It\\ncoming up with content strategy. It\\ncould be scheduling the next 100 blogs\\ncould be scheduling the next 100 blogs\\ncould be scheduling the next 100 blogs\\nfor the next 90 days, for example,\\nfor the next 90 days, for example,\\nfor the next 90 days, for example,\\nright? It could be creating a massive\\nright? It could be creating a massive\\nright? It could be creating a massive\\ncompetitor gap analysis across all your\\ncompetitor gap analysis across all your\\ncompetitor gap analysis across all your\\nclients. Um basically, what you can see\\nclients. Um basically, what you can see\\nclients. Um basically, what you can see\\nhere is that you can orchestrate 100\\nhere is that you can orchestrate 100\\nhere is that you can orchestrate 100\\nagents. This is far different from using\\nagents. This is far different from using\\nagents. This is far different from using\\nClaude Code normally, where you don't\\nClaude Code normally, where you don't\\nClaude Code normally, where you don't\\nget the full power of that. You might\\nget the full power of that. You might\\nget the full power of that. You might\\nget like one or two sub agents\\nget like one or two sub agents\\nget like one or two sub agents\\noccasionally, but you're never going to\\noccasionally, but you're never going to\\noccasionally, but you're never going to\\nget a full orchestration plan like with\\nget a full orchestration plan like with\\nget a full orchestration plan like with\\nRufflow. So, this is pretty wild. So,\\nRufflow. So, this is pretty wild. So,\\nRufflow. So, this is pretty wild. So,\\nlet me show an example of how this\\nlet me show an example of how this\\nlet me show an example of how this\\nworks. And by the way, this is just what\\nworks. And by the way, this is just what\\nworks. And by the way, this is just what\\nworks for me. You can see an example of\\nworks for me. You can see an example of\\nworks for me. You can see an example of\\na website here, here, here, and here,\\na website here, here, here, and here,\\na website here, here, here, and here,\\nright? I mean, look at the trajectory of\\nright? I mean, look at the trajectory of\\nright? I mean, look at the trajectory of\\nthat website. It's popping off, right?\\nthat website. It's popping off, right?\\nthat website. It's popping off, right?\\nAnd so, the way that we can get results\\nAnd so, the way that we can get results\\nAnd so, the way that we can get results\\nlike this is using Agentic SEO. And if\\nlike this is using Agentic SEO. And if\\nlike this is using Agentic SEO. And if\\nyou can combine multiple agents working\\nyou can combine multiple agents working\\nyou can combine multiple agents working\\nin tandem together, they're going to be\\nin tandem together, they're going to be\\nin tandem together, they're going to be\\n10 times more powerful or 100 times more\\n10 times more powerful or 100 times more\\n10 times more powerful or 100 times more\\npowerful if you've got 100 agents,\\npowerful if you've got 100 agents,\\npowerful if you've got 100 agents,\\nright? And the other cool thing about\\nright? And the other cool thing about\\nright? And the other cool thing about\\nRufflow specifically is it has something\\nRufflow specifically is it has something\\nRufflow specifically is it has something\\ncalled specialists, right? So, what this\\ncalled specialists, right? So, what this\\ncalled specialists, right? So, what this\\nmeans is basically you have different AI\\nmeans is basically you have different AI\\nmeans is basically you have different AI\\nagents inside the pack that all have\\nagents inside the pack that all have\\nagents inside the pack that all have\\ndifferent skills, as you can see right\\ndifferent skills, as you can see right\\ndifferent skills, as you can see right\\nhere. There's some for like memory\\nhere. There's some for like memory\\nhere. There's some for like memory\\nknowledge, there's some for swarms, etc.\\nknowledge, there's some for swarms, etc.\\nknowledge, there's some for swarms, etc.\\nThere's all sorts of different plugins\\nThere's all sorts of different plugins\\nThere's all sorts of different plugins\\nfor different types of doing stuff,\\nfor different types of doing stuff,\\nfor different types of doing stuff,\\nright? You even have like a a Rufflow\\nright? You even have like a a Rufflow\\nright? You even have like a a Rufflow\\nloop workers, which means you can\\nloop workers, which means you can\\nloop workers, which means you can\\nschedule background tasks on a timer,\\nschedule background tasks on a timer,\\nschedule background tasks on a timer,\\nright? We use Claude Code. So, it's\\nright? We use Claude Code. So, it's\\nright? We use Claude Code. So, it's\\nsuper powerful. Now, if you want to get\\nsuper powerful. Now, if you want to get\\nsuper powerful. Now, if you want to get\\nthis installed, literally all you do is\\nthis installed, literally all you do is\\nthis installed, literally all you do is\\nyou copy and paste the commands from the\\nyou copy and paste the commands from the\\nyou copy and paste the commands from the\\nquick start section here, right? So, you\\nquick start section here, right? So, you\\nquick start section here, right? So, you\\ncopy and paste this, you go into your\\ncopy and paste this, you go into your\\ncopy and paste this, you go into your\\nterminal, install it, it'll take about 5\\nterminal, install it, it'll take about 5\\nterminal, install it, it'll take about 5\\nto 10 minutes, and that's basically it.\\nto 10 minutes, and that's basically it.\\nto 10 minutes, and that's basically it.\\nOnce you've done that, then you can come\\nOnce you've done that, then you can come\\nOnce you've done that, then you can come\\ninto Claude Code and you can say like,\\ninto Claude Code and you can say like,\\ninto Claude Code and you can say like,\\nare you using Rufflow? And the other\\nare you using Rufflow? And the other\\nare you using Rufflow? And the other\\nway, whilst we're waiting for that to be\\nway, whilst we're waiting for that to be\\nway, whilst we're waiting for that to be\\ndone, is we are going to go on to Hermes\\ndone, is we are going to go on to Hermes\\ndone, is we are going to go on to Hermes\\nworkspace, right? So, Hermes workspace,\\nworkspace, right? So, Hermes workspace,\\nworkspace, right? So, Hermes workspace,\\npretty basically what it does it uses\\npretty basically what it does it uses\\npretty basically what it does it uses\\nHermes agent and essentially allows you\\nHermes agent and essentially allows you\\nHermes agent and essentially allows you\\nto use like Agentic swarms inside Hermes\\nto use like Agentic swarms inside Hermes\\nto use like Agentic swarms inside Hermes\\nagent. Let me show you an example of\\nagent. Let me show you an example of\\nagent. Let me show you an example of\\nthat, right? So, if we go inside a new\\nthat, right? So, if we go inside a new\\nthat, right? So, if we go inside a new\\ntab here, we'll run Hermes. Hermes, if\\ntab here, we'll run Hermes. Hermes, if\\ntab here, we'll run Hermes. Hermes, if\\nyou're not familiar with it, is is the\\nyou're not familiar with it, is is the\\nyou're not familiar with it, is is the\\nmost popular AI agent in the world right\\nmost popular AI agent in the world right\\nmost popular AI agent in the world right\\nnow, actually. It just overtook\\nnow, actually. It just overtook\\nnow, actually. It just overtook\\nOpen Core like today, which is crazy.\\nOpen Core like today, which is crazy.\\nOpen Core like today, which is crazy.\\nAnd so, with Hermes agent, you can do\\nAnd so, with Hermes agent, you can do\\nAnd so, with Hermes agent, you can do\\nnormal stuff. You can you can create\\nnormal stuff. You can you can create\\nnormal stuff. You can you can create\\ncontent, you can publish to your\\ncontent, you can publish to your\\ncontent, you can publish to your\\nwebsites, whatever. But, why don't we\\nwebsites, whatever. But, why don't we\\nwebsites, whatever. But, why don't we\\nmake it more fun and get an agentic\\nmake it more fun and get an agentic\\nmake it more fun and get an agentic\\nswarm to work together, right? So, for\\nswarm to work together, right? So, for\\nswarm to work together, right? So, for\\nexample, with Hermes Workspace recently,\\nexample, with Hermes Workspace recently,\\nexample, with Hermes Workspace recently,\\nand with agentic swarms, I actually had\\nand with agentic swarms, I actually had\\nand with agentic swarms, I actually had\\na team of like 25 agents working on a\\na team of like 25 agents working on a\\na team of like 25 agents working on a\\nfull website, and they just published it\\nfull website, and they just published it\\nfull website, and they just published it\\nfor me. Let me show you an example of\\nfor me. Let me show you an example of\\nfor me. Let me show you an example of\\nthat. Right, so this is a full website\\nthat. Right, so this is a full website\\nthat. Right, so this is a full website\\nthat we built, and you know, it's all\\nthat we built, and you know, it's all\\nthat we built, and you know, it's all\\ninternally linked, all the content's\\ninternally linked, all the content's\\ninternally linked, all the content's\\ncreated, super easy and simple to do,\\ncreated, super easy and simple to do,\\ncreated, super easy and simple to do,\\nand we just got a swarm of agents to\\nand we just got a swarm of agents to\\nand we just got a swarm of agents to\\ncreate this content, right? Even the\\ncreate this content, right? Even the\\ncreate this content, right? Even the\\nfact that it's just nicely formatted\\nfact that it's just nicely formatted\\nfact that it's just nicely formatted\\nbetter than, you know, a human would do,\\nbetter than, you know, a human would do,\\nbetter than, you know, a human would do,\\nright? And so, the way that we can use\\nright? And so, the way that we can use\\nright? And so, the way that we can use\\nthese swarms, we can go inside here, and\\nthese swarms, we can go inside here, and\\nthese swarms, we can go inside here, and\\nwe can say, \\\"Okay, create a team of\\nwe can say, \\\"Okay, create a team of\\nwe can say, \\\"Okay, create a team of\\nagents to build out a blog plus keyword\\nagents to build out a blog plus keyword\\nagents to build out a blog plus keyword\\na blog about AI automation, and then the\\na blog about AI automation, and then the\\na blog about AI automation, and then the\\nCTA should be this on every page,\\nCTA should be this on every page,\\nCTA should be this on every page,\\nright?\\\" You can do something like that.\\nright?\\\" You can do something like that.\\nright?\\\" You can do something like that.\\nNow, bear in mind, like, when you're\\nNow, bear in mind, like, when you're\\nNow, bear in mind, like, when you're\\ndoing this, obviously, I'm doing it on\\ndoing this, obviously, I'm doing it on\\ndoing this, obviously, I'm doing it on\\nthe spot, right? But, you would\\nthe spot, right? But, you would\\nthe spot, right? But, you would\\nbasically spend a bit more time just\\nbasically spend a bit more time just\\nbasically spend a bit more time just\\ncrafting the prompt, really thinking\\ncrafting the prompt, really thinking\\ncrafting the prompt, really thinking\\nabout what do you need to automate in\\nabout what do you need to automate in\\nabout what do you need to automate in\\nSEO's help you? So, for me, for example,\\nSEO's help you? So, for me, for example,\\nSEO's help you? So, for me, for example,\\nI want to link to this page, so we're\\nI want to link to this page, so we're\\nI want to link to this page, so we're\\ngoing to copy that. We're going to go\\ngoing to copy that. We're going to go\\ngoing to copy that. We're going to go\\nback inside here, I'm going to paste\\nback inside here, I'm going to paste\\nback inside here, I'm going to paste\\nthis link, and then paste that in. But,\\nthis link, and then paste that in. But,\\nthis link, and then paste that in. But,\\nsome examples of better prompts, you\\nsome examples of better prompts, you\\nsome examples of better prompts, you\\nknow, if you have more time, for\\nknow, if you have more time, for\\nknow, if you have more time, for\\nexample, is you could go over to\\nexample, is you could go over to\\nexample, is you could go over to\\nRuffalo, and I would take this like so,\\nRuffalo, and I would take this like so,\\nRuffalo, and I would take this like so,\\nand I would paste that in here. I would\\nand I would paste that in here. I would\\nand I would paste that in here. I would\\nsay, \\\"Give me some agentic swarm prompts\\nsay, \\\"Give me some agentic swarm prompts\\nsay, \\\"Give me some agentic swarm prompts\\nto help grow a new website with AI SEO.\\\"\\nto help grow a new website with AI SEO.\\\"\\nto help grow a new website with AI SEO.\\\"\\nAnd you can ask Claude to help you on\\nAnd you can ask Claude to help you on\\nAnd you can ask Claude to help you on\\nthat, and it will actually give you a\\nthat, and it will actually give you a\\nthat, and it will actually give you a\\nbunch of ideas for prompts that you can\\nbunch of ideas for prompts that you can\\nbunch of ideas for prompts that you can\\ngenerate. All right, so you can see here\\ngenerate. All right, so you can see here\\ngenerate. All right, so you can see here\\nthat it's actually given us a bunch of\\nthat it's actually given us a bunch of\\nthat it's actually given us a bunch of\\nideas. So, for example, like, could be a\\nideas. So, for example, like, could be a\\nideas. So, for example, like, could be a\\nsite audit and quick wins, right? Launch\\nsite audit and quick wins, right? Launch\\nsite audit and quick wins, right? Launch\\na swarm of five agents to audit this\\na swarm of five agents to audit this\\na swarm of five agents to audit this\\nwebsite for SEO. And then you got one\\nwebsite for SEO. And then you got one\\nwebsite for SEO. And then you got one\\nagent that crawls the pages, one that\\nagent that crawls the pages, one that\\nagent that crawls the pages, one that\\nidentifies internal links, one that\\nidentifies internal links, one that\\nidentifies internal links, one that\\nchecks core web vitals, one that pulls\\nchecks core web vitals, one that pulls\\nchecks core web vitals, one that pulls\\nexisting backlinks, and one that\\nexisting backlinks, and one that\\nexisting backlinks, and one that\\nsynthesizes findings into a quick win\\nsynthesizes findings into a quick win\\nsynthesizes findings into a quick win\\nreport, right? That's something you\\nreport, right? That's something you\\nreport, right? That's something you\\ncould easily use with Claude to code.\\ncould easily use with Claude to code.\\ncould easily use with Claude to code.\\nSo, it's building this out. And then, we\\nSo, it's building this out. And then, we\\nSo, it's building this out. And then, we\\ncan also do this in workspace. I'm going\\ncan also do this in workspace. I'm going\\ncan also do this in workspace. I'm going\\nto say launch Hermes workspace. So I've\\nto say launch Hermes workspace. So I've\\nto say launch Hermes workspace. So I've\\nalready installed Hermes workspace, but\\nalready installed Hermes workspace, but\\nalready installed Hermes workspace, but\\nif you don't have it already, just make\\nif you don't have it already, just make\\nif you don't have it already, just make\\nsure you have Hermes agent installed and\\nsure you have Hermes agent installed and\\nsure you have Hermes agent installed and\\nthen make sure you have Hermes workspace\\nthen make sure you have Hermes workspace\\nthen make sure you have Hermes workspace\\ninstalled. If you don't know how to\\ninstalled. If you don't know how to\\ninstalled. If you don't know how to\\ninstall Hermes workspace, just follow\\ninstall Hermes workspace, just follow\\ninstall Hermes workspace, just follow\\nthe quick start instructions right here.\\nthe quick start instructions right here.\\nthe quick start instructions right here.\\nAnother way that you could use this, you\\nAnother way that you could use this, you\\nAnother way that you could use this, you\\ncould use it to build a topical\\ncould use it to build a topical\\ncould use it to build a topical\\nauthority map, right? So you could say,\\nauthority map, right? So you could say,\\nauthority map, right? So you could say,\\n\\\"Okay, run a an agent swarm to build a\\n\\\"Okay, run a an agent swarm to build a\\n\\\"Okay, run a an agent swarm to build a\\nfull topical authority for insert\\nfull topical authority for insert\\nfull topical authority for insert\\nniche.\\\" And then agent one identifies\\nniche.\\\" And then agent one identifies\\nniche.\\\" And then agent one identifies\\nthe 10 core pillar topics with highest\\nthe 10 core pillar topics with highest\\nthe 10 core pillar topics with highest\\nsearch volume and buyer intent, right?\\nsearch volume and buyer intent, right?\\nsearch volume and buyer intent, right?\\nAgent two, for each pillar, generate 20\\nAgent two, for each pillar, generate 20\\nAgent two, for each pillar, generate 20\\nsupporting cluster topics using semantic\\nsupporting cluster topics using semantic\\nsupporting cluster topics using semantic\\nkeyword expansion, right? That sort of\\nkeyword expansion, right? That sort of\\nkeyword expansion, right? That sort of\\nthing. By the way, if you want help on\\nthing. By the way, if you want help on\\nthing. By the way, if you want help on\\ndoing stuff like this, feel free to book\\ndoing stuff like this, feel free to book\\ndoing stuff like this, feel free to book\\nin a a free SEO strategy session at\\nin a a free SEO strategy session at\\nin a a free SEO strategy session at\\ngoldy.agency. We can look at your\\ngoldy.agency. We can look at your\\ngoldy.agency. We can look at your\\nwebsite, help you set up, etc. Um and\\nwebsite, help you set up, etc. Um and\\nwebsite, help you set up, etc. Um and\\nand we can give you a free one-to-one\\nand we can give you a free one-to-one\\nand we can give you a free one-to-one\\nSEO strategy session that shows you how\\nSEO strategy session that shows you how\\nSEO strategy session that shows you how\\nto rank your website. You'll discover\\nto rank your website. You'll discover\\nto rank your website. You'll discover\\nthe secrets of SEO link building, answer\\nthe secrets of SEO link building, answer\\nthe secrets of SEO link building, answer\\nany questions you have one-to-one on\\nany questions you have one-to-one on\\nany questions you have one-to-one on\\nthat call, and you'll learn the best\\nthat call, and you'll learn the best\\nthat call, and you'll learn the best\\nlink building strategies for your\\nlink building strategies for your\\nlink building strategies for your\\nwebsite. So Hermes workspace is up now.\\nwebsite. So Hermes workspace is up now.\\nwebsite. So Hermes workspace is up now.\\nWe're just going to check that out.\\nWe're just going to check that out.\\nWe're just going to check that out.\\nAnd then we can come back to our team,\\nAnd then we can come back to our team,\\nAnd then we can come back to our team,\\nright? So you can see here that we're\\nright? So you can see here that we're\\nright? So you can see here that we're\\nusing Ruffolo to help us. So it's\\nusing Ruffolo to help us. So it's\\nusing Ruffolo to help us. So it's\\nbuilding out a HTML website. It's\\nbuilding out a HTML website. It's\\nbuilding out a HTML website. It's\\nspawned a four-agent team right now. So\\nspawned a four-agent team right now. So\\nspawned a four-agent team right now. So\\nyou've got the architect, the coder, the\\nyou've got the architect, the coder, the\\nyou've got the architect, the coder, the\\ntester, and the reviewer. And then these\\ntester, and the reviewer. And then these\\ntester, and the reviewer. And then these\\nagents can talk to each other, right?\\nagents can talk to each other, right?\\nagents can talk to each other, right?\\nAnd you can see the status of them here.\\nAnd you can see the status of them here.\\nAnd you can see the status of them here.\\nSo you've got the agent, the role, the\\nSo you've got the agent, the role, the\\nSo you've got the agent, the role, the\\nstatus, right? And so that's how you can\\nstatus, right? And so that's how you can\\nstatus, right? And so that's how you can\\nbasically get these agents to help each\\nbasically get these agents to help each\\nbasically get these agents to help each\\nother. So the architect is going to\\nother. So the architect is going to\\nother. So the architect is going to\\ndesign the blog structure. The coder is\\ndesign the blog structure. The coder is\\ndesign the blog structure. The coder is\\ngoing to build all the blog files. The\\ngoing to build all the blog files. The\\ngoing to build all the blog files. The\\ntester is going to validate all pages\\ntester is going to validate all pages\\ntester is going to validate all pages\\nand links. And the reviewer will do the\\nand links. And the reviewer will do the\\nand links. And the reviewer will do the\\nfinal quality and polish passes for that\\nfinal quality and polish passes for that\\nfinal quality and polish passes for that\\nwebsite as well. Um some other examples\\nwebsite as well. Um some other examples\\nwebsite as well. Um some other examples\\nof what you can do here. So it could be,\\nof what you can do here. So it could be,\\nof what you can do here. So it could be,\\nfor example, like creating all your\\nfor example, like creating all your\\nfor example, like creating all your\\ncontent. So you could say, \\\"Okay, spawn\\ncontent. So you could say, \\\"Okay, spawn\\ncontent. So you could say, \\\"Okay, spawn\\na content production swarm for your\\na content production swarm for your\\na content production swarm for your\\ntarget keyword list,\\\" right? So you\\ntarget keyword list,\\\" right? So you\\ntarget keyword list,\\\" right? So you\\ncould have a a list of like 50 keywords\\ncould have a a list of like 50 keywords\\ncould have a a list of like 50 keywords\\nthat you paste in. And then you got\\nthat you paste in. And then you got\\nthat you paste in. And then you got\\nagent one that's a researcher, so that\\nagent one that's a researcher, so that\\nagent one that's a researcher, so that\\ncan like research Google, look at the\\ncan like research Google, look at the\\ncan like research Google, look at the\\nkeywords, look at what people are\\nkeywords, look at what people are\\nkeywords, look at what people are\\nasking, related searches, and top five\\nasking, related searches, and top five\\nasking, related searches, and top five\\nranking page outlines. So, then you've\\nranking page outlines. So, then you've\\nranking page outlines. So, then you've\\ngot an agent two that suggests\\ngot an agent two that suggests\\ngot an agent two that suggests\\nstrategies. So, decides the content\\nstrategies. So, decides the content\\nstrategies. So, decides the content\\nformat per keyword list score guide,\\nformat per keyword list score guide,\\nformat per keyword list score guide,\\ncomparisons, tool pages, etc. Agent\\ncomparisons, tool pages, etc. Agent\\ncomparisons, tool pages, etc. Agent\\nthree is the writer. So, drafts full SEO\\nthree is the writer. So, drafts full SEO\\nthree is the writer. So, drafts full SEO\\noptimized articles for each keyword\\noptimized articles for each keyword\\noptimized articles for each keyword\\nusing EAT signals, proper heading\\nusing EAT signals, proper heading\\nusing EAT signals, proper heading\\nhierarchies, and FAQ schema markups. And\\nhierarchies, and FAQ schema markups. And\\nhierarchies, and FAQ schema markups. And\\nthen agent four is the optimizer, right?\\nthen agent four is the optimizer, right?\\nthen agent four is the optimizer, right?\\nReviews each draft against search\\nReviews each draft against search\\nReviews each draft against search\\nintent, adds missing entities, titles,\\nintent, adds missing entities, titles,\\nintent, adds missing entities, titles,\\nmeta titles, and descriptions, right?\\nmeta titles, and descriptions, right?\\nmeta titles, and descriptions, right?\\nSo, I mean, you could say if you if you\\nSo, I mean, you could say if you if you\\nSo, I mean, you could say if you if you\\nwanted to go like crazy mode, you could\\nwanted to go like crazy mode, you could\\nwanted to go like crazy mode, you could\\nsay, \\\"Okay, give me some prompts for 100\\nsay, \\\"Okay, give me some prompts for 100\\nsay, \\\"Okay, give me some prompts for 100\\nagent swarms.\\\" And then, you know, that\\nagent swarms.\\\" And then, you know, that\\nagent swarms.\\\" And then, you know, that\\nway you can actually build something out\\nway you can actually build something out\\nway you can actually build something out\\nof this even bigger, right? You can say,\\nof this even bigger, right? You can say,\\nof this even bigger, right? You can say,\\n\\\"Okay, spawn a 100 agent parallel audit\\n\\\"Okay, spawn a 100 agent parallel audit\\n\\\"Okay, spawn a 100 agent parallel audit\\nswarm for, you know, and then you you\\nswarm for, you know, and then you you\\nswarm for, you know, and then you you\\ninsert the details here and just fill in\\ninsert the details here and just fill in\\ninsert the details here and just fill in\\nthe blanks, which is pretty cool. So,\\nthe blanks, which is pretty cool. So,\\nthe blanks, which is pretty cool. So,\\nwe've got a Homie's workspace set up\\nwe've got a Homie's workspace set up\\nwe've got a Homie's workspace set up\\nhere. Let's just log in. And the way\\nhere. Let's just log in. And the way\\nhere. Let's just log in. And the way\\nthat this works is again you use agent\\nthat this works is again you use agent\\nthat this works is again you use agent\\nswarms, and you just go over to the\\nswarms, and you just go over to the\\nswarms, and you just go over to the\\nswarm section inside here, right?\\nswarm section inside here, right?\\nswarm section inside here, right?\\nAnd this is where you can type in your\\nAnd this is where you can type in your\\nAnd this is where you can type in your\\nmission, and you can see here we have 17\\nmission, and you can see here we have 17\\nmission, and you can see here we have 17\\nworkers ready for planning, routing,\\nworkers ready for planning, routing,\\nworkers ready for planning, routing,\\nreports, etc. And we can type in the\\nreports, etc. And we can type in the\\nreports, etc. And we can type in the\\nmission over here. We can select one\\nmission over here. We can select one\\nmission over here. We can select one\\nagent, broadcast, or\\nagent, broadcast, or\\nagent, broadcast, or\\num just have an auto mode. Auto will\\num just have an auto mode. Auto will\\num just have an auto mode. Auto will\\nbasically decide how many agents we\\nbasically decide how many agents we\\nbasically decide how many agents we\\nneed. And then, you'll see here all your\\nneed. And then, you'll see here all your\\nneed. And then, you'll see here all your\\ndifferent agents and profiles right\\ndifferent agents and profiles right\\ndifferent agents and profiles right\\nhere, right? And that's super powerful.\\nhere, right? And that's super powerful.\\nhere, right? And that's super powerful.\\nI mean, for example, we actually had a\\nI mean, for example, we actually had a\\nI mean, for example, we actually had a\\nteam of agents that created this full\\nteam of agents that created this full\\nteam of agents that created this full\\nwebsite as I've shown you before. You\\nwebsite as I've shown you before. You\\nwebsite as I've shown you before. You\\ncan see all the files right here, right?\\ncan see all the files right here, right?\\ncan see all the files right here, right?\\nNow, if we scroll up in terms of the\\nNow, if we scroll up in terms of the\\nNow, if we scroll up in terms of the\\nactual prompt, we just said swarm\\nactual prompt, we just said swarm\\nactual prompt, we just said swarm\\norchestra dispatch, putting all the\\norchestra dispatch, putting all the\\norchestra dispatch, putting all the\\ndetails of the swarm, what it's going to\\ndetails of the swarm, what it's going to\\ndetails of the swarm, what it's going to\\nwork on, what it's going to do, etc. And\\nwork on, what it's going to do, etc. And\\nwork on, what it's going to do, etc. And\\nthen it just started off going and\\nthen it just started off going and\\nthen it just started off going and\\nimplementing that all for us, right?\\nimplementing that all for us, right?\\nimplementing that all for us, right?\\nCreating the code for the website,\\nCreating the code for the website,\\nCreating the code for the website,\\ngenerating the whole website, and then\\ngenerating the whole website, and then\\ngenerating the whole website, and then\\ngoing off and doing that, pretty\\ngoing off and doing that, pretty\\ngoing off and doing that, pretty\\npowerful stuff. You know, when you've\\npowerful stuff. You know, when you've\\npowerful stuff. You know, when you've\\ngot a team of 25 agents working or even\\ngot a team of 25 agents working or even\\ngot a team of 25 agents working or even\\njust a small team of like four agent\\njust a small team of like four agent\\njust a small team of like four agent\\nexperts working on an SEO plan or even\\nexperts working on an SEO plan or even\\nexperts working on an SEO plan or even\\nwhen you're doing both at the same time.\\nwhen you're doing both at the same time.\\nwhen you're doing both at the same time.\\nSo, we could have one inside Hermes and\\nSo, we could have one inside Hermes and\\nSo, we could have one inside Hermes and\\nthen we could have this one running\\nthen we could have this one running\\nthen we could have this one running\\ninside Claude. Super powerful stuff,\\ninside Claude. Super powerful stuff,\\ninside Claude. Super powerful stuff,\\nright? Basically makes you unstoppable\\nright? Basically makes you unstoppable\\nright? Basically makes you unstoppable\\nand you're going to save so much time\\nand you're going to save so much time\\nand you're going to save so much time\\ndoing that. So, that is exactly how to\\ndoing that. So, that is exactly how to\\ndoing that. So, that is exactly how to\\ncreate swarms of SEO teams and agents\\ncreate swarms of SEO teams and agents\\ncreate swarms of SEO teams and agents\\nthat work together and get stuff done\\nthat work together and get stuff done\\nthat work together and get stuff done\\nfaster than most agents. You can see\\nfaster than most agents. You can see\\nfaster than most agents. You can see\\nhere it actually ticks off the task once\\nhere it actually ticks off the task once\\nhere it actually ticks off the task once\\nit is completed. So, we actually built\\nit is completed. So, we actually built\\nit is completed. So, we actually built\\nout an SEO website and we built out an\\nout an SEO website and we built out an\\nout an SEO website and we built out an\\nAI SEO content strategy for that\\nAI SEO content strategy for that\\nAI SEO content strategy for that\\nwebsite, too, which is pretty nice. And\\nwebsite, too, which is pretty nice. And\\nwebsite, too, which is pretty nice. And\\nso, if you want to get a full guide on\\nso, if you want to get a full guide on\\nso, if you want to get a full guide on\\nexactly how this works, I'll plug that\\nexactly how this works, I'll plug that\\nexactly how this works, I'll plug that\\ninto the AI Profit Bot link. And bear in\\ninto the AI Profit Bot link. And bear in\\ninto the AI Profit Bot link. And bear in\\nmind like, you know, some people say,\\nmind like, you know, some people say,\\nmind like, you know, some people say,\\n\\\"Well, AI SEO is just for big companies\\n\\\"Well, AI SEO is just for big companies\\n\\\"Well, AI SEO is just for big companies\\nright now.\\\" But, AI SEO is really the\\nright now.\\\" But, AI SEO is really the\\nright now.\\\" But, AI SEO is really the\\ngreat equalizer, you know, cuz if for\\ngreat equalizer, you know, cuz if for\\ngreat equalizer, you know, cuz if for\\nthe first time in history, a solo\\nthe first time in history, a solo\\nthe first time in history, a solo\\nentrepreneur with a laptop can deploy,\\nentrepreneur with a laptop can deploy,\\nentrepreneur with a laptop can deploy,\\nyou know, the same research and content\\nyou know, the same research and content\\nyou know, the same research and content\\npowers of a 50-person marketing agency.\\npowers of a 50-person marketing agency.\\npowers of a 50-person marketing agency.\\nThat's the difference, right? You have\\nThat's the difference, right? You have\\nThat's the difference, right? You have\\naccess to the tools\\naccess to the tools\\naccess to the tools\\num\\num\\num\\nsuper cheap right now. We've, you know,\\nsuper cheap right now. We've, you know,\\nsuper cheap right now. We've, you know,\\nyou can even get free APIs and obviously\\nyou can even get free APIs and obviously\\nyou can even get free APIs and obviously\\nHermes agent itself is free as well.\\nHermes agent itself is free as well.\\nHermes agent itself is free as well.\\nIt's an open-source project, so yeah,\\nIt's an open-source project, so yeah,\\nIt's an open-source project, so yeah,\\nit's pretty crazy stuff. I mean, other\\nit's pretty crazy stuff. I mean, other\\nit's pretty crazy stuff. I mean, other\\npeople say, \\\"Well, I'm not technical\\npeople say, \\\"Well, I'm not technical\\npeople say, \\\"Well, I'm not technical\\nenough to use AI agents.\\\" You don't\\nenough to use AI agents.\\\" You don't\\nenough to use AI agents.\\\" You don't\\ninstall engines to drive a car car,\\ninstall engines to drive a car car,\\ninstall engines to drive a car car,\\nright? RunCloud is a tool you get\\nright? RunCloud is a tool you get\\nright? RunCloud is a tool you get\\ninstalled once. Same with Hermes. After\\ninstalled once. Same with Hermes. After\\ninstalled once. Same with Hermes. After\\nthat, you type plain English\\nthat, you type plain English\\nthat, you type plain English\\ninstructions just like texting a friend.\\ninstructions just like texting a friend.\\ninstructions just like texting a friend.\\nThe agents handle every technical\\nThe agents handle every technical\\nThe agents handle every technical\\ndecision underneath the surface. If you\\ndecision underneath the surface. If you\\ndecision underneath the surface. If you\\ncan type a sentence, you can run an AI\\ncan type a sentence, you can run an AI\\ncan type a sentence, you can run an AI\\nswarm, right? Other people say, \\\"Well,\\nswarm, right? Other people say, \\\"Well,\\nswarm, right? Other people say, \\\"Well,\\nSEO takes too long to be worth it.\\\"\\nSEO takes too long to be worth it.\\\"\\nSEO takes too long to be worth it.\\\"\\nActually, SEO takes long when it's done\\nActually, SEO takes long when it's done\\nActually, SEO takes long when it's done\\nslowly, but if you have a 100 agents\\nslowly, but if you have a 100 agents\\nslowly, but if you have a 100 agents\\nrunning simultaneously, work that used\\nrunning simultaneously, work that used\\nrunning simultaneously, work that used\\nto take 6 months can be implemented in 6\\nto take 6 months can be implemented in 6\\nto take 6 months can be implemented in 6\\nweeks, right? The rankings still take\\nweeks, right? The rankings still take\\nweeks, right? The rankings still take\\ntime to appear. That's Google's\\ntime to appear. That's Google's\\ntime to appear. That's Google's\\ntimeline. But, I mean, you can check,\\ntimeline. But, I mean, you can check,\\ntimeline. But, I mean, you can check,\\nfor example, when we started using\\nfor example, when we started using\\nfor example, when we started using\\nHermes, which was in February, that's\\nHermes, which was in February, that's\\nHermes, which was in February, that's\\nwhen our traffic started growing. The\\nwhen our traffic started growing. The\\nwhen our traffic started growing. The\\nsame with this website, same with this\\nsame with this website, same with this\\nsame with this website, same with this\\nwebsite, right? It didn't take long to\\nwebsite, right? It didn't take long to\\nwebsite, right? It didn't take long to\\nget them ranking. It was pretty powerful\\nget them ranking. It was pretty powerful\\nget them ranking. It was pretty powerful\\nstuff. So, that's basically it. If you\\nstuff. So, that's basically it. If you\\nstuff. So, that's basically it. If you\\nwant a full step-by-step guide on how to\\nwant a full step-by-step guide on how to\\nwant a full step-by-step guide on how to\\ndo that, you can get that inside the AI\\ndo that, you can get that inside the AI\\ndo that, you can get that inside the AI\\nProfit Botim. Link in the comments and\\nProfit Botim. Link in the comments and\\nProfit Botim. Link in the comments and\\ndescription or go to the AI Profit\\ndescription or go to the AI Profit\\ndescription or go to the AI Profit\\nBotim.com. We have loads of guides on\\nBotim.com. We have loads of guides on\\nBotim.com. We have loads of guides on\\nhow to use AI SEO, how to get more\\nhow to use AI SEO, how to get more\\nhow to use AI SEO, how to get more\\nwebsite traffic. You can connect with me\\nwebsite traffic. You can connect with me\\nwebsite traffic. You can connect with me\\npersonally inside there. It's an awesome\\npersonally inside there. It's an awesome\\npersonally inside there. It's an awesome\\ncommunity of people where you can post\\ncommunity of people where you can post\\ncommunity of people where you can post\\nquestions, get help and support, etc. Um\\nquestions, get help and support, etc. Um\\nquestions, get help and support, etc. Um\\nwe have a very active community. You can\\nwe have a very active community. You can\\nwe have a very active community. You can\\njump on weekly coaching calls. You can\\njump on weekly coaching calls. You can\\njump on weekly coaching calls. You can\\nmeet people in your local area who are\\nmeet people in your local area who are\\nmeet people in your local area who are\\ndoing this stuff. And you can also get\\ndoing this stuff. And you can also get\\ndoing this stuff. And you can also get\\nall of my best trainings inside the\\nall of my best trainings inside the\\nall of my best trainings inside the\\nclassroom, too. Also, if you want to get\\nclassroom, too. Also, if you want to get\\nclassroom, too. Also, if you want to get\\na free SEO strategy session that shows\\na free SEO strategy session that shows\\na free SEO strategy session that shows\\nyou exactly how to rank your website,\\nyou exactly how to rank your website,\\nyou exactly how to rank your website,\\nhow to get more traffic, you get a free\\nhow to get more traffic, you get a free\\nhow to get more traffic, you get a free\\nSEO domination plan. Just go over the\\nSEO domination plan. Just go over the\\nSEO domination plan. Just go over the\\nsecret SEO link building. Answer any\\nsecret SEO link building. Answer any\\nsecret SEO link building. Answer any\\nquestions you have live on the call.\\nquestions you have live on the call.\\nquestions you have live on the call.\\nYou'll learn the best link building\\nYou'll learn the best link building\\nYou'll learn the best link building\\nstrategy for your website. And you'll\\nstrategy for your website. And you'll\\nstrategy for your website. And you'll\\nlearn how to quickly outrank your\\nlearn how to quickly outrank your\\nlearn how to quickly outrank your\\ncompetitors with link building. You can\\ncompetitors with link building. You can\\ncompetitors with link building. You can\\nget that all inside goldy.agency. So, go\\nget that all inside goldy.agency. So, go\\nget that all inside goldy.agency. So, go\\nto goldy.agency, link in the comments\\nto goldy.agency, link in the comments\\nto goldy.agency, link in the comments\\nand description to get that free\\nand description to get that free\\nand description to get that free\\none-to-one SEO strategy session. Thanks\\none-to-one SEO strategy session. Thanks\\none-to-one SEO strategy session. Thanks\\nfor watching.\", \"exit_code\": 0, \"error\": null}",
+      "tool_call_id": "call_function_30m0t1zktaej_1"
+    },
+    {
+      "role": "tool",
+      "name": "terminal",
+      "content": "{\"output\": \"inside Claude Code and Hermes Agent\\ninside Claude Code and Hermes Agent\\ninside Claude Code and Hermes Agent\\nRufflow inside Claude Code. And this\\nRufflow inside Claude Code. And this\\nRufflow inside Claude Code. And this\\nClaude Code normally, where you don't\\nClaude Code normally, where you don't\\nClaude Code normally, where you don't\\nright? We use Claude Code. So, it's\\nright? We use Claude Code. So, it's\\nright? We use Claude Code. So, it's\\ninto Claude Code and you can say like,\\ninto Claude Code and you can say like,\\ninto Claude Code and you can say like,\\ndone, is we are going to go on to Hermes\\ndone, is we are going to go on to Hermes\\ndone, is we are going to go on to Hermes\\nworkspace, right? So, Hermes workspace,\\nworkspace, right? So, Hermes workspace,\\nworkspace, right? So, Hermes workspace,\\nHermes agent and essentially allows you\\nHermes agent and essentially allows you\\nHermes agent and essentially allows you\\nto use like Agentic swarms inside Hermes\\nto use like Agentic swarms inside Hermes\\nto use like Agentic swarms inside Hermes\\ntab here, we'll run Hermes. Hermes, if\\ntab here, we'll run Hermes. Hermes, if\\ntab here, we'll run Hermes. Hermes, if\\nAnd so, with Hermes agent, you can do\\nAnd so, with Hermes agent, you can do\\nAnd so, with Hermes agent, you can do\\nexample, with Hermes Workspace recently,\\nexample, with Hermes Workspace recently,\\nexample, with Hermes Workspace recently,\\nAnd you can ask Claude to help you on\\nAnd you can ask Claude to help you on\\nAnd you can ask Claude to help you on\\nreport, right? That's something you\\nreport, right? That's something you\\nreport, right? That's something you\\ncould easily use with Claude to code.\\ncould easily use with Claude to code.\\ncould easily use with Claude to code.\\nto say launch Hermes workspace. So I've\\nto say launch Hermes workspace. So I've\\nto say launch Hermes workspace. So I've\\nalready installed Hermes workspace, but\\nalready installed Hermes workspace, but\\nalready installed Hermes workspace, but\\nsure you have Hermes agent installed and\\nsure you have Hermes agent installed and\\nsure you have Hermes agent installed and\\nthen make sure you have Hermes workspace\\nthen make sure you have Hermes workspace\\nthen make sure you have Hermes workspace\\ninstall Hermes workspace, just follow\\ninstall Hermes workspace, just follow\\ninstall Hermes workspace, just follow\\nwebsite. So Hermes workspace is up now.\\nwebsite. So Hermes workspace is up now.\\nwebsite. So Hermes workspace is up now.\\nreports, etc. And we can type in the\\nreports, etc. And we can type in the\\nreports, etc. And we can type in the\\nSo, we could have one inside Hermes and\\nSo, we could have one inside Hermes and\\nSo, we could have one inside Hermes and\\ninside Claude. Super powerful stuff,\\ninside Claude. Super powerful stuff,\\ninside Claude. Super powerful stuff,\\nHermes agent itself is free as well.\\nHermes agent itself is free as well.\\nHermes agent itself is free as well.\\ninstalled once. Same with Hermes. After\\ninstalled once. Same with Hermes. After\\ninstalled once. Same with Hermes. After\\nHermes, which was in February, that's\\nHermes, which was in February, that's\\nHermes, which was in February, that's\", \"exit_code\": 0, \"error\": null}",
+      "tool_call_id": "call_function_30m0t1zktaej_2"
+    },
+    {
+      "role": "assistant",
+      "content": "",
+      "reasoning": "Good, I got the transcript. Now let me search for the GitHub repos mentioned. The video mentions:\n1. Rufflow (Flow复仇?) - inside Claude Code\n2. Hermes Agent / Hermes Workspace\n\nLet me search for these on GitHub. The video also mentioned specific setup instructions from quick start sections.\n\nLet me search for the GitHub repos for these tools.",
+      "finish_reason": "tool_calls",
+      "reasoning_content": "Good, I got the transcript. Now let me search for the GitHub repos mentioned. The video mentions:\n1. Rufflow (Flow复仇?) - inside Claude Code\n2. Hermes Agent / Hermes Workspace\n\nLet me search for these on GitHub. The video also mentioned specific setup instructions from quick start sections.\n\nLet me search for the GitHub repos for these tools.",
+      "reasoning_details": [
+        {
+          "signature": "cfad5850bcd13c98950bcd03b68221fa9f3f39bfb332df4c97355bb726932cde",
+          "thinking": "Good, I got the transcript. Now let me search for the GitHub repos mentioned. The video mentions:\n1. Rufflow (Flow复仇?) - inside Claude Code\n2. Hermes Agent / Hermes Workspace\n\nLet me search for these on GitHub. The video also mentioned specific setup instructions from quick start sections.\n\nLet me search for the GitHub repos for these tools.",
+          "type": "thinking"
+        }
+      ],
+      "tool_calls": [
+        {
+          "id": "call_function_sn4c2lln9l4s_1",
+          "call_id": "call_function_sn4c2lln9l4s_1",
+          "response_item_id": "fc_function_sn4c2lln9l4s_1",
+          "type": "function",
+          "function": {
+            "name": "terminal",
+            "arguments": "{\"command\": \"curl -s \\\"https://api.github.com/search/repositories?q=rufflow+claude+code\\\" 2>&1 | python3 -c \\\"import sys,json; d=json.load(sys.stdin); [print(r['html_url'], '-', r['description']) for r in d.get('items',[])[:5]]\\\" 2>&1\", \"timeout\": 20}"
+          }
+        },
+        {
+          "id": "call_function_sn4c2lln9l4s_2",
+          "call_id": "call_function_sn4c2lln9l4s_2",
+          "response_item_id": "fc_function_sn4c2lln9l4s_2",
+          "type": "function",
+          "function": {
+            "name": "terminal",
+            "arguments": "{\"command\": \"curl -s \\\"https://api.github.com/search/repositories?q=hermes+agent+workspace+ai\\\" 2>&1 | python3 -c \\\"import sys,json; d=json.load(sys.stdin); [print(r['html_url'], '-', r['description']) for r in d.get('items',[])[:10]]\\\" 2>&1\", \"timeout\": 20}"
+          }
+        }
+      ]
+    },
+    {
+      "role": "tool",
+      "name": "terminal",
+      "content": "{\"output\": \"\", \"exit_code\": 0, \"error\": null}",
+      "tool_call_id": "call_function_sn4c2lln9l4s_1"
+    },
+    {
+      "role": "tool",
+      "name": "terminal",
+      "content": "{\"output\": \"https://github.com/Euraika-Labs/pan-ui - Pan by Euraika — a self-hosted AI workspace for Hermes Agent. Chat, skills, extensions, memory, profiles, and runtime controls.\\nhttps://github.com/Bo1202/Aivy-OS - Your own digital life form — local AI companion with persistent memory, IDE workspace, MCP support, and 30+ tools. Companion-first alternative to Hermes Agent / OpenClaw / Claude Code.\\nhttps://github.com/laolaoshiren/hermes-agent-desktop - Chinese-first desktop AI workspace built on a Hermes-agent-oriented architecture\\nhttps://github.com/freestylefly/wesight - Open-source desktop AI agent workspace with one-click Claude Code, Codex, OpenClaw, Hermes Agent setup and custom LLM model routing.\\nhttps://github.com/legendwxy-cmyk/hermes-workspace-public - Hermes Agent Super Workspace - Production-ready AI project management platform with multi-agent collaboration\\nhttps://github.com/S3YED/appie-kit - Build Your Own AI Employee. The complete starter kit for OpenClaw + Hermes Agent. 155 deduplicated skills, drag-and-drop workspace, case studies, install scripts.\\nhttps://github.com/Jaxz714/test-hermes-workspace - 测试仓库 - 用于 AI Agent 工作流测试\\nhttps://github.com/prodriguez-dev/agent-base - Public template for deploying personal AI agents (Hermes/OpenClaw) on Linux VPS hosts. Idempotent install, additive config, workspace one-concern-each, postmortem-driven discipline. Fork for client deploys.\\nhttps://github.com/aibusinessfrontier2025/multi-agent-codex-isolation - Guide for safely running multiple AI agents with ChatGPT Codex OAuth, isolated workspaces, and Docker sandboxing.\\nhttps://github.com/elasticflowapp/elasticflow-mcp - Collaboration workspace for teams. AI agents and humans build tables, write documents, and publish dashboards together — via any MCP assistant.\", \"exit_code\": 0, \"error\": null}",
+      "tool_call_id": "call_function_sn4c2lln9l4s_2"
+    },
+    {
+      "role": "assistant",
+      "content": "",
+      "reasoning": "Let me search specifically for the Hermes Agent repository by the original creator. The video mentions \"Hermes Agent\" as the most popular AI agent in the world. Let me also search for Rufflow specifically.",
+      "finish_reason": "tool_calls",
+      "reasoning_content": "Let me search specifically for the Hermes Agent repository by the original creator. The video mentions \"Hermes Agent\" as the most popular AI agent in the world. Let me also search for Rufflow specifically.",
+      "reasoning_details": [
+        {
+          "signature": "265c112467e2c8ee02eec25d750ca6bd34a0b6bb1769994f047f7776822110cb",
+          "thinking": "Let me search specifically for the Hermes Agent repository by the original creator. The video mentions \"Hermes Agent\" as the most popular AI agent in the world. Let me also search for Rufflow specifically.",
+          "type": "thinking"
+        }
+      ],
+      "tool_calls": [
+        {
+          "id": "call_function_ggi0oy1qaog6_1",
+          "call_id": "call_function_ggi0oy1qaog6_1",
+          "response_item_id": "fc_function_ggi0oy1qaog6_1",
+          "type": "function",
+          "function": {
+            "name": "terminal",
+            "arguments": "{\"command\": \"curl -s \\\"https://api.github.com/search/repositories?q=hermes+agent+NousResearch\\\" 2>&1 | python3 -c \\\"import sys,json; d=json.load(sys.stdin); [print(r['full_name'], '-', r['html_url'], '-', r.get('description','')) for r in d.get('items',[])[:10]]\\\" 2>&1\", \"timeout\": 20}"
+          }
+        },
+        {
+          "id": "call_function_ggi0oy1qaog6_2",
+          "call_id": "call_function_ggi0oy1qaog6_2",
+          "response_item_id": "fc_function_ggi0oy1qaog6_2",
+          "type": "function",
+          "function": {
+            "name": "terminal",
+            "arguments": "{\"command\": \"curl -s \\\"https://api.github.com/search/repositories?q=rufflow+seo+agent\\\" 2>&1 | python3 -c \\\"import sys,json; d=json.load(sys.stdin); [print(r['full_name'], '-', r['html_url'], '-', r.get('description','')) for r in d.get('items',[])[:10]]\\\" 2>&1\", \"timeout\": 20}"
+          }
+        }
+      ]
+    },
+    {
+      "role": "tool",
+      "name": "terminal",
+      "content": "{\"output\": \"AxDSan/mnemosyne - https://github.com/AxDSan/mnemosyne - The Zero-Dependency, Sub-Millisecond AI Memory System for Hermes Agents\\nTheAiSingularity/hermesclaw - https://github.com/TheAiSingularity/hermesclaw - Hermes Agent (NousResearch) sandboxed by NVIDIA OpenShell — hardware-enforced network/filesystem/syscall policy, full memory + gateway stack\\nmudrii/hermes-agent-docs - https://github.com/mudrii/hermes-agent-docs - Comprehensive documentation for Hermes Agent by NousResearch — the self-improving AI agent (v0.2.0)\\naibuild-lab/skill-vault - https://github.com/aibuild-lab/skill-vault - Threat scanner + trust matrix for AI skills. MIT. Port of NousResearch/hermes-agent skills_guard.py with attribution.\\nxujfcn/crazyrouter-hermes - https://github.com/xujfcn/crazyrouter-hermes - Use Hermes Agent (NousResearch) with Crazyrouter — 600+ AI models, 30-50% cheaper than OpenRouter\\ndemocra-ai/HermesFace - https://github.com/democra-ai/HermesFace - No Mac Mini? No problem. HermesFace is the best free way to deploy Hermes Agent on HuggingFace Spaces — 2 vCPU, 16GB RAM, 50GB storage, always online, zero cost.\\ndongsheng123132/u-hermes - https://github.com/dongsheng123132/u-hermes - U-Hermes 虾米 — NousResearch Hermes Agent 中文便携版（Linux Live + Windows 商业版）\\ndev-xyz-0-0/hermes-agent - https://github.com/dev-xyz-0-0/hermes-agent - Fork of https://github.com/NousResearch/hermes-agent\\nysnbytrk/hermes-agent - https://github.com/ysnbytrk/hermes-agent - Hermes Agent - NousResearch\\nyantrikos/yantrikdb-hermes-plugin - https://github.com/yantrikos/yantrikdb-hermes-plugin - YantrikDB memory provider for NousResearch/hermes-agent — self-maintaining memory with canonicalization, contradiction tracking, recency ranking, and explainable recall.\", \"exit_code\": 0, \"error\": null}",
+      "tool_call_id": "call_function_ggi0oy1qaog6_1"
+    },
+    {
+      "role": "tool",
+      "name": "terminal",
+      "content": "{\"output\": \"\", \"exit_code\": 0, \"error\": null}",
+      "tool_call_id": "call_function_ggi0oy1qaog6_2"
+    },
+    {
+      "role": "assistant",
+      "content": "",
+      "reasoning": "The main repos I need are:\n1. Hermes Agent by NousResearch: https://github.com/NousResearch/hermes-agent\n2. Rufflow (also known as Ruffalo?) - but I'm not finding it in GitHub search. Let me search more specifically.\n\nThe video mentions \"Rufflow inside Claude Code\" and \"Ruffalo\" - let me search for these specifically.",
+      "finish_reason": "tool_calls",
+      "reasoning_content": "The main repos I need are:\n1. Hermes Agent by NousResearch: https://github.com/NousResearch/hermes-agent\n2. Rufflow (also known as Ruffalo?) - but I'm not finding it in GitHub search. Let me search more specifically.\n\nThe video mentions \"Rufflow inside Claude Code\" and \"Ruffalo\" - let me search for these specifically.",
+      "reasoning_details": [
+        {
+          "signature": "0afafb0e74b1051db9939dbf623ff9253716b5c426fd903314711b705d21c94e",
+          "thinking": "The main repos I need are:\n1. Hermes Agent by NousResearch: https://github.com/NousResearch/hermes-agent\n2. Rufflow (also known as Ruffalo?) - but I'm not finding it in GitHub search. Let me search more specifically.\n\nThe video mentions \"Rufflow inside Claude Code\" and \"Ruffalo\" - let me search for these specifically.",
+          "type": "thinking"
+        }
+      ],
+      "tool_calls": [
+        {
+          "id": "call_function_ovvflivsrt17_1",
+          "call_id": "call_function_ovvflivsrt17_1",
+          "response_item_id": "fc_function_ovvflivsrt17_1",
+          "type": "function",
+          "function": {
+            "name": "terminal",
+            "arguments": "{\"command\": \"curl -s \\\"https://api.github.com/search/repositories?q=rufflow+inurl:github\\\" 2>&1 | python3 -c \\\"import sys,json; d=json.load(sys.stdin); [print(r['full_name'], '-', r['html_url'], '-', r.get('description','')) for r in d.get('items',[])[:10]]\\\" 2>&1\", \"timeout\": 20}"
+          }
+        },
+        {
+          "id": "call_function_ovvflivsrt17_2",
+          "call_id": "call_function_ovvflivsrt17_2",
+          "response_item_id": "fc_function_ovvflivsrt17_2",
+          "type": "function",
+          "function": {
+            "name": "terminal",
+            "arguments": "{\"command\": \"curl -s \\\"https://api.github.com/repos/NousResearch/hermes-agent\\\" 2>&1 | python3 -c \\\"import sys,json; d=json.load(sys.stdin); print('Name:', d.get('name')); print('Description:', d.get('description')); print('Stars:', d.get('stargazers_count')); print('URL:', d.get('html_url')); print('Readme snippet:', d.get('homepage','')[:200])\\\" 2>&1\", \"timeout\": 20}"
+          }
+        }
+      ]
+    },
+    {
+      "role": "tool",
+      "name": "terminal",
+      "content": "{\"output\": \"\", \"exit_code\": 0, \"error\": null}",
+      "tool_call_id": "call_function_ovvflivsrt17_1"
+    },
+    {
+      "role": "tool",
+      "name": "terminal",
+      "content": "{\"output\": \"Name: hermes-agent\\nDescription: The agent that grows with you\\nStars: 141313\\nURL: https://github.com/NousResearch/hermes-agent\\nReadme snippet: https://hermes-agent.nousresearch.com\", \"exit_code\": 0, \"error\": null}",
+      "tool_call_id": "call_function_ovvflivsrt17_2"
+    },
+    {
+      "role": "assistant",
+      "content": "",
+      "reasoning": "The transcript mentions Rufflow inside Claude Code. Let me search more specifically for Rufflow.",
+      "finish_reason": "tool_calls",
+      "reasoning_content": "The transcript mentions Rufflow inside Claude Code. Let me search more specifically for Rufflow.",
+      "reasoning_details": [
+        {
+          "signature": "97e53ea502d9e760f5952d04af3280f102fdbc31c315965172bb85105e2bf78f",
+          "thinking": "The transcript mentions Rufflow inside Claude Code. Let me search more specifically for Rufflow.",
+          "type": "thinking"
+        }
+      ],
+      "tool_calls": [
+        {
+          "id": "call_function_hk8vmcdmckat_1",
+          "call_id": "call_function_hk8vmcdmckat_1",
+          "response_item_id": "fc_function_hk8vmcdmckat_1",
+          "type": "function",
+          "function": {
+            "name": "terminal",
+            "arguments": "{\"command\": \"curl -s \\\"https://api.github.com/search/repositories?q=Rufflow+agent\\\" 2>&1 | python3 -c \\\"import sys,json; d=json.load(sys.stdin); [print(r['full_name'], '-', r['html_url'], '-', r.get('description','')) for r in d.get('items',[])[:15]]\\\" 2>&1\", \"timeout\": 20}"
+          }
+        },
+        {
+          "id": "call_function_hk8vmcdmckat_2",
+          "call_id": "call_function_hk8vmcdmckat_2",
+          "response_item_id": "fc_function_hk8vmcdmckat_2",
+          "type": "function",
+          "function": {
+            "name": "terminal",
+            "arguments": "{\"command\": \"curl -s \\\"https://api.github.com/repos/NousResearch/hermes-agent/readme\\\" 2>&1 | python3 -c \\\"import sys,json,base64; d=json.load(sys.stdin); print(base64.b64decode(d.get('content','')).decode('utf-8')[:3000])\\\" 2>&1\", \"timeout\": 20}"
+          }
+        }
+      ]
+    },
+    {
+      "role": "tool",
+      "name": "terminal",
+      "content": "{\"output\": \"\", \"exit_code\": 0, \"error\": null}",
+      "tool_call_id": "call_function_hk8vmcdmckat_1"
+    },
+    {
+      "role": "tool",
+      "name": "terminal",
+      "content": "{\"output\": \"<p align=\\\"center\\\">\\n  <img src=\\\"assets/banner.png\\\" alt=\\\"Hermes Agent\\\" width=\\\"100%\\\">\\n</p>\\n\\n# Hermes Agent ☤\\n\\n<p align=\\\"center\\\">\\n  <a href=\\\"https://hermes-agent.nousresearch.com/docs/\\\"><img src=\\\"https://img.shields.io/badge/Docs-hermes--agent.nousresearch.com-FFD700?style=for-the-badge\\\" alt=\\\"Documentation\\\"></a>\\n  <a href=\\\"https://discord.gg/NousResearch\\\"><img src=\\\"https://img.shields.io/badge/Discord-5865F2?style=for-the-badge&logo=discord&logoColor=white\\\" alt=\\\"Discord\\\"></a>\\n  <a href=\\\"https://github.com/NousResearch/hermes-agent/blob/main/LICENSE\\\"><img src=\\\"https://img.shields.io/badge/License-MIT-green?style=for-the-badge\\\" alt=\\\"License: MIT\\\"></a>\\n  <a href=\\\"https://nousresearch.com\\\"><img src=\\\"https://img.shields.io/badge/Built%20by-Nous%20Research-blueviolet?style=for-the-badge\\\" alt=\\\"Built by Nous Research\\\"></a>\\n  <a href=\\\"README.zh-CN.md\\\"><img src=\\\"https://img.shields.io/badge/Lang-中文-red?style=for-the-badge\\\" alt=\\\"中文\\\"></a>\\n</p>\\n\\n**The self-improving AI agent built by [Nous Research](https://nousresearch.com).** It's the only agent with a built-in learning loop — it creates skills from experience, improves them during use, nudges itself to persist knowledge, searches its own past conversations, and builds a deepening model of who you are across sessions. Run it on a $5 VPS, a GPU cluster, or serverless infrastructure that costs nearly nothing when idle. It's not tied to your laptop — talk to it from Telegram while it works on a cloud VM.\\n\\nUse any model you want — [Nous Portal](https://portal.nousresearch.com), [OpenRouter](https://openrouter.ai) (200+ models), [NVIDIA NIM](https://build.nvidia.com) (Nemotron), [Xiaomi MiMo](https://platform.xiaomimimo.com), [z.ai/GLM](https://z.ai), [Kimi/Moonshot](https://platform.moonshot.ai), [MiniMax](https://www.minimax.io), [Hugging Face](https://huggingface.co), OpenAI, or your own endpoint. Switch with `hermes model` — no code changes, no lock-in.\\n\\n<table>\\n<tr><td><b>A real terminal interface</b></td><td>Full TUI with multiline editing, slash-command autocomplete, conversation history, interrupt-and-redirect, and streaming tool output.</td></tr>\\n<tr><td><b>Lives where you do</b></td><td>Telegram, Discord, Slack, WhatsApp, Signal, and CLI — all from a single gateway process. Voice memo transcription, cross-platform conversation continuity.</td></tr>\\n<tr><td><b>A closed learning loop</b></td><td>Agent-curated memory with periodic nudges. Autonomous skill creation after complex tasks. Skills self-improve during use. FTS5 session search with LLM summarization for cross-session recall. <a href=\\\"https://github.com/plastic-labs/honcho\\\">Honcho</a> dialectic user modeling. Compatible with the <a href=\\\"https://agentskills.io\\\">agentskills.io</a> open standard.</td></tr>\\n<tr><td><b>Scheduled automations</b></td><td>Built-in cron scheduler with delivery to any platform. Daily reports, nightly backups, weekly audits — all in natural language, running unattended.</td></tr>\\n<tr><td><b>Delegates and parallelizes</b></td><t\", \"exit_code\": 0, \"error\": null}",
+      "tool_call_id": "call_function_hk8vmcdmckat_2"
+    },
+    {
+      "role": "assistant",
+      "content": "",
+      "reasoning": "Good, I found the Hermes Agent repo: https://github.com/NousResearch/hermes-agent. Now let me search for Rufflow - the video mentions it specifically. The search isn't finding it via GitHub API, so let me try other approaches.",
+      "finish_reason": "tool_calls",
+      "reasoning_content": "Good, I found the Hermes Agent repo: https://github.com/NousResearch/hermes-agent. Now let me search for Rufflow - the video mentions it specifically. The search isn't finding it via GitHub API, so let me try other approaches.",
+      "reasoning_details": [
+        {
+          "signature": "d2541990da4ea46c42344c323771fc0bb750adf5f7e75a854bb11985e196de76",
+          "thinking": "Good, I found the Hermes Agent repo: https://github.com/NousResearch/hermes-agent. Now let me search for Rufflow - the video mentions it specifically. The search isn't finding it via GitHub API, so let me try other approaches.",
+          "type": "thinking"
+        }
+      ],
+      "tool_calls": [
+        {
+          "id": "call_function_gjh7jt82zwze_1",
+          "call_id": "call_function_gjh7jt82zwze_1",
+          "response_item_id": "fc_function_gjh7jt82zwze_1",
+          "type": "function",
+          "function": {
+            "name": "terminal",
+            "arguments": "{\"command\": \"curl -s \\\"https://api.github.com/search/repositories?q=Rufflow+SEO+agentic\\\" 2>&1 | python3 -c \\\"import sys,json; d=json.load(sys.stdin); [print(r['full_name'], '-', r['html_url'], '-', r.get('description','')) for r in d.get('items',[])[:10]]\\\" 2>&1\", \"timeout\": 20}"
+          }
+        },
+        {
+          "id": "call_function_gjh7jt82zwze_2",
+          "call_id": "call_function_gjh7jt82zwze_2",
+          "response_item_id": "fc_function_gjh7jt82zwze_2",
+          "type": "function",
+          "function": {
+            "name": "terminal",
+            "arguments": "{\"command\": \"curl -s \\\"https://api.github.com/search/repositories?q=agentic+swarm+SEO+claude\\\" 2>&1 | python3 -c \\\"import sys,json; d=json.load(sys.stdin); [print(r['full_name'], '-', r['html_url'], '-', r.get('description','')) for r in d.get('items',[])[:10]]\\\" 2>&1\", \"timeout\": 20}"
+          }
+        }
+      ]
+    },
+    {
+      "role": "tool",
+      "name": "terminal",
+      "content": "{\"output\": \"\", \"exit_code\": 0, \"error\": null}",
+      "tool_call_id": "call_function_gjh7jt82zwze_1"
+    },
+    {
+      "role": "tool",
+      "name": "terminal",
+      "content": "{\"output\": \"\", \"exit_code\": 0, \"error\": null}",
+      "tool_call_id": "call_function_gjh7jt82zwze_2"
+    },
+    {
+      "role": "assistant",
+      "content": "",
+      "reasoning": "The transcript clearly mentions \"Rufflow inside Claude Code\" - Julian seems to be referring to Rufflow as a tool/pack. Let me search more broadly for this.",
+      "finish_reason": "tool_calls",
+      "reasoning_content": "The transcript clearly mentions \"Rufflow inside Claude Code\" - Julian seems to be referring to Rufflow as a tool/pack. Let me search more broadly for this.",
+      "reasoning_details": [
+        {
+          "signature": "5c40bbbf5dc447ebd960c2ff0d2879ffecc082b4f921b0b581a4d2eca32a4c4a",
+          "thinking": "The transcript clearly mentions \"Rufflow inside Claude Code\" - Julian seems to be referring to Rufflow as a tool/pack. Let me search more broadly for this.",
+          "type": "thinking"
+        }
+      ],
+      "tool_calls": [
+        {
+          "id": "call_function_vh971sy9aqz6_1",
+          "call_id": "call_function_vh971sy9aqz6_1",
+          "response_item_id": "fc_function_vh971sy9aqz6_1",
+          "type": "function",
+          "function": {
+            "name": "terminal",
+            "arguments": "{\"command\": \"curl -s \\\"https://api.github.com/search/repositories?q=Rufflow\\\" 2>&1 | python3 -c \\\"import sys,json; d=json.load(sys.stdin); [print(r['full_name'], '-', r['html_url'], '-', r.get('description','')) for r in d.get('items',[])[:15]]\\\" 2>&1\", \"timeout\": 20}"
+          }
+        }
+      ]
+    },
+    {
+      "role": "tool",
+      "name": "terminal",
+      "content": "{\"output\": \"\", \"exit_code\": 0, \"error\": null}",
+      "tool_call_id": "call_function_vh971sy9aqz6_1"
+    },
+    {
+      "role": "assistant",
+      "content": "",
+      "reasoning": "The search for \"Rufflow\" returns empty results on GitHub. The video might be referring to a tool that goes by a different name or is spelled differently. Let me look at the transcript more carefully for mentions of how to install Rufflow.\n\nFrom the transcript: \"if you want to get this installed, literally all you do is you copy and paste the commands from the quick start section here\"\n\nLet me save a clean version of the transcript and compile my findings. Let me also check if Rufflow might be the same as or related to something like \"Ruff\" (Python linter) or some other tool.\n\nActually, I notice the video says \"Rufflow\" - could it be a typo or reference to \"Ruff\" (the Python linter)? No, that doesn't make sense in this context. \n\nLet me compile what I have. The video is about:\n1. Using Rufflow inside Claude Code - gives power of ~100 AI agents for SEO\n2. Using Hermes Agent Workspace - also supports agentic swarms\n\nLet me save the transcript to a file and write up my findings.",
+      "finish_reason": "tool_calls",
+      "reasoning_content": "The search for \"Rufflow\" returns empty results on GitHub. The video might be referring to a tool that goes by a different name or is spelled differently. Let me look at the transcript more carefully for mentions of how to install Rufflow.\n\nFrom the transcript: \"if you want to get this installed, literally all you do is you copy and paste the commands from the quick start section here\"\n\nLet me save a clean version of the transcript and compile my findings. Let me also check if Rufflow might be the same as or related to something like \"Ruff\" (Python linter) or some other tool.\n\nActually, I notice the video says \"Rufflow\" - could it be a typo or reference to \"Ruff\" (the Python linter)? No, that doesn't make sense in this context. \n\nLet me compile what I have. The video is about:\n1. Using Rufflow inside Claude Code - gives power of ~100 AI agents for SEO\n2. Using Hermes Agent Workspace - also supports agentic swarms\n\nLet me save the transcript to a file and write up my findings.",
+      "reasoning_details": [
+        {
+          "signature": "4600aec19feadf45ff8ebe74af22f5af60ec012ad01c61476ebd5ef49e7a619f",
+          "thinking": "The search for \"Rufflow\" returns empty results on GitHub. The video might be referring to a tool that goes by a different name or is spelled differently. Let me look at the transcript more carefully for mentions of how to install Rufflow.\n\nFrom the transcript: \"if you want to get this installed, literally all you do is you copy and paste the commands from the quick start section here\"\n\nLet me save a clean version of the transcript and compile my findings. Let me also check if Rufflow might be the same as or related to something like \"Ruff\" (Python linter) or some other tool.\n\nActually, I notice the video says \"Rufflow\" - could it be a typo or reference to \"Ruff\" (the Python linter)? No, that doesn't make sense in this context. \n\nLet me compile what I have. The video is about:\n1. Using Rufflow inside Claude Code - gives power of ~100 AI agents for SEO\n2. Using Hermes Agent Workspace - also supports agentic swarms\n\nLet me save the transcript to a file and write up my findings.",
+          "type": "thinking"
+        }
+      ],
+      "tool_calls": [
+        {
+          "id": "call_function_51qvod809x37_1",
+          "call_id": "call_function_51qvod809x37_1",
+          "response_item_id": "fc_function_51qvod809x37_1",
+          "type": "function",
+          "function": {
+            "name": "terminal",
+            "arguments": "{\"command\": \"python3 -c \\\"\\nimport re\\nwith open('/tmp/video_s4h2cgaV0pM.en.vtt') as f:\\n    content = f.read()\\n# Strip VTT tags\\ntext = re.sub(r'<[^>]+>', '', content)\\ntext = re.sub(r'WEBVTT.*?\\\\n\\\\n', '', text)\\ntext = re.sub(r'\\\\d{2}:\\\\d{2}:\\\\d{2}\\\\.\\\\d{3} --> .*\\\\n', '', text)\\nlines = [l.strip() for l in text.split('\\\\n') if l.strip()]\\n# Deduplicate consecutive lines\\ndeduped = []\\nprev = None\\nfor l in lines:\\n    if l != prev:\\n        deduped.append(l)\\n        prev = l\\nwith open('/home/marco/video_transcript_s4h2cgaV0pM.txt', 'w') as f:\\n    f.write('\\\\n'.join(deduped))\\nprint('Saved', len(deduped), 'lines')\\n\\\" 2>&1\", \"timeout\": 10}"
+          }
+        }
+      ]
+    },
+    {
+      "role": "tool",
+      "name": "terminal",
+      "content": "{\"output\": \"Saved 377 lines\", \"exit_code\": 0, \"error\": null}",
+      "tool_call_id": "call_function_51qvod809x37_1"
+    },
+    {
+      "role": "assistant",
+      "content": "Here's a comprehensive summary of the research:\n\n---\n\n## Video Research Summary: s4h2cgaV0pM\n\n**Video:** \"Hermes + Claude Agent Swarms AI SEO is INSANE!\" by Julian Goldie SEO\n**Duration:** ~13 minutes | **Topic:** Agentic swarm SEO automation using Rufflow + Claude Code + Hermes Agent\n\n---\n\n### What I Did\n1. Downloaded auto-generated English subtitles (VTT) via yt-dlp\n2. Parsed/stripped VTT timestamps and tags to produce clean text\n3. Queried GitHub API for relevant repos (Hermes Agent, Rufflow, agent swarm tools)\n4. Saved transcript to `/home/marco/video_transcript_s4h2cgaV0pM.txt`\n\n---\n\n### Key Tools Mentioned\n\n| Tool | Role | Repo/Link |\n|------|------|-----------|\n| **Rufflow** (inside Claude Code) | Orchestrates 100 parallel AI agents for SEO tasks | Could not locate public GitHub repo — may be a Claude Code internal/paid feature or obscure |\n| **Claude Code** | Agentic coding environment by Anthropic | `claude.com/code` |\n| **Hermes Agent** | Nous Research open-source AI agent (141k ⭐) | `github.com/NousResearch/hermes-agent` |\n| **Hermes Workspace** | Swarm-capable workspace UI for Hermes | Part of Hermes Agent ecosystem |\n\n---\n\n### Setup/Config Tips from Video\n\n**Rufflow + Claude Code setup:**\n- Copy/paste commands from Rufflow's quickstart section in its docs\n- Install takes ~5–10 minutes\n- After install, ask Claude Code \"are you using Rufflow?\" to activate\n- Rufflow provides \"specialists\" (role-based AI agents: memory, knowledge, swarms, loop workers, etc.)\n\n**Hermes Workspace setup:**\n- Requires Hermes Agent to be installed first\n- Follow quickstart instructions in Hermes docs\n- Go to the **swarm section** inside Hermes Workspace to dispatch teams\n- Can select: single agent, broadcast, or **auto mode** (auto-decides how many agents needed)\n\n**Running agent swarms:**\n1. Go to swarm section in Hermes Workspace\n2. Type mission prompt in the input field\n3. Choose mode (single/broadcast/auto)\n4. Monitor workers (status: planning, routing, reports, etc.)\n5. Agents tick off tasks as completed\n\n---\n\n### Agent Swarm Architectures Described\n\n**4-agent website builder team:**\n- Architect → designs blog structure\n- Coder → builds all blog files\n- Tester → validates pages/links\n- Reviewer → final QA passes\n\n**25-agent website swarm:**\n- Full website built and published automatically\n\n**5-agent SEO audit swarm:**\n- Agent 1: crawls pages\n- Agent 2: identifies internal links\n- Agent 3: checks core web vitals\n- Agent 4: pulls existing backlinks\n- Agent 5: synthesizes into quick-win report\n\n**Content production swarm (4 agents):**\n- Researcher → Google research, keyword analysis, top 5 ranking page outlines\n- Strategist → decides content format, score guide, comparisons, tool pages\n- Writer → drafts SEO articles with E-E-A-T signals, FAQ schema, proper headings\n- Optimizer → reviews against search intent, adds meta titles/descriptions\n\n**Topical authority builder (2 agents):**\n- Agent 1: identifies 10 core pillar topics (high search volume + buyer intent)\n- Agent 2: generates 20 supporting cluster topics per pillar via semantic keyword expansion\n\n---\n\n### GitHub Repos Found\n\n| Repo | URL | Stars |\n|------|-----|-------|\n| **NousResearch/hermes-agent** (primary) | `github.com/NousResearch/hermes-agent` | 141k |\n| Various workspace forks/related | See notes above | — |\n\n**Rufflow:** No public GitHub repo found despite video emphasis — likely a proprietary/Claude Code internal feature or brand name used differently than a standard open-source project.\n\n---\n\n### Files Created\n- `/home/marco/video_transcript_s4h2cgaV0pM.txt` — deduplicated, cleaned transcript (377 lines)\n\n---\n\n### Issues\n- **No GitHub repo for Rufflow** — searched multiple times with different query patterns; no results\n- Invidious API returned empty response; fell back to yt-dlp subtitles\n- ffmpeg not installed for subtitle conversion; raw VTT used instead (still parseable)",
+      "reasoning": "Now let me compile a comprehensive summary of everything found. The video is about using Rufflow inside Claude Code combined with Hermes Agent Workspace for SEO automation using AI agent swarms.\n\nKey findings:\n1. Rufflow - mentioned as a tool inside Claude Code that enables 100 AI agents orchestrated for SEO. Couldn't find a GitHub repo - it might not be open source or might be relatively obscure\n2. Hermes Agent - NousResearch/hermes-agent - 141k stars - https://github.com/NousResearch/hermes-agent\n3. Hermes Workspace - various related repos found but the canonical one seems to be Hermes Agent itself with workspace capabilities\n\n\n4. The transcript is saved and contains all the setup instructions and tips shared throughout the video.",
+      "finish_reason": "stop",
+      "reasoning_content": "Now let me compile a comprehensive summary of everything found. The video is about using Rufflow inside Claude Code combined with Hermes Agent Workspace for SEO automation using AI agent swarms.\n\nKey findings:\n1. Rufflow - mentioned as a tool inside Claude Code that enables 100 AI agents orchestrated for SEO. Couldn't find a GitHub repo - it might not be open source or might be relatively obscure\n2. Hermes Agent - NousResearch/hermes-agent - 141k stars - https://github.com/NousResearch/hermes-agent\n3. Hermes Workspace - various related repos found but the canonical one seems to be Hermes Agent itself with workspace capabilities\n\n\n4. The transcript is saved and contains all the setup instructions and tips shared throughout the video.",
+      "reasoning_details": [
+        {
+          "signature": "c8b051815c9fc28cb9ce5f52e63d31c35f4f4f823d9705ba5c58a80b8ef089d0",
+          "thinking": "Now let me compile a comprehensive summary of everything found. The video is about using Rufflow inside Claude Code combined with Hermes Agent Workspace for SEO automation using AI agent swarms.\n\nKey findings:\n1. Rufflow - mentioned as a tool inside Claude Code that enables 100 AI agents orchestrated for SEO. Couldn't find a GitHub repo - it might not be open source or might be relatively obscure\n2. Hermes Agent - NousResearch/hermes-agent - 141k stars - https://github.com/NousResearch/hermes-agent\n3. Hermes Workspace - various related repos found but the canonical one seems to be Hermes Agent itself with workspace capabilities\n\n\n4. The transcript is saved and contains all the setup instructions and tips shared throughout the video.",
+          "type": "thinking"
+        }
+      ]
+    }
+  ]
+}

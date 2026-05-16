@@ -529,3 +529,70 @@ for g in json.load(sys.stdin):
 | List workflows | `gh workflow list` | `curl GET /repos/o/r/actions/workflows` |
 | Rerun CI | `gh run rerun ID` | `curl POST /repos/o/r/actions/runs/ID/rerun` |
 | Set secret | `gh secret set KEY` | `curl PUT /repos/o/r/actions/secrets/KEY` (+ encryption) |
+
+## Push Failures: Non-Fast-Forward
+
+When `git push` fails with `rejected: non-fast-forward`, the remote has commits your local doesn't have. This happens when the remote was force-pushed by another client.
+
+### Diagnose
+```bash
+git fetch origin
+git log --oneline HEAD..origin/master   # commits on remote NOT on local
+git log --oneline origin/master..HEAD   # commits on local NOT on remote
+git ls-remote origin                    # show all branches + SHAs
+```
+
+### When Local Is Ahead → Use Backup-Branch Pattern
+```bash
+# Push to timestamped backup branch (ALWAYS works)
+git push origin HEAD:refs/heads/backup-$(date +%Y-%m-%d)
+# Output: * [new branch] HEAD -> backup-2026-05-16
+```
+
+### When Remote Is Ahead → Pull Then Push
+```bash
+git pull --rebase origin master && git push origin master
+```
+
+### Force Push (last resort — destroys remote commits)
+```bash
+git push origin/master --force
+```
+
+### Fine-Grained PAT: 403 Permission Denied
+
+Fine-Grained Personal Access Tokens (PATs) require **explicit repository access** even when the token belongs to the account that owns the repo. If `git push` returns `HTTP/2 401` or `403` despite the token being valid (`curl /user` returns the correct login), the token's repository access is the culprit.
+
+**Two solutions:**
+
+1. **Add repo to Fine-Grained token settings** (recommended for future use):
+   - Go to https://github.com/settings/tokens
+   - Click the Fine-Grained token
+   - Repository access → "Only select repositories" → choose the target repo
+   - Regenerate the token or save settings
+
+2. **Use Classic PAT instead** (immediate fix):
+   - Go to https://github.com/settings/tokens
+   - Generate new token (classic)
+   - Select `repo` scope (full control)
+   - Use the classic token instead
+
+**To switch tokens in an existing git remote:**
+```bash
+git remote set-url origin https://CLASSIC_TOKEN@github.com/owner/repo.git
+git push --force origin master
+```
+
+**Debugging steps (always run these first):**
+```bash
+# Verify token is valid
+curl -s -H "Authorization: token $TOKEN" https://api.github.com/user | python3 -c "import sys,json; d=json.load(sys.stdin); print(f'User: {d[\"login\"]}')"
+
+# Verify token has repo permissions
+curl -s -H "Authorization: token $TOKEN" https://api.github.com/repos/owner/repo | python3 -c "import sys,json; d=json.load(sys.stdin); print(f'Push: {d.get(\"permissions\",{}).get(\"push\")}')"
+
+# Check rate limit
+curl -s -H "Authorization: token $TOKEN" https://api.github.com/rate_limit | python3 -c "import sys,json; print(f'Remaining: {json.load(sys.stdin)[\"resources\"][\"core\"][\"remaining\"]}')"
+```
+
+**Note:** GitHub Fine-Grained PATs have additional restrictions — they cannot create branches via `git push` in some configurations. Classic PATs with `repo` scope are more reliable for git operations from a VPS.
